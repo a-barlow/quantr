@@ -18,7 +18,7 @@ for version control with git. Below is the general outline of this
 strategy, 
 
 - fork this repository;
-- from the newly forked repositry, create a new branch from the `dev`
+- from the newly forked repository, create a new branch from the `dev`
   branch and prefix it's name with feat- or fix-, if adding a feature or
   fixing a bug respectively;
 - implement your changes in your newly created branch with a series of
@@ -49,7 +49,7 @@ When a pull request is opened, a template should appear that shows the
 above as checklist (that should be ticked off), in addition to questions
 that the contributor should answer
 
-### What is a descriptive commit? 
+## What is a descriptive commit? 
 
 This is only specified to help maintain a well-documented repository,
 and help the maintainers review the pull request. 
