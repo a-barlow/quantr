@@ -8,19 +8,19 @@
 * Author: Andrew Rowan Barlow <a.barlow.dev@gmail.com>
 */
 
-//! Construct, simulate and measure quantum circuits. 
+//! Construct, simulate and measure quantum circuits.
 //!
 //! Initialise a new quantum circuit by using [Circuit::new] where the argument defines the number
 //! of qubits. Afterwards, multiple methods can be called to append gates onto the circuit a row at
-//! a time. For instance, [Circuit::add_gate] will add a single gate, whilst 
+//! a time. For instance, [Circuit::add_gate] will add a single gate, whilst
 //! [Circuit::add_gates_with_positions] and [Circuit::add_repeating_gate] will add multiple.
-//! 
+//!
 //! The circuit can then be simulated with [Circuit::simulate]. The progress of the simulation can
 //! be printed to the terminal by calling [Circuit::toggle_simulation_progress] before simulating
 //! the circuit.
 //!
-//! A bin count can be taken of a series of repeated measurements of the circuit with 
-//! [Circuit::repeat_measurement]. The explicit superpositon can be retreived also using 
+//! A bin count can be taken of a series of repeated measurements of the circuit with
+//! [Circuit::repeat_measurement]. The explicit superpositon can be retreived also using
 //! [Circuit::get_superposition].
 
 use crate::complex::Complex;
@@ -37,8 +37,8 @@ use self::error::QuantrError;
 use crate::circuit::states::{ProductState, Qubit, SuperPosition};
 
 /// Distinguishes observable and non-observable quantities.
-/// 
-/// For example, this will distinguish the retreival of a superposition (that cannot be measured 
+///
+/// For example, this will distinguish the retreival of a superposition (that cannot be measured
 /// directly), and the state resulting from the collapse of a superposition upon measurement.
 pub enum Measurement<T> {
     Observable(T),
@@ -46,9 +46,9 @@ pub enum Measurement<T> {
 }
 
 /// Gates that can be added to a [Circuit] struct.
-/// 
-/// Currently, this enum has the `#[non_exhaustive]` as it's 
-/// yet undecided what will be included in a standard gate. This will 
+///
+/// Currently, this enum has the `#[non_exhaustive]` as it's
+/// yet undecided what will be included in a standard gate. This will
 /// lessen the impact of breaking changes in the future.
 #[derive(Clone, PartialEq, Debug)]
 #[non_exhaustive]
@@ -73,20 +73,20 @@ pub enum StandardGate<'a> {
     Swap(usize),
     /// Toffoli, with position of control nodes.
     Toffoli(usize, usize),
-    /// Defines a custom gate. 
+    /// Defines a custom gate.
     ///
     /// The arguments define the mapping of the
     /// gate; the position of the qubit states that the gate acts on;
     /// and a name that will be displayed in the printed diagram
     /// respectively.
-    /// 
+    ///
     /// # Example
     /// ```
     /// use quantr::circuit::{Circuit, StandardGate};
     /// use quantr::circuit::states::{SuperPosition, ProductState, Qubit};
     /// use quantr::complex::Complex;
     /// use quantr::complex_Re_array;
-    /// 
+    ///
     /// // Defines a C-Not gate
     /// fn example_cnot(prod: ProductState) -> SuperPosition {
     ///    let input_register: [Qubit; 2] = [prod.state[0], prod.state[1]];
@@ -100,8 +100,8 @@ pub enum StandardGate<'a> {
     ///
     /// let mut quantum_circuit = Circuit::new(3);
     /// quantum_circuit.add_gate(StandardGate::Custom(example_cnot, &[2], String::from("X")), 1).unwrap();
-    /// 
-    /// // This is equivalent to 
+    ///
+    /// // This is equivalent to
     /// quantum_circuit.add_gate(StandardGate::CNot(2), 1).unwrap();
     ///
     /// ```
@@ -134,11 +134,11 @@ pub struct Circuit<'a> {
 }
 
 impl<'a> Circuit<'a> {
-    /// Initialises a new circuit. 
+    /// Initialises a new circuit.
     ///
-    /// The target qubits used in defining custom functions must out live the slice of target 
+    /// The target qubits used in defining custom functions must out live the slice of target
     /// qubits given to the custom function.
-    pub fn new(num_qubits: usize) -> Circuit<'a>{
+    pub fn new(num_qubits: usize) -> Circuit<'a> {
         let circuit_gates: Vec<StandardGate> = Vec::new();
         Circuit {
             circuit_gates,
@@ -148,20 +148,20 @@ impl<'a> Circuit<'a> {
         }
     }
 
-    /// Toggles if the circuit should print the progress of simulating each gate. 
+    /// Toggles if the circuit should print the progress of simulating each gate.
     ///
-    /// It will only show the application of non-identity gates. The toggle is set to `false` 
+    /// It will only show the application of non-identity gates. The toggle is set to `false`
     /// for a new quantum circuit.
     pub fn toggle_simulation_progress(&mut self) {
         self.config_progress = !self.config_progress;
     }
 
-    /// Add a row of gates. 
+    /// Add a row of gates.
     ///
-    /// Expects the input vector to specify the gate that is added to *each* wire. That is, the 
-    /// length of the vector should equal the number of wires. To only add gates based on their 
+    /// Expects the input vector to specify the gate that is added to *each* wire. That is, the
+    /// length of the vector should equal the number of wires. To only add gates based on their
     /// positions, see [Circuit::add_gates_with_positions] and [Circuit::add_gate]. An
-    /// [error::QuantrError] is returned if not all wires are accounted for. 
+    /// [error::QuantrError] is returned if not all wires are accounted for.
     ///
     /// # Example   
     /// ```
@@ -191,9 +191,9 @@ impl<'a> Circuit<'a> {
         Ok(())
     }
 
-    /// Place a single gate repeatedly onto multiple wires. 
+    /// Place a single gate repeatedly onto multiple wires.
     ///
-    /// The top of the wire is in the 0th position. For adding multiple gates that are different, 
+    /// The top of the wire is in the 0th position. For adding multiple gates that are different,
     /// please refer to [Circuit::add_gates] and [Circuit::add_gates_with_positions]. An
     /// [error::QuantrError] will be returned if the vector contains positions that are equal.
     ///
@@ -314,7 +314,7 @@ impl<'a> Circuit<'a> {
     /// Adds a single gate to the circuit.
     ///
     /// If wanting to add multiple gates, or a single gate repeatedly, across multiple wires, see
-    /// [Circuit::add_repeating_gate] and [Circuit::add_gates_with_positions] respectively. 
+    /// [Circuit::add_repeating_gate] and [Circuit::add_gates_with_positions] respectively.
     ///
     /// # Example
     /// ```
@@ -334,7 +334,7 @@ impl<'a> Circuit<'a> {
 
     /// Returns the resulting superposition after the circuit has been simulated.
     ///
-    /// This is a non-observable, as the superposition would reduce to a state upon measurement. Returns 
+    /// This is a non-observable, as the superposition would reduce to a state upon measurement. Returns
     /// an [error::QuantrError] if the circuit hasn't been simulated.
     ///
     /// # Example
@@ -437,7 +437,7 @@ impl<'a> Circuit<'a> {
         }
     }
 
-    /// Attaches the register, |0...0>, to the circuit resulting in a superposition that can be measured. 
+    /// Attaches the register, |0...0>, to the circuit resulting in a superposition that can be measured.
     ///
     /// See [Circuit::get_superposition] and [Circuit::repeat_measurement] for details on measuring
     /// the resulting superposition.
@@ -524,9 +524,8 @@ impl<'a> Circuit<'a> {
     // in an effort to reduce memory. Cannot guarantee if this
     // method is the fastest.
     fn apply_gate(gate: &GateInfo, register: &SuperPosition) -> SuperPosition {
-       
         // the sum of states that are required to be added to the register
-        let mut mapped_states: HashMap<ProductState, Complex<f64>> = Default::default();         
+        let mut mapped_states: HashMap<ProductState, Complex<f64>> = Default::default();
 
         for (prod_state, amp) in (&register).into_iter() {
             //Looping through super position of register
@@ -544,7 +543,7 @@ impl<'a> Circuit<'a> {
                 }
                 GateSize::Custom => {
                     Self::custom_gate_on_wires(gate, &prod_state, &mut acting_positions)
-                } 
+                }
             };
 
             acting_positions.reverse(); // to fit the gate defintions to our convention
