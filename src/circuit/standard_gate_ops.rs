@@ -123,22 +123,32 @@ pub fn swap(register: ProductState) -> SuperPosition {
 
 pub fn toffoli(register: ProductState) -> SuperPosition {
     let input_register: [Qubit; 3] = [register.state[0], register.state[1], register.state[2]];
-    SuperPosition::new(3).set_amplitudes(match input_register {
-        [Qubit::Zero, Qubit::Zero, Qubit::Zero] => 
-            &complex_Re_array!(1f64, 0f64, 0f64, 0f64, 0f64, 0f64, 0f64, 0f64),
-        [Qubit::Zero, Qubit::Zero, Qubit::One] => 
-            &complex_Re_array!(0f64, 1f64, 0f64, 0f64, 0f64, 0f64, 0f64, 0f64),
-        [Qubit::Zero, Qubit::One, Qubit::Zero] => 
-            &complex_Re_array!(0f64, 0f64, 1f64, 0f64, 0f64, 0f64, 0f64, 0f64),
-        [Qubit::Zero, Qubit::One, Qubit::One] => 
-            &complex_Re_array!(0f64, 0f64, 0f64, 1f64, 0f64, 0f64, 0f64, 0f64),
-        [Qubit::One, Qubit::Zero, Qubit::Zero] => 
-            &complex_Re_array!(0f64, 0f64, 0f64, 0f64, 1f64, 0f64, 0f64, 0f64),
-        [Qubit::One, Qubit::Zero, Qubit::One] => 
-            &complex_Re_array!(0f64, 0f64, 0f64, 0f64, 0f64, 1f64, 0f64, 0f64),
-        [Qubit::One, Qubit::One, Qubit::Zero] => 
-            &complex_Re_array!(0f64, 0f64, 0f64, 0f64, 0f64, 0f64, 0f64, 1f64),
-        [Qubit::One, Qubit::One, Qubit::One] => 
-            &complex_Re_array!(0f64, 0f64, 0f64, 0f64, 0f64, 0f64, 1f64, 0f64),
-    }).unwrap()
+    SuperPosition::new(3)
+        .set_amplitudes(match input_register {
+            [Qubit::Zero, Qubit::Zero, Qubit::Zero] => {
+                &complex_Re_array!(1f64, 0f64, 0f64, 0f64, 0f64, 0f64, 0f64, 0f64)
+            }
+            [Qubit::Zero, Qubit::Zero, Qubit::One] => {
+                &complex_Re_array!(0f64, 1f64, 0f64, 0f64, 0f64, 0f64, 0f64, 0f64)
+            }
+            [Qubit::Zero, Qubit::One, Qubit::Zero] => {
+                &complex_Re_array!(0f64, 0f64, 1f64, 0f64, 0f64, 0f64, 0f64, 0f64)
+            }
+            [Qubit::Zero, Qubit::One, Qubit::One] => {
+                &complex_Re_array!(0f64, 0f64, 0f64, 1f64, 0f64, 0f64, 0f64, 0f64)
+            }
+            [Qubit::One, Qubit::Zero, Qubit::Zero] => {
+                &complex_Re_array!(0f64, 0f64, 0f64, 0f64, 1f64, 0f64, 0f64, 0f64)
+            }
+            [Qubit::One, Qubit::Zero, Qubit::One] => {
+                &complex_Re_array!(0f64, 0f64, 0f64, 0f64, 0f64, 1f64, 0f64, 0f64)
+            }
+            [Qubit::One, Qubit::One, Qubit::Zero] => {
+                &complex_Re_array!(0f64, 0f64, 0f64, 0f64, 0f64, 0f64, 0f64, 1f64)
+            }
+            [Qubit::One, Qubit::One, Qubit::One] => {
+                &complex_Re_array!(0f64, 0f64, 0f64, 0f64, 0f64, 0f64, 1f64, 0f64)
+            }
+        })
+        .unwrap()
 }
