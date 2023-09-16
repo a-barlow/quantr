@@ -7,28 +7,31 @@ test](https://github.com/a-barlow/quantr/workflows/cargo%20test/badge.svg)](http
 [![cargo test
 (dev)](https://github.com/a-barlow/quantr/workflows/cargo%20test%20%28dev%29/badge.svg)](https://github.com/a-barlow/quantr/actions/workflows/rust_dev.yml)
 
-> This crate is not production ready, and so should not be considered
-> stable, nor produce correct answers. It is still heavily under
-> development and major optimsations are still needed, most likely
-> requiring major breaking updates in the near future. Please always 
-> check your answers with 
+> This crate is not production ready and so should **not** be considered
+> stable, nor produce correct answers. It is still under heavy
+> development and requires many more optimisations. Hence, it's likely 
+> that near future updates will induce breaking changes. Please 
+> always check answers with 
 > [other simulations](#other-quantum-computer-simulators) if you are 
-> intending to use this for projects.  
+> intending to use quantr for projects.  
 
-A Rust crate that simulates a quantum computer.
+A Rust library crate that builds and simulates a quantum computer.
 
-This crate simulates a quantum computer by allowing the user to build
-a quantum circuit by adding columns of gates so that a quantum register 
-can be constructed (see the [quick start guide](QUICK_START.md)). 
-Measurements can then be performed on this circuit to return 
-observables.
+This crate allows the user to build a quantum circuit by adding columns 
+of gates through various methods. Once the circuit has been built, then
+it can be simulated which attaches the register |00..0> to the circuit, 
+resulting in a superposition that can be measured.
+
+For a brief example of using quantr, see the 
+[quick start guide](QUICK_START.md) which walks through an
+implementation of the Grover's algorithm.
 
 ### Defining features
 
 - Aimed to be accessible to beginners in Rust.
 - The distinction between physical observables and non-physical
-  observables are made clear; but the latter is still possible to
-  retrieve.
+  observables are made clear; but the latter is still made possible to
+  retrieve. 
 - Prints the circuit diagram to the terminal, or saves it to a text
   file, as a UTF-8 string.
 - Custom gates can be implemented easily by giving their explicit linear
@@ -42,17 +45,17 @@ observables.
 
 ### Limitations (currently)
 
-- Inserting **multiple n-gates or with other single gates** causes an
-  issue for the printer. For now, the user has to manually make sure
-  that n-gates are added by themselves one column at a time. In the near
-  future, this will be resolved.
+- Inserting **multiple n-gates by themselves or with other single 
+  gates** causes an issue for the printer. For now, the user has to 
+  manually make sure that the n-gates are added by themselves, one 
+  column at a time. In the near future, this will be resolved.
 - There is **no noise** consideration, or ability to introduce noise.
 - There is **no ability to add classical circuits**.
 
 ### Conventions
 
-The ordering of the states labelling the product states of the 
-circuit is defined as:
+The ordering of the wires labelling the product states in the
+computational basis is defined as:
 
 ``` text 
 |a⟩ ──── 
@@ -64,9 +67,9 @@ circuit is defined as:
 When defining a custom function that depends on the position of control
 nodes to define gates (such as the CNot and Toffoli gates), it must be
 defined so that the most far right state of the product state, is
-assumed to be the gate that is "activiated". In general, it is better to
+assumed to be the gate that is 'activated'. In general, it is better to
 assume that the custom function doesn't define control nodes, but rather 
-that it extends the dimension of its domain. 
+it extends the dimension of the function's domain. 
 
 ### Documentation 
 
@@ -76,7 +79,7 @@ that it extends the dimension of its domain.
 
 For the online code documentation, please refer to 
 [crates.io](https://crates.io/crates/quantr). This can also be built and 
-opened in your favourite webrowser locally by cloning the project, 
+opened in your favourite web browser locally by cloning the project, 
 moving into the directory, and running `cargo doc --open`. 
 
 ### Other quantum computer simulators 
@@ -85,11 +88,11 @@ As of 27th July 2023, the website [Are We Quantum
 Yet](https://arewequantumyet.github.io/]) lists all things quantum
 computing in Rust. 
 
-A useful and very practical simulator in learning quantum computing is
+A useful and very practical simulator for learning quantum computing is
 [Quirk](https://algassert.com/quirk). It's a real-time online simulator
-that inerfaces via drag-and-drop gates. Note that Quirk uses the reverse
-ordering of labelling their states from the quantum circuit as defined
-here.
+that interfaces via drag-and-drop gates. Note that Quirk uses the 
+reverse ordering of labelling their states from the quantum circuit as 
+defined here.
 
 ### Licence 
 
