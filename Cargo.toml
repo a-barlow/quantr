@@ -8,6 +8,7 @@ keywords = ["quantum", "computer", "computing", "simulator"]
 categories = ["science", "simulation"]
 authors = ["Andrew Barlow <a.barlow.dev@gmail.com>"]
 repository = "https://github.com/a-barlow/quantr"
+homepage = "https://github.com/a-barlow/quantr"
 description = "A rust crate for creating and simulating quantum circuits."
 
 [dependencies]
