@@ -69,7 +69,7 @@ impl Printer<'_> {
         println!("{}", self.get_or_make_diagram());
     }
 
-    /// Saves the circuit diagram to a text file in UTF-8 chars. 
+    /// Saves the circuit diagram to a text file in UTF-8 chars.
     ///
     /// If the file already exists, it will overwrite it.
     pub fn save_diagram(&mut self, file_path: &str) -> std::io::Result<()> {
@@ -78,7 +78,7 @@ impl Printer<'_> {
         file.write_all(self.get_or_make_diagram().as_bytes())
     }
 
-    /// Prints the circuit diagram to the terminal and saves it to a text file in UTF-8. 
+    /// Prints the circuit diagram to the terminal and saves it to a text file in UTF-8.
     ///
     /// Essentially, this is a combination of [Printer::save_diagram] and [Printer::print_diagram].
     pub fn print_and_save_diagram(&mut self, file_path: &str) -> std::io::Result<()> {
@@ -96,7 +96,7 @@ impl Printer<'_> {
         self.get_or_make_diagram()
     }
 
-    /// Removes the cache of the circuit diagram. 
+    /// Removes the cache of the circuit diagram.
     ///
     /// Future calls to print the diagram will have to build the diagram from scratch. Can be used
     /// if the circuit has been updated, and the printer needs to rebuild the same circuit.
@@ -348,7 +348,7 @@ impl Printer<'_> {
 
 #[cfg(test)]
 mod tests {
-    use crate::circuit::{Circuit, StandardGate, printer::Printer};
+    use crate::circuit::{printer::Printer, Circuit, StandardGate};
     // These are primarly tested by making sure they print correctly to
     // the terminal, and then copy the output for the assert_eq! macro.
 

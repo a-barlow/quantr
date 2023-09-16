@@ -11,23 +11,23 @@
 //! Sates, product states and superpositions of qubits.
 //!
 //! The mapping of circuit to product state is defined like so:
-//! |a⟩ ──── 
-//! |b⟩ ────  ⟺ |a,b,c,⋯⟩ ≡ |a⟩⊗|b⟩⊗|c⟩⊗⋯ 
+//! |a⟩ ────
+//! |b⟩ ────  ⟺ |a,b,c,⋯⟩ ≡ |a⟩⊗|b⟩⊗|c⟩⊗⋯
 //! |c⟩ ────
 //!  ⋮    ⋮
 
+use super::error::QuantrError;
 use crate::complex::Complex;
 use crate::{complex_Re, complex_zero};
 use std::collections::HashMap;
 use std::hash::Hash;
-use super::error::QuantrError;
 
 /// The fundamental unit in quantum computers, the qubit.
 #[derive(Clone, Copy, Hash, PartialEq, Eq, Debug)]
 pub enum Qubit {
-    /// |0⟩ 
+    /// |0⟩
     Zero,
-    /// |1⟩ 
+    /// |1⟩
     One,
 }
 
@@ -54,7 +54,7 @@ impl Qubit {
     }
 }
 
-/// A product state in the computational basis. 
+/// A product state in the computational basis.
 #[derive(Clone, Hash, PartialEq, Eq, Debug)]
 pub struct ProductState {
     /// Each element of `state` is mapped to bra-ket notation like so:
@@ -64,7 +64,7 @@ pub struct ProductState {
 
 impl ProductState {
     /// Creates a single product state from a slice of qubits.
-    /// 
+    ///
     /// The product state is mapped to bra-ket notation like so:
     /// `&[a, b, ..., c] -> |ab...c>`
     pub fn new(product_state: &[Qubit]) -> ProductState {
@@ -271,8 +271,7 @@ impl SuperPosition {
 
     /// Creates a superposition in the |0..0> state.
     pub fn new(num_qubits: usize) -> SuperPosition {
-        let mut new_amps: Vec<Complex<f64>> =
-            vec![complex_zero!(); 2usize.pow(num_qubits as u32)];
+        let mut new_amps: Vec<Complex<f64>> = vec![complex_zero!(); 2usize.pow(num_qubits as u32)];
         new_amps[0] = complex_Re!(1f64);
         SuperPosition {
             amplitudes: new_amps,
@@ -287,8 +286,7 @@ impl SuperPosition {
     pub fn get_amp_from_pos(&self, pos: usize) -> Result<Complex<f64>, QuantrError> {
         if pos >= self.amplitudes.len() {
             let length = self.amplitudes.len();
-            Err(QuantrError { 
-                message: format!("Failed to retrieve amplitude from list. Index given was, {pos}, which is greater than length of list, {length}."), 
+            Err(QuantrError { message: format!("Failed to retrieve amplitude from list. Index given was, {pos}, which is greater than length of list, {length}."), 
             })
         } else {
             Ok(*self.amplitudes.get(pos).unwrap())
@@ -305,20 +303,20 @@ impl SuperPosition {
         }
     }
 
-    /// Returns a new superposition with the desired slice of amplitudes. 
-    /// 
+    /// Returns a new superposition with the desired slice of amplitudes.
+    ///
     /// Checks to see if the amplitudes completely specify the amplitude of each state, in addition
     /// to it conserving probability.
     pub fn set_amplitudes(self, amplitudes: &[Complex<f64>]) -> Result<SuperPosition, QuantrError> {
         if amplitudes.len() != self.amplitudes.len() {
             return Err(QuantrError {
                 message: String::from("Unequal dimension in setting the amplitudes from a slice and the number of amplitudes in the super position."),
-            })
+            });
         }
         if !Self::equal_within_error(amplitudes.iter().map(|x| x.abs_square()).sum::<f64>(), 1f64) {
             return Err(QuantrError {
                 message: String::from("Array slice given to set amplitudes in super position does not conserve probability, the absolute square sum of the coefficents must be one."),
-            })
+            });
         }
 
         let mut new_amps: Vec<Complex<f64>> = (*self.amplitudes).to_vec();
@@ -343,7 +341,7 @@ impl SuperPosition {
         }
     }
 
-    /// Sets the amplitudes of a [SuperPosition] from a HashMap. 
+    /// Sets the amplitudes of a [SuperPosition] from a HashMap.
     ///
     /// States that are missing from the HashMap will be assumed to have 0 amplitde. An error will
     /// be returned if there is a [ProductState] that does not equal the dimension of the [SuperPosition].
@@ -403,7 +401,8 @@ mod tests {
                     complex_Re!(FRAC_1_SQRT_2),
                     complex_Im!(-FRAC_1_SQRT_2),
                     complex_zero!()
-                ]).unwrap()
+                ])
+                .unwrap()
                 .get_amp_from_state(ProductState::new(&[Qubit::Zero, Qubit::One])),
             complex_Re!(FRAC_1_SQRT_2)
         )
@@ -418,7 +417,8 @@ mod tests {
                     complex_Re!(FRAC_1_SQRT_2),
                     complex_Im!(-FRAC_1_SQRT_2),
                     complex_zero!()
-                ]).unwrap()
+                ])
+                .unwrap()
                 .get_amp_from_pos(2)
                 .unwrap(),
             complex_Im!(-FRAC_1_SQRT_2)
@@ -455,10 +455,12 @@ mod tests {
                     complex_Re!(FRAC_1_SQRT_2),
                     complex_Im!(-FRAC_1_SQRT_2),
                     complex_zero!()
-                ]).unwrap()
+                ])
+                .unwrap()
                 .amplitudes,
             SuperPosition::new(2)
-                .set_amplitudes_from_states(&states).unwrap()
+                .set_amplitudes_from_states(&states)
+                .unwrap()
                 .amplitudes
         )
     }
@@ -472,7 +474,8 @@ mod tests {
                 complex_Re!(FRAC_1_SQRT_2),
                 complex_Im!(-FRAC_1_SQRT_2),
                 complex_zero!(),
-            ]).unwrap()
+            ])
+            .unwrap()
             .get_amp_from_state(ProductState::new(&[Qubit::Zero, Qubit::One, Qubit::One]));
     }
 
@@ -485,7 +488,8 @@ mod tests {
                 complex_Re!(FRAC_1_SQRT_2),
                 complex_Im!(-FRAC_1_SQRT_2),
                 complex_zero!(),
-            ]).unwrap()
+            ])
+            .unwrap()
             .get_amp_from_pos(4)
             .unwrap();
     }
@@ -493,12 +497,14 @@ mod tests {
     #[test]
     #[should_panic]
     fn catches_super_position_breaking_conservation() {
-        SuperPosition::new(2).set_amplitudes(&[
-            complex_zero!(),
-            complex_Re!(0.5f64),
-            complex_zero!(),
-            complex_Im!(-0.5f64),
-        ]).unwrap();
+        SuperPosition::new(2)
+            .set_amplitudes(&[
+                complex_zero!(),
+                complex_Re!(0.5f64),
+                complex_zero!(),
+                complex_Im!(-0.5f64),
+            ])
+            .unwrap();
     }
 
     #[test]
