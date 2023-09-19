@@ -11,8 +11,8 @@
 //! Construct, simulate and measure quantum circuits.
 //!
 //! Initialise a new quantum circuit by using [Circuit::new] where the argument defines the number
-//! of qubits. Afterwards, multiple methods can be called to append gates onto the circuit a row at
-//! a time. For instance, [Circuit::add_gate] will add a single gate, whilst
+//! of qubits. Afterwards, multiple methods can be called to append gates onto the circuit a column 
+//! at a time. For instance, [Circuit::add_gate] will add a single gate, whilst
 //! [Circuit::add_gates_with_positions] and [Circuit::add_repeating_gate] will add multiple.
 //!
 //! The circuit can then be simulated with [Circuit::simulate]. The progress of the simulation can
@@ -156,7 +156,7 @@ impl<'a> Circuit<'a> {
         self.config_progress = !self.config_progress;
     }
 
-    /// Add a row of gates.
+    /// Add a column of gates.
     ///
     /// Expects the input vector to specify the gate that is added to *each* wire. That is, the
     /// length of the vector should equal the number of wires. To only add gates based on their
@@ -254,7 +254,7 @@ impl<'a> Circuit<'a> {
         None
     }
 
-    /// Add a row of gates based on their position on the wire.
+    /// Add a column of gates based on their position on the wire.
     ///
     /// A hashmap is used to place gates onto their desired position; where the key is the position
     /// and the value is the [StandardGate]. This is similar to [Circuit::add_gate], however not
