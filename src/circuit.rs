@@ -525,8 +525,8 @@ impl<'a> Circuit<'a> {
     // The main algorithm and impetus for this project.
     //
     // This takes linear mappings defined on how they act on the basis of their product space, to
-    // then apply on an arbitary register. This algorithm is used instead of matricies, or sparse
-    // matricies, in an effort to reduce memory. Cannot guarantee if this method is the fastest.
+    // then apply on an arbitary register. This algorithm is used instead of matrices, or sparse
+    // matrices, in an effort to reduce memory. Cannot guarantee if this method is the fastest.
     fn apply_gate(gate: &GateInfo, register: &SuperPosition) -> SuperPosition {
         // the sum of states that are required to be added to the register
         let mut mapped_states: HashMap<ProductState, Complex<f64>> = Default::default();
