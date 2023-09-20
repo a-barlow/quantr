@@ -10,11 +10,14 @@
 
 //! Sates, product states and superpositions of qubits.
 //!
-//! The mapping of circuit to product state is defined like so:
+//! The mapping of circuit to product state in the computational basis is defined like so:
+//!
+//! ``` text
 //! |a⟩ ────
 //! |b⟩ ────  ⟺ |a,b,c,⋯⟩ ≡ |a⟩⊗|b⟩⊗|c⟩⊗⋯
 //! |c⟩ ────
 //!  ⋮    ⋮
+//!  ```
 
 use super::error::QuantrError;
 use crate::complex::Complex;
@@ -32,7 +35,7 @@ pub enum Qubit {
 }
 
 impl Qubit {
-    /// Defines the action of the tensor product on two qubits.
+    /// Defines the tensor product on two qubits.
     ///
     /// # Example
     /// ```
@@ -55,6 +58,9 @@ impl Qubit {
 }
 
 /// A product state in the computational basis.
+///
+/// The product state usually results from the action of the tensor product on two [Qubit]s, but
+/// may also result from the direct conversion of the computational base labelling.
 #[derive(Clone, Hash, PartialEq, Eq, Debug)]
 pub struct ProductState {
     /// Each element of `state` is mapped to bra-ket notation like so:
@@ -73,6 +79,8 @@ impl ProductState {
         }
     }
 
+    // This operation could just be changed to inverting the qubits, as qubits can only be in two
+    // states.
     /// Changes the qubits at specified positions within the product state with a slice of other
     /// qubits.
     ///
@@ -128,8 +136,7 @@ impl ProductState {
             .collect::<String>()
     }
 
-    /// Converts the binary basis in to the computational basis, that is
-    /// the position of the states in the list.
+    /// Converts the computational basis labelling (a binary integer), into base 10.
     pub fn comp_basis(&self) -> usize {
         self.state
             .iter()
@@ -142,7 +149,8 @@ impl ProductState {
             .fold(0, |sum, i| sum + i) as usize
     }
 
-    /// Converts the computional basis to a product state.
+    /// Produces a product states based on converting a base 10 number to binary, where the product
+    /// state in the computational basis is defined from this labelling.
     pub fn binary_basis(index: usize, basis_size: usize) -> ProductState {
         let binary_index: Vec<Qubit> = (0..basis_size)
             .rev()
@@ -156,9 +164,9 @@ impl ProductState {
     }
 }
 
-/// Defines a superposition of [ProductState].
+/// A superposition of [ProductState]s.
 ///
-/// The ordering `amplitudes` correspond to state vectors in the binary basis.
+/// The ordering `amplitudes` correspond to state vectors in the computational basis.
 #[derive(PartialEq, Debug, Clone)]
 pub struct SuperPosition {
     pub amplitudes: Vec<Complex<f64>>,
@@ -166,8 +174,7 @@ pub struct SuperPosition {
     index: usize,
 }
 
-/// Returns the product state and it's respective amplitude in each
-/// iteration.
+/// Returns the product state and it's respective amplitude in each iteration.
 ///
 /// # Example
 /// ```
@@ -229,7 +236,7 @@ impl<'a> Iterator for SuperPositionIterator<'a> {
 impl SuperPosition {
     const ERROR_MARGIN: f64 = 0.00000001f64;
 
-    /// Retrieves the coefficient of the product state labelled in the binary basis.
+    /// Retrieves the coefficient of the product state labelled in the computational basis.
     pub fn get_amp_from_state(&self, prod_state: ProductState) -> Complex<f64> {
         if 2usize.pow(prod_state.state.len() as u32) != self.amplitudes.len() {
             panic!("Unable to retreive product state from superposition that contains product states of different dimension.");
@@ -252,8 +259,8 @@ impl SuperPosition {
         super_pos_as_hash
     }
 
-    /// Creates a HashMap where the keys are string labels of the product states in the binary
-    /// basis.
+    /// Creates a HashMap where the keys are string labels of the product states in the
+    /// computatonal basis.
     ///
     /// Similar to [SuperPosition::as_hash], which uses the [ProductState] struct instead as a key.
     pub fn as_hash_string(&self) -> HashMap<String, Complex<f64>> {
@@ -343,7 +350,7 @@ impl SuperPosition {
 
     /// Sets the amplitudes of a [SuperPosition] from a HashMap.
     ///
-    /// States that are missing from the HashMap will be assumed to have 0 amplitde. An error will
+    /// States that are missing from the HashMap will be assumed to have 0 amplitude. An error will
     /// be returned if there is a [ProductState] that does not equal the dimension of the [SuperPosition].
     pub fn set_amplitudes_from_states(
         &self,

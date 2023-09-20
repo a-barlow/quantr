@@ -8,21 +8,17 @@ I acknowledge that:
   where appropriate; and
 - [] I am merging with the `dev` branch.
 
+## What is the current problem, or feature that should be added?
 
-## Why is this needed?
+_What aspect of the project needs changing?_
 
-_Does this increase the user's/developer's experience with Quantr?_
-
-## What does it add/fix?
+## How does this fix and/or better quantr?
 
 _If it's a feature, please add examples on how you would use it._ 
 
 ## Is this pull request a major or minor change with respect to the `dev` branch?
 
-_Please refer to [semantic versioning for
-Rust](https://doc.rust-lang.org/cargo/reference/semver.html). If this is
-a major/breaking change, please add explanation why it could not be
-minor, or equally why it should._
+_Please refer to [semantic versioning for Rust](https://doc.rust-lang.org/cargo/reference/semver.html). If this is a major/breaking change, please add an explanation to why it could not be minor, or equally why it should break the current version.
 
 ## What do the unit tests cover?
 
@@ -30,5 +26,4 @@ _Description of the unit tests added (if applicable)._
 
 ## Additional comments.
 
-_Any more justifications, examples of output, or even suggestions for
-improving this pull request template are welcome!_
+_Any more justifications, examples of output, or even suggestions for improving this pull request template are all welcome!_

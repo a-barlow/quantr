@@ -8,22 +8,25 @@
 * Author: Andrew Rowan Barlow <a.barlow.dev@gmail.com>
 */
 
-//! Contains the gate operations for all elementary logic gates. These
-//! linear functions are defined on how they act on product states of
-//! qubits. Defining the mappings on a basis defines how the gates act
-//! on larger product spaces.
+//! Contains the gate operations for all standard gates.
+//!
+//! These linear functions are defined by how they act on product states of qubits. Defining the
+//! mappings on a basis defines how the gates act on larger product spaces.
 
 use crate::circuit::states::{ProductState, Qubit, SuperPosition};
 use crate::complex::Complex;
 use crate::{complex_Im, complex_Im_array, complex_Re, complex_Re_array, complex_zero};
 use std::f64::consts::FRAC_1_SQRT_2;
 
-/// The following gates (inlcuding triple and custom) are mapping qubits 
-/// via the computational basis:
-/// |a> ---- 
-/// |b> ----
-/// |c> ----
-/// => |a,b,c>
+// The following gates (inlcuding triple and custom) are mapping qubits via the
+// computational basis:
+// |a> ----
+// |b> ----
+// |c> ----
+// => |a,b,c>
+//
+// `cargo fmt` has also been skipped as this shows the connection between matrices in the
+// computational basis, and linear maps!
 
 //
 // Single gates
@@ -121,6 +124,7 @@ pub fn swap(register: ProductState) -> SuperPosition {
 // Triple gates
 //
 
+#[rustfmt::skip]
 pub fn toffoli(register: ProductState) -> SuperPosition {
     let input_register: [Qubit; 3] = [register.state[0], register.state[1], register.state[2]];
     SuperPosition::new(3)

@@ -11,17 +11,17 @@
 //! Construct, simulate and measure quantum circuits.
 //!
 //! Initialise a new quantum circuit by using [Circuit::new] where the argument defines the number
-//! of qubits. Afterwards, multiple methods can be called to append gates onto the circuit a row at
-//! a time. For instance, [Circuit::add_gate] will add a single gate, whilst
+//! of qubits. Afterwards, various methods can be called to append gates onto the circuit in columns.
+//! For instance, [Circuit::add_gate] will add a single gate, whilst
 //! [Circuit::add_gates_with_positions] and [Circuit::add_repeating_gate] will add multiple.
 //!
 //! The circuit can then be simulated with [Circuit::simulate]. The progress of the simulation can
 //! be printed to the terminal by calling [Circuit::toggle_simulation_progress] before simulating
 //! the circuit.
 //!
-//! A bin count can be taken of a series of repeated measurements of the circuit with
-//! [Circuit::repeat_measurement]. The explicit superpositon can be retreived also using
-//! [Circuit::get_superposition].
+//! A bin count of states that are observed over a series of measurements can be performed with
+//! [Circuit::repeat_measurement], where a new register is attached before each measurment. Or, the
+//! explicit superpositon can be retreived using [Circuit::get_superposition].
 
 use crate::complex::Complex;
 use core::panic;
@@ -39,7 +39,8 @@ use crate::circuit::states::{ProductState, Qubit, SuperPosition};
 /// Distinguishes observable and non-observable quantities.
 ///
 /// For example, this will distinguish the retreival of a superposition (that cannot be measured
-/// directly), and the state resulting from the collapse of a superposition upon measurement.
+/// directly), and the state resulting from the collapse of a superposition upon measurement. See
+/// [Circuit::get_superposition] and [Circuit::repeat_measurement] for examples.
 pub enum Measurement<T> {
     Observable(T),
     NonObservable(T),
@@ -48,7 +49,7 @@ pub enum Measurement<T> {
 /// Gates that can be added to a [Circuit] struct.
 ///
 /// Currently, this enum has the `#[non_exhaustive]` as it's
-/// yet undecided what will be included in a standard gate. This will
+/// yet undecided what will be included as a standard gate. This will
 /// lessen the impact of breaking changes in the future.
 #[derive(Clone, PartialEq, Debug)]
 #[non_exhaustive]
@@ -125,7 +126,8 @@ struct GateInfo<'a> {
     size: GateSize,
 }
 
-/// A quantum circuit where gates can be appended and then simulated to measure observables.
+/// A quantum circuit where gates can be appended and then simulated to measure resulting
+/// superpositions.
 pub struct Circuit<'a> {
     pub circuit_gates: Vec<StandardGate<'a>>,
     pub num_qubits: usize,
@@ -156,12 +158,12 @@ impl<'a> Circuit<'a> {
         self.config_progress = !self.config_progress;
     }
 
-    /// Add a row of gates.
+    /// Add a column of gates.
     ///
     /// Expects the input vector to specify the gate that is added to *each* wire. That is, the
     /// length of the vector should equal the number of wires. To only add gates based on their
     /// positions, see [Circuit::add_gates_with_positions] and [Circuit::add_gate]. An
-    /// [error::QuantrError] is returned if not all wires are accounted for.
+    /// [error::QuantrError] is returned if all wires are not accounted for.
     ///
     /// # Example   
     /// ```
@@ -254,12 +256,12 @@ impl<'a> Circuit<'a> {
         None
     }
 
-    /// Add a row of gates based on their position on the wire.
+    /// Add a column of gates based on their position on the wire.
     ///
-    /// A hashmap is used to place gates onto their desired position; where the key is the position
+    /// A HashMap is used to place gates onto their desired position; where the key is the position
     /// and the value is the [StandardGate]. This is similar to [Circuit::add_gate], however not
     /// all wires have to be accounted for. An [error::QuantrError] will be returned if there is a
-    /// position that is greater than the size of the circuit.
+    /// key that is greater than the size of the circuit.
     ///
     /// # Example
     /// ```
@@ -334,8 +336,8 @@ impl<'a> Circuit<'a> {
 
     /// Returns the resulting superposition after the circuit has been simulated.
     ///
-    /// This is a non-observable, as the superposition would reduce to a state upon measurement. Returns
-    /// an [error::QuantrError] if the circuit hasn't been simulated.
+    /// This is a non-physical observable, as the superposition would reduce to a single state upon measurement.
+    /// Returnsan [error::QuantrError] if the circuit hasn't been simulated.
     ///
     /// # Example
     /// ```
@@ -372,10 +374,10 @@ impl<'a> Circuit<'a> {
     /// Returns a HashMap that holds the number of times the corresponding state was observed over
     /// `n` measurments of the superposition.
     ///
-    /// Peform repeated measurements where a register is attached to the circuit, observed, and
-    /// then the reduced state recorded. If the HashMap does not include a product state, then it
-    /// was not observed over the `n` measurements. Returns an [error::QuantrError] if the circuit
-    /// hasn't been simulated.
+    /// Peform repeated measurements where a register is attached to the circuit, the reuslting
+    /// superposition measured, and then the reduced state recorded. If the HashMap does not
+    /// include a product state, then it was not observed over the `n` measurements. Returns an
+    /// [error::QuantrError] if the circuit hasn't been simulated.
     ///
     /// # Example
     /// ```
@@ -439,8 +441,8 @@ impl<'a> Circuit<'a> {
 
     /// Attaches the register, |0...0>, to the circuit resulting in a superposition that can be measured.
     ///
-    /// See [Circuit::get_superposition] and [Circuit::repeat_measurement] for details on measuring
-    /// the resulting superposition.
+    /// See [Circuit::get_superposition] and [Circuit::repeat_measurement] for details on obtaining
+    /// observables from the resulting superposition.
     pub fn simulate(&mut self) {
         // Form the initial state if the product space, that is |0...0>
         let mut register: SuperPosition = SuperPosition::new(self.num_qubits);
@@ -479,6 +481,7 @@ impl<'a> Circuit<'a> {
         self.output_state = Some(register);
     }
 
+    // If the user toggles the log on, then prints the simulation of each circuit.
     fn print_circuit_log(
         gate: &StandardGate,
         gate_pos: &usize,
@@ -500,6 +503,9 @@ impl<'a> Circuit<'a> {
         }
     }
 
+    // Helps in constructing a bundle. This ultimately makes the match statements more concise.
+    // Maybe best to see if this can be hardcoded in before hand; that is the bundles are added to
+    // the circuit instead?
     fn classify_gate_size(gate: &StandardGate) -> GateSize {
         match gate {
             StandardGate::Id
@@ -518,11 +524,9 @@ impl<'a> Circuit<'a> {
 
     // The main algorithm and impetus for this project.
     //
-    // This takes linear mappings defined on how they act on the basis
-    // of their product space, to then apply on an arbitary register.
-    // This algorithm is used instead of matricies, or sparse matricies,
-    // in an effort to reduce memory. Cannot guarantee if this
-    // method is the fastest.
+    // This takes linear mappings defined on how they act on the basis of their product space, to
+    // then apply on an arbitary register. This algorithm is used instead of matrices, or sparse
+    // matrices, in an effort to reduce memory. Cannot guarantee if this method is the fastest.
     fn apply_gate(gate: &GateInfo, register: &SuperPosition) -> SuperPosition {
         // the sum of states that are required to be added to the register
         let mut mapped_states: HashMap<ProductState, Complex<f64>> = Default::default();
@@ -559,6 +563,9 @@ impl<'a> Circuit<'a> {
         // GET RID OF RETURNING SUPERPOSITION, INSTEAD JUST PASS REGISTER BY REFERENCE, &mut register
         register.set_amplitudes_from_states(&mapped_states).unwrap()
     }
+
+    // The following functions compartementalise the algorithms for applying a gate to the
+    // register.
 
     fn single_gate_on_wire(single_gate: &GateInfo, prod_state: &ProductState) -> SuperPosition {
         let operator: fn(Qubit) -> SuperPosition = match single_gate.name {

@@ -73,9 +73,10 @@ it extends the dimension of the function's domain.
 
 ### Documentation 
 
-> There are plans to create a
-> [mdBook](https://rust-lang.github.io/mdBook/) that gives the
-> background and theory behind quantr.
+> [The Quantr Book](https://a-barlow.github.io/quantr-book/) is planned
+> to serve as extended documentation to quantr, such as explaining the
+> motivations behind chosen algorithms. For now, it only contains the
+> start guide.
 
 For the online code documentation, please refer to 
 [crates.io](https://crates.io/crates/quantr). This can also be built and 
