@@ -11,10 +11,13 @@
 //! Sates, product states and superpositions of qubits.
 //!
 //! The mapping of circuit to product state in the computational basis is defined like so:
+//!
+//! ``` text
 //! |a⟩ ────
 //! |b⟩ ────  ⟺ |a,b,c,⋯⟩ ≡ |a⟩⊗|b⟩⊗|c⟩⊗⋯
 //! |c⟩ ────
 //!  ⋮    ⋮
+//!  ```
 
 use super::error::QuantrError;
 use crate::complex::Complex;
