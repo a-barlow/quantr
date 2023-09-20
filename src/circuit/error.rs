@@ -31,4 +31,3 @@ impl fmt::Debug for QuantrError {
 }
 
 impl Error for QuantrError {}
-

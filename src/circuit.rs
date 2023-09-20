@@ -11,7 +11,7 @@
 //! Construct, simulate and measure quantum circuits.
 //!
 //! Initialise a new quantum circuit by using [Circuit::new] where the argument defines the number
-//! of qubits. Afterwards, various methods can be called to append gates onto the circuit in columns. 
+//! of qubits. Afterwards, various methods can be called to append gates onto the circuit in columns.
 //! For instance, [Circuit::add_gate] will add a single gate, whilst
 //! [Circuit::add_gates_with_positions] and [Circuit::add_repeating_gate] will add multiple.
 //!
@@ -19,8 +19,8 @@
 //! be printed to the terminal by calling [Circuit::toggle_simulation_progress] before simulating
 //! the circuit.
 //!
-//! A bin count of states that are observed over a series of measurements can be performed with 
-//! [Circuit::repeat_measurement], where a new register is attached before each measurment. Or, the 
+//! A bin count of states that are observed over a series of measurements can be performed with
+//! [Circuit::repeat_measurement], where a new register is attached before each measurment. Or, the
 //! explicit superpositon can be retreived using [Circuit::get_superposition].
 
 use crate::complex::Complex;
@@ -336,7 +336,7 @@ impl<'a> Circuit<'a> {
 
     /// Returns the resulting superposition after the circuit has been simulated.
     ///
-    /// This is a non-physical observable, as the superposition would reduce to a single state upon measurement. 
+    /// This is a non-physical observable, as the superposition would reduce to a single state upon measurement.
     /// Returnsan [error::QuantrError] if the circuit hasn't been simulated.
     ///
     /// # Example

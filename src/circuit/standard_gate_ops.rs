@@ -8,7 +8,7 @@
 * Author: Andrew Rowan Barlow <a.barlow.dev@gmail.com>
 */
 
-//! Contains the gate operations for all standard gates. 
+//! Contains the gate operations for all standard gates.
 //!
 //! These linear functions are defined by how they act on product states of qubits. Defining the
 //! mappings on a basis defines how the gates act on larger product spaces.
@@ -18,9 +18,9 @@ use crate::complex::Complex;
 use crate::{complex_Im, complex_Im_array, complex_Re, complex_Re_array, complex_zero};
 use std::f64::consts::FRAC_1_SQRT_2;
 
-// The following gates (inlcuding triple and custom) are mapping qubits via the 
+// The following gates (inlcuding triple and custom) are mapping qubits via the
 // computational basis:
-// |a> ---- 
+// |a> ----
 // |b> ----
 // |c> ----
 // => |a,b,c>
@@ -156,4 +156,3 @@ pub fn toffoli(register: ProductState) -> SuperPosition {
         })
         .unwrap()
 }
-
