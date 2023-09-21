@@ -1,6 +1,6 @@
 [package]
 name = "quantr"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2021"
 license = "EUPL-1.2"
 readme = "README.md"
@@ -9,7 +9,7 @@ categories = ["science", "simulation"]
 authors = ["Andrew Barlow <a.barlow.dev@gmail.com>"]
 repository = "https://github.com/a-barlow/quantr"
 homepage = "https://github.com/a-barlow/quantr"
-description = "A rust crate for creating and simulating quantum circuits."
+description = "Readily create and simulate quantum circuits."
 
 [dependencies]
 rand = "0.8.5"

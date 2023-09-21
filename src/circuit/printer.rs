@@ -12,12 +12,12 @@
 //!
 //! The user has the option to print the string to the terminal or a text file, where the text file
 //! has the advantage of not wrapping the circuit within the terminal. The [Printer] will also
-//! chache a copy of the diagram so subsequent prints will require no building of the diagram. This
-//! cache can be removed with [Printer::flush] to force the [Printer] to construct the cicuit
+//! cache a copy of the diagram so subsequent prints will require no building of the diagram. This
+//! cache can be removed with [Printer::flush] to force the [Printer] to construct the circuit
 //! diagram again.
 
-//.!!! Developer Warning !!!
-// This module is very messy, and will it's code will be cleared up in a near future update.
+// !!! Developer Warning !!!
+// This module is very messy, and it's code will be cleared up in a near future update.
 
 use crate::circuit::StandardGate;
 use crate::circuit::{Circuit, GateInfo, GateSize};
@@ -91,7 +91,7 @@ impl Printer<'_> {
         file.write_all(diagram.as_bytes())
     }
 
-    /// Returns the circuit diagram that is made from UTF8-chars.
+    /// Returns the circuit diagram that is made from UTF-8 chars.
     pub fn get_diagram(&mut self) -> String {
         self.get_or_make_diagram()
     }
@@ -115,10 +115,10 @@ impl Printer<'_> {
         }
     }
 
-    // Change name to get UTF-8 representation after testing. This requires the asumption that
+    // Change name to get UTF-8 representation after testing. This requires the assumption that
     // there is only one node per row
     fn make_diagram(&mut self) {
-        // For every row, there is fourspaces to control.
+        // For every row, there is four spaces to control.
         let mut schematic: Vec<String> = vec![String::from(""); 4 * self.circuit.num_qubits + 1];
 
         let wire: String = (0..GATE_WIDTH_MIN + 2)
@@ -170,7 +170,7 @@ impl Printer<'_> {
             StandardGate::H => String::from("H"),
             StandardGate::Y => String::from("Y"),
             StandardGate::Z => String::from("Z"),
-            StandardGate::Swap(_) => String::from("Z"),
+            StandardGate::Swap(_) => String::from("S"),
             StandardGate::CY(_) => String::from("Y"),
             StandardGate::CNot(_) => String::from("X"),
             StandardGate::Toffoli(_, _) => String::from("T"),
@@ -349,7 +349,7 @@ impl Printer<'_> {
 #[cfg(test)]
 mod tests {
     use crate::circuit::{printer::Printer, Circuit, StandardGate};
-    // These are primarly tested by making sure they print correctly to
+    // These are primarily tested by making sure they print correctly to
     // the terminal, and then copy the output for the assert_eq! macro.
 
     #[test]

@@ -8,18 +8,18 @@
 * Author: Andrew Rowan Barlow <a.barlow.dev@gmail.com>
 */
 
-//! Simple implementation of generic complex numbers with operations
-//! that are needed for the quantum computer. For the quantum computer,
-//! will mostly use `Complex<f64>`, so additional functionality is added
-//! for this type, such as square roots and multiplication with `f64`.
+//! Generic complex numbers.
+//!
+//! Simple implementation with operations that are needed for the quantum computer. Quantr will
+//! mostly use `Complex<f64>`, so additional functionality is added for this type, such as square
+//! roots and multiplication with `f64`.
 
 use std::fmt;
 use std::fmt::{Debug, Formatter};
 use std::ops::{Add, Mul, Sub};
 
-/// A square root trait, that is only implemented for `f32` and `f64` as
-/// Sqrt is not a closed operation for int, uint, etc. This is needed
-/// for the absolute value of a complex number.
+/// A square root trait, that is only implemented for `f32` and `f64` as Sqrt is not a closed
+/// operation for int, uint, etc. This is needed for the absolute value of a complex number.
 pub trait Sqr {
     fn square_root(self) -> Self;
 }
@@ -36,8 +36,7 @@ impl Sqr for f64 {
     }
 }
 
-/// Generic complex number for the quantum computer. Will mostly use
-/// `f64`.
+/// Generic complex number for the quantum computer. Will mostly use `f64`.
 #[derive(Debug, PartialEq, Copy, Clone)]
 pub struct Complex<T> {
     pub real: T,
