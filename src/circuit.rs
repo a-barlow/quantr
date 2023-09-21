@@ -70,7 +70,7 @@ pub enum StandardGate<'a> {
     CY(usize),
     /// CNot, with position of control node.
     CNot(usize),
-    /// Swap (or Controlled Pauli-Z gate), with position of other node.
+    /// Swap, with position of control node.
     Swap(usize),
     /// Toffoli, with position of control nodes.
     Toffoli(usize, usize),
@@ -879,6 +879,26 @@ mod tests {
         
         compare_circuit(circuit, &correct_register);
 
+    }
+
+    #[test]
+    fn cz_and_swap_gates_work() {
+        let mut circuit = Circuit::new(3);
+
+        circuit.add_repeating_gate(StandardGate::X, vec![0,2]).unwrap();
+        circuit.add_gate(StandardGate::Swap(1), 2).unwrap();
+        circuit.add_gate(StandardGate::CZ(1), 0).unwrap();
+
+        circuit.simulate();
+
+        let correct_register = [
+            complex_zero!(), complex_zero!(), complex_zero!(), complex_zero!(),
+            complex_zero!(), complex_zero!(), complex_Re!(-1f64), complex_zero!(),
+            complex_zero!(), complex_zero!(), complex_zero!(), complex_zero!(),
+            complex_zero!(), complex_zero!(), complex_zero!(), complex_zero!()
+        ];
+        
+        compare_circuit(circuit, &correct_register);
     }
 
     #[test]

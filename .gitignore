@@ -1,7 +1,6 @@
 /target
 /Cargo.lock
 /TODO.md
-/.DS_Store
-/.github/.DS_Store
 /src/main.rs
+**/.DS_Store
 

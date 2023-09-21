@@ -25,8 +25,8 @@ use std::f64::consts::FRAC_1_SQRT_2;
 // |c> ----
 // => |a,b,c>
 //
-// `cargo fmt` has also been skipped as this shows the connection between matrices in the
-// computational basis, and linear maps!
+// `cargo fmt` has also been skipped as this shows the connection between matrices (which are
+// transposed) in the computational basis, and linear maps!
 
 //
 // Single gates
@@ -116,7 +116,7 @@ pub fn swap(register: ProductState) -> SuperPosition {
         [Qubit::Zero, Qubit::Zero] => &complex_Re_array!(1f64, 0f64, 0f64, 0f64),
         [Qubit::Zero, Qubit::One]  => &complex_Re_array!(0f64, 0f64, 1f64, 0f64),
         [Qubit::One, Qubit::Zero]  => &complex_Re_array!(0f64, 1f64, 0f64, 0f64),
-        [Qubit::One, Qubit::One]   => &complex_Re_array!(0f64, 0f64, 0f64, -1f64),
+        [Qubit::One, Qubit::One]   => &complex_Re_array!(0f64, 0f64, 0f64, 1f64),
     }).unwrap()
 }
 
