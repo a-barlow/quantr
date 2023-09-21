@@ -15,12 +15,12 @@ test](https://github.com/a-barlow/quantr/workflows/cargo%20test/badge.svg)](http
 > [other simulations](#other-quantum-computer-simulators) if you are 
 > intending to use quantr for projects.  
 
-A Rust library crate that builds and simulates a quantum computer.
+A Rust library crate that builds, prints and simulates a quantum computer.
 
-This crate allows the user to build a quantum circuit by adding columns 
-of gates through various methods. Once the circuit has been built, then
-it can be simulated which attaches the register |00..0> to the circuit, 
-resulting in a superposition that can be measured.
+This crate allows the user to build a quantum circuit by adding columns
+of gates via various methods. Once the circuit has been built, then it
+can be simulated which attaches the register |00..0>, resulting in a
+superposition that can be measured.
 
 For a brief example of using quantr, see the 
 [quick start guide](QUICK_START.md) which walks through an
@@ -28,9 +28,9 @@ implementation of the Grover's algorithm.
 
 ### Defining features
 
-- Aimed to be accessible to beginners in Rust.
+- Aimed to be accessible for beginners in Rust.
 - The distinction between physical observables and non-physical
-  observables are made clear; but the latter is still made possible to
+  observables is made clear; but the latter is still made possible to
   retrieve. 
 - Prints the circuit diagram to the terminal, or saves it to a text
   file, as a UTF-8 string.
