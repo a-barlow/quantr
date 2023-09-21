@@ -116,7 +116,7 @@ pub fn swap(register: ProductState) -> SuperPosition {
         [Qubit::Zero, Qubit::Zero] => &complex_Re_array!(1f64, 0f64, 0f64, 0f64),
         [Qubit::Zero, Qubit::One]  => &complex_Re_array!(0f64, 0f64, 1f64, 0f64),
         [Qubit::One, Qubit::Zero]  => &complex_Re_array!(0f64, 1f64, 0f64, 0f64),
-        [Qubit::One, Qubit::One]   => &complex_Re_array!(0f64, 0f64, 0f64, -1f64),
+        [Qubit::One, Qubit::One]   => &complex_Re_array!(0f64, 0f64, 0f64, 1f64),
     }).unwrap()
 }
 
