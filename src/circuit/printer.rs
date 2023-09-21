@@ -170,7 +170,7 @@ impl Printer<'_> {
             StandardGate::H => String::from("H"),
             StandardGate::Y => String::from("Y"),
             StandardGate::Z => String::from("Z"),
-            StandardGate::Swap(_) => String::from("Z"),
+            StandardGate::Swap(_) => String::from("S"),
             StandardGate::CY(_) => String::from("Y"),
             StandardGate::CNot(_) => String::from("X"),
             StandardGate::Toffoli(_, _) => String::from("T"),

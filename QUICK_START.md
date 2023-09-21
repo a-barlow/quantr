@@ -84,16 +84,16 @@ that corresponds to a 'solution' of the searching function. In this
 example, the states |110> and |111> are chosen to be the solution
 states.
 
-This is implemented by adding a swap gate (or controlled-z gate) on the
-0th and 1st position of the wires; the first and second wire from top to
-bottom respectively:
+This is implemented by adding a controlled-z gate targeting the 0th
+wire, with its control node placed on the 1st wire; the first and second
+wire from top to bottom in a circuit diagram respectively:
 
 ```rust,ignore
-circuit.add_gate(StandardGate::Swap(1), 0).unwrap();
+circuit.add_gate(StandardGate::CZ(1), 0).unwrap();
 ```
 
 The second argument of `circuit.add_gate` specifies which wire is the
-target, and the field of the variant `StandardGate::Swap` specifies the
+target, and the field of the variant `StandardGate::CZ` specifies the
 control wire.
 
 With the solution states marked, these amplitudes are amplified so
@@ -162,7 +162,7 @@ The following is the completed code. This can be copied directly to your
 `main.rs` and ran with `cargo run`. Make sure that quantr is added as a
 dependency.
 
-```rust
+```rust,ignore
 use quantr::circuit::{printer::Printer, Circuit, Measurement, StandardGate};
 
 fn main() {
@@ -174,7 +174,7 @@ fn main() {
         .unwrap();
 
     // Oracle
-    circuit.add_gate(StandardGate::CZ(0), 1).unwrap();
+    circuit.add_gate(StandardGate::CZ(1), 0).unwrap();
 
     // Amplitude amplification
     circuit
