@@ -179,7 +179,7 @@ impl<'a> Circuit<'a> {
     /// // |0> -- X --
     /// // |0> -- Y --
     /// ```
-    pub fn add_gates(&mut self, gates: Vec<StandardGate<'a>>) -> Result<(), QuantrError> {
+    pub fn add_gates(&mut self, mut gates: Vec<StandardGate<'a>>) -> Result<(), QuantrError> {
         // Ensured we have a gate for every wire.
         if gates.len() != self.num_qubits {
             return Err(QuantrError {
@@ -187,10 +187,78 @@ impl<'a> Circuit<'a> {
             });
         }
 
-        // Add functionality to safely add double gates
+        // Make sure there are no control nodes that overlap with it's other nodes.
+        Self::no_overlapping_controls_and_target(&gates)?;
+
+        // Push n-gates to another line (double, triple, etc.)
+        Self::push_multi_gates(&mut gates);
 
         self.circuit_gates.extend(gates);
         Ok(())
+    }
+
+    // Pushes multi-controlled gates into their own column. Potentially expensive operation to
+    // insert new elements at smaller positions into a long vector.
+    fn push_multi_gates(gates: &mut Vec<StandardGate<'a>>) {
+        let mut extended_vec: Vec<StandardGate> = Default::default();
+        let mut multi_gate_positions: Vec<usize> = Default::default();
+
+        for (pos, gate) in gates.iter().enumerate() {
+            match Self::classify_gate_size(gate) {
+                GateSize::Double | GateSize::Triple => {
+                    let mut temp_vec = vec![StandardGate::Id; gates.len()];
+                    temp_vec[pos] = gate.clone();
+                    extended_vec.extend(temp_vec);
+                    multi_gate_positions.push(pos);
+                }
+                _ => {}
+            }
+        }
+
+        for i in multi_gate_positions {
+            gates[i] = StandardGate::Id;
+        }
+        gates.extend(extended_vec);
+    }
+
+    fn no_overlapping_controls_and_target(gates: &Vec<StandardGate>) -> Result<(), QuantrError> {
+        for (pos, gate) in gates.iter().enumerate() {
+            match *gate {
+                StandardGate::CZ(c)
+                | StandardGate::CY(c)
+                | StandardGate::CNot(c)
+                | StandardGate::Swap(c) => {
+                    if c == pos {
+                        return Err(QuantrError { message: format!("The gate, {:?}, has it's control node placed on it's target position, {}. These must differ.", gate, pos) });
+                    }
+                }
+                StandardGate::Toffoli(c1, c2) => {
+                    if c1 == c2 || c1 == pos || c2 == pos {
+                        return Err(QuantrError { message: format!("The gate, {:?}, has either overlapping control nodes: ({}, {}), or target: {}. All of these must differ.", gate, c1, c2, pos) });
+                    }
+                }
+                StandardGate::Custom(_, controls, _) => {
+                    if controls.contains(&pos) || Self::contains_repeating_values(controls) {
+                        return Err(QuantrError { message: format!("The custom gate, {:?}, has either overlapping control nodes: {:?}, or target node: {}. All of these must differ.", gate, controls, pos) });
+                    }
+                }
+                _ => {}
+            }
+        }
+
+        Ok(())
+    }
+
+    // Find if there are any repating values in array, O(n)
+    fn contains_repeating_values(array: &[usize]) -> bool {
+        let mut counter: Vec<bool> = vec![false; array.len()];
+        for j in array {
+            if counter[*j] {
+                return true;
+            };
+            counter[*j] = true;
+        }
+        false
     }
 
     /// Place a single gate repeatedly onto multiple wires.
@@ -217,14 +285,7 @@ impl<'a> Circuit<'a> {
         positions: Vec<usize>,
     ) -> Result<(), QuantrError> {
         // Incase the user has attempted to place the gate twice on the same wire.
-        if let Some(wire_num) = Self::has_repeating_digits(positions.as_slice()) {
-            return Err(QuantrError {
-                message: format!(
-                    "Attempted to add more than one gate onto wire {}.",
-                    wire_num
-                ),
-            });
-        }
+        Self::has_repeating_digits(positions.as_slice())?;
 
         // Generates a list of identity gates, that are subsequently replaced by non-trivial gates
         // specified by the user.
@@ -244,16 +305,21 @@ impl<'a> Circuit<'a> {
     }
 
     // Used to check if gates have been added to the same position more than once. Has O( n*log(n) )
-    fn has_repeating_digits(array_to_check: &[usize]) -> Option<usize> {
+    fn has_repeating_digits(array_to_check: &[usize]) -> Result<(), QuantrError> {
         let length = array_to_check.len();
-        for (i, element) in array_to_check.iter().enumerate() {
-            for j in i + 1..length {
+        for (wire_num, element) in array_to_check.iter().enumerate() {
+            for j in wire_num + 1..length {
                 if *element == array_to_check[j] {
-                    return Some(i);
+                    return Err(QuantrError {
+                        message: format!(
+                            "Attempted to add more than one gate onto wire {}.",
+                            wire_num
+                        ),
+                    });
                 }
             }
         }
-        None
+        Ok(())
     }
 
     /// Add a column of gates based on their position on the wire.
@@ -731,7 +797,43 @@ mod tests {
         }).unwrap()
     }
 
-    // All tests below were calculated by hand.
+    
+    // No expected panic message as the eample_cnot function is an address in memory, that will
+    // change everytime.
+    #[test]
+    #[should_panic]
+    fn catches_overlapping_nodes_custom_gate() {
+        let mut quantum_circuit = Circuit::new(3);
+        quantum_circuit.add_gates(vec![StandardGate::Id, StandardGate::Custom(example_cnot, &[1], "X".to_string()), StandardGate::Id]).unwrap();
+
+    }
+    
+    #[test]
+    #[should_panic(expected = "\u{1b}[91m[Quantr Error] The gate, CNot(0), has it's control node placed on it's target position, 0. These must differ.\u{1b}[0m ")]
+    fn catches_overlapping_control_nodes() {
+        let mut quantum_circuit = Circuit::new(3);
+        quantum_circuit.add_gates(vec![StandardGate::CNot(0), StandardGate::Id, StandardGate::Id]).unwrap();
+    }
+
+    #[test]
+    fn pushes_multi_gates() {
+        let mut quantum_circuit = Circuit::new(3);
+        quantum_circuit.add_gates(vec![StandardGate::CNot(2), StandardGate::CNot(0), StandardGate::H]).unwrap();
+        quantum_circuit.add_gates(vec![StandardGate::Toffoli(1, 2), StandardGate::H, StandardGate::CNot(0)]).unwrap();
+    
+        let correct_circuit_layout: Vec<StandardGate> = vec![
+            StandardGate::Id, StandardGate::Id, StandardGate::H,
+            StandardGate::CNot(2), StandardGate::Id, StandardGate::Id,
+            StandardGate::Id, StandardGate::CNot(0), StandardGate::Id,
+            StandardGate::Id, StandardGate::H, StandardGate::Id,
+            StandardGate::Toffoli(1,2), StandardGate::Id, StandardGate::Id,
+            StandardGate::Id, StandardGate::Id, StandardGate::CNot(0)];
+
+        assert_eq!(correct_circuit_layout, quantum_circuit.circuit_gates);
+    }
+
+
+    // All gate tests were calculated by hand.
 
     #[test]
     fn custom_gates() {
