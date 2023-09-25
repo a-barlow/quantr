@@ -146,8 +146,8 @@ impl<'a> Circuit<'a> {
     pub fn new(num_qubits: usize) -> Result<Circuit<'a>, QuantrError> {
         if num_qubits > CIRCUIT_MAX_QUBITS {
             return Err(QuantrError {
-                message: String::from("The initialised circuit must have 50 or less qubits.")
-            })
+                message: String::from("The initialised circuit must have 50 or less qubits."),
+            });
         }
 
         let circuit_gates: Vec<StandardGate> = Vec::new();
@@ -211,7 +211,6 @@ impl<'a> Circuit<'a> {
     fn push_multi_gates(gates: &mut Vec<StandardGate<'a>>) {
         let mut extended_vec: Vec<StandardGate> = Default::default();
         let mut multi_gate_positions: Vec<usize> = Default::default();
-
 
         // if its a column with only a multi-control gate, leave it
         let mut found_multi: bool = false;
