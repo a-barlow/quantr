@@ -15,7 +15,7 @@ const ERROR_MARGIN: f64 = 0.00000001f64;
 
 #[test]
 fn grovers_3qubit() {
-    let mut circuit = Circuit::new(3);
+    let mut circuit = Circuit::new(3).unwrap();
 
     // Kick state into superposition of equal weights
     circuit

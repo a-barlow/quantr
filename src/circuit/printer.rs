@@ -354,7 +354,7 @@ mod tests {
 
     #[test]
     fn producing_string_circuit() {
-        let mut quantum_circuit = Circuit::new(4);
+        let mut quantum_circuit = Circuit::new(4).unwrap();
         quantum_circuit.add_gate(StandardGate::H, 3).unwrap();
         quantum_circuit
             .add_repeating_gate(StandardGate::Y, vec![0, 1])
