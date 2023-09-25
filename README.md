@@ -51,6 +51,9 @@ implementation of the Grover's algorithm.
   column at a time. In the near future, this will be resolved.
 - There is **no noise** consideration, or ability to introduce noise.
 - There is **no ability to add classical circuits**.
+- The circuit size has an **upper bound of 50 qubits**. Although, due to
+  incomplete optimisations, it's recommended that the circuit size
+  should be much less.
 
 ### Conventions
 
