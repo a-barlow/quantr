@@ -212,22 +212,39 @@ impl<'a> Circuit<'a> {
         let mut extended_vec: Vec<StandardGate> = Default::default();
         let mut multi_gate_positions: Vec<usize> = Default::default();
 
-        for (pos, gate) in gates.iter().enumerate() {
-            match Self::classify_gate_size(gate) {
-                GateSize::Double | GateSize::Triple => {
-                    let mut temp_vec = vec![StandardGate::Id; gates.len()];
-                    temp_vec[pos] = gate.clone();
-                    extended_vec.extend(temp_vec);
-                    multi_gate_positions.push(pos);
+
+        // if its a column with only a multi-control gate, leave it
+        let mut found_multi: bool = false;
+        let mut found_second: bool = false;
+        for gate in gates.iter() {
+            if gate != &StandardGate::Id {
+                if found_multi {
+                    found_second = true;
+                    break;
                 }
-                _ => {}
+                found_multi = true;
             }
         }
+        if !found_second {
+            gates.extend(extended_vec)
+        } else {
+            for (pos, gate) in gates.iter().enumerate() {
+                match Self::classify_gate_size(gate) {
+                    GateSize::Double | GateSize::Triple => {
+                        let mut temp_vec = vec![StandardGate::Id; gates.len()];
+                        temp_vec[pos] = gate.clone();
+                        extended_vec.extend(temp_vec);
+                        multi_gate_positions.push(pos);
+                    }
+                    _ => {}
+                }
+            }
 
-        for i in multi_gate_positions {
-            gates[i] = StandardGate::Id;
+            for i in multi_gate_positions {
+                gates[i] = StandardGate::Id;
+            }
+            gates.extend(extended_vec);
         }
-        gates.extend(extended_vec);
     }
 
     fn has_overlapping_controls_and_target(gates: &Vec<StandardGate>) -> Result<(), QuantrError> {
@@ -350,20 +367,20 @@ impl<'a> Circuit<'a> {
         &mut self,
         gates_with_positions: HashMap<usize, StandardGate<'a>>,
     ) -> Result<(), QuantrError> {
-        // If any keys are greater, return an error.
+        // If any keys are out of bounds, return an error.
         if let Some(out_of_bounds_key) =
             gates_with_positions.keys().find(|k| *k >= &self.num_qubits)
         {
             return Err(QuantrError {
                 message: format!(
-                    "The position, {}, is a key in the hash map and is out of bounds 
-                                 for the circuit with {} qubits.",
+                    "The position, {}, is out of bounds for the circuit with {} qubits.",
                     out_of_bounds_key, self.num_qubits
                 ),
             });
         }
 
-        // Add gates from `gates_with_positions` based on their positions. For the lines that don't have a gate, the identity is added.
+        // Add gates from `gates_with_positions` based on their positions. For the lines that don't
+        // have a gate, the identity is added.
         let mut gates_to_add: Vec<StandardGate> = Default::default();
         for row_num in 0..self.num_qubits {
             gates_to_add.push(
@@ -373,6 +390,12 @@ impl<'a> Circuit<'a> {
                     .clone(),
             );
         }
+
+        // No overlapping gates
+        Self::has_overlapping_controls_and_target(&gates_to_add)?;
+
+        // Push any multi-controlled gates to isolated columns
+        Self::push_multi_gates(&mut gates_to_add);
 
         self.circuit_gates.extend(gates_to_add);
         Ok(())
@@ -831,8 +854,45 @@ mod tests {
         assert_eq!(correct_circuit_layout, quantum_circuit.circuit_gates);
     }
 
+    #[test]
+    fn pushes_multi_gates_using_vec() {
+        let mut quantum_circuit = Circuit::new(3).unwrap();
+        quantum_circuit.add_gates_with_positions(HashMap::from([
+            (2, StandardGate::H),
+            (0, StandardGate::CNot(2)),
+            (1, StandardGate::CNot(0))
+        ])).unwrap();
+        quantum_circuit.add_gates_with_positions(HashMap::from([
+            (2, StandardGate::CNot(0)),
+            (0, StandardGate::Toffoli(1, 2)),
+            (1, StandardGate::H)
+        ])).unwrap();
+    
+        let correct_circuit_layout: Vec<StandardGate> = vec![
+            StandardGate::Id, StandardGate::Id, StandardGate::H,
+            StandardGate::CNot(2), StandardGate::Id, StandardGate::Id,
+            StandardGate::Id, StandardGate::CNot(0), StandardGate::Id,
+            StandardGate::Id, StandardGate::H, StandardGate::Id,
+            StandardGate::Toffoli(1,2), StandardGate::Id, StandardGate::Id,
+            StandardGate::Id, StandardGate::Id, StandardGate::CNot(0)];
 
-    // All gate tests were calculated by hand.
+        assert_eq!(correct_circuit_layout, quantum_circuit.circuit_gates);
+    }
+
+    #[test]
+    #[should_panic(expected = "\u{1b}[91m[Quantr Error] The gate, CNot(0), has it's control node placed on it's target position, 0. These must differ.\u{1b}[0m ")]
+    fn catches_overlapping_control_nodes_using_vec() {
+        let mut quantum_circuit = Circuit::new(3).unwrap();
+        quantum_circuit.add_gates_with_positions(HashMap::from([
+            (2, StandardGate::H),
+            (0, StandardGate::CNot(0)),
+            (1, StandardGate::CNot(0))
+        ])).unwrap();
+    }
+
+    //
+    // All circuit tests were calculated by hand.
+    //
 
     #[test]
     fn custom_gates() {
