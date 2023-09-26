@@ -107,8 +107,8 @@ impl ProductState {
         ProductState::new(&edited_qubits)
     }
 
-    /// Returns the dimension of the product state.
-    pub fn num_qubits(&self) -> usize {
+    // Returns the dimension of the product state.
+    fn num_qubits(&self) -> usize {
         self.state.len()
     }
 
@@ -136,8 +136,8 @@ impl ProductState {
             .collect::<String>()
     }
 
-    /// Converts the computational basis labelling (a binary integer), into base 10.
-    pub fn comp_basis(&self) -> usize {
+    // Converts the computational basis labelling (a binary integer), into base 10.
+    fn comp_basis(&self) -> usize {
         self.state
             .iter()
             .rev()
@@ -149,9 +149,9 @@ impl ProductState {
             .fold(0, |sum, i| sum + i) as usize
     }
 
-    /// Produces a product states based on converting a base 10 number to binary, where the product
-    /// state in the computational basis is defined from this labelling.
-    pub fn binary_basis(index: usize, basis_size: usize) -> ProductState {
+    // Produces a product states based on converting a base 10 number to binary, where the product
+    // state in the computational basis is defined from this labelling.
+    fn binary_basis(index: usize, basis_size: usize) -> ProductState {
         let binary_index: Vec<Qubit> = (0..basis_size)
             .rev()
             .map(|n| match (index >> n) & 1 == 1 {
@@ -236,6 +236,17 @@ impl<'a> Iterator for SuperPositionIterator<'a> {
 impl SuperPosition {
     const ERROR_MARGIN: f64 = 0.00000001f64;
 
+    /// Creates a superposition in the |0..0> state.
+    pub fn new(num_qubits: usize) -> SuperPosition {
+        let mut new_amps: Vec<Complex<f64>> = vec![complex_zero!(); 2usize.pow(num_qubits as u32)];
+        new_amps[0] = complex_Re!(1f64);
+        SuperPosition {
+            amplitudes: new_amps,
+            product_dim: num_qubits,
+            index: 0,
+        }
+    }
+
     /// Retrieves the coefficient of the product state labelled in the computational basis.
     pub fn get_amp_from_state(&self, prod_state: ProductState) -> Complex<f64> {
         if 2usize.pow(prod_state.state.len() as u32) != self.amplitudes.len() {
@@ -252,39 +263,11 @@ impl SuperPosition {
     pub fn as_hash(&self) -> HashMap<ProductState, Complex<f64>> {
         let mut super_pos_as_hash: HashMap<ProductState, Complex<f64>> = Default::default();
         for (i, amp) in self.amplitudes.iter().enumerate() {
-            if amp.abs_square() != 0f64 {
+            if Self::equal_within_error(amp.abs_square(), 0f64) {
                 super_pos_as_hash.insert(ProductState::binary_basis(i, self.product_dim), *amp);
             }
         }
         super_pos_as_hash
-    }
-
-    /// Creates a HashMap where the keys are string labels of the product states in the
-    /// computatonal basis.
-    ///
-    /// Similar to [SuperPosition::as_hash], which uses the [ProductState] struct instead as a key.
-    pub fn as_hash_string(&self) -> HashMap<String, Complex<f64>> {
-        let mut super_pos_as_hash: HashMap<String, Complex<f64>> = Default::default();
-        for (i, amp) in self.amplitudes.iter().enumerate() {
-            super_pos_as_hash.insert(
-                (0..self.product_dim)
-                    .map(|n| ((i >> n) & 1).to_string())
-                    .collect::<String>(),
-                *amp,
-            );
-        }
-        super_pos_as_hash
-    }
-
-    /// Creates a superposition in the |0..0> state.
-    pub fn new(num_qubits: usize) -> SuperPosition {
-        let mut new_amps: Vec<Complex<f64>> = vec![complex_zero!(); 2usize.pow(num_qubits as u32)];
-        new_amps[0] = complex_Re!(1f64);
-        SuperPosition {
-            amplitudes: new_amps,
-            product_dim: num_qubits,
-            index: 0,
-        }
     }
 
     /// Retrieves the coefficient of the product state given the list index.
@@ -335,24 +318,11 @@ impl SuperPosition {
         })
     }
 
-    fn from_hash_to_array(
-        hash_amplitudes: &HashMap<ProductState, Complex<f64>>,
-        vec_amplitudes: &mut Vec<Complex<f64>>,
-        product_size: usize,
-    ) {
-        for (key, val) in hash_amplitudes {
-            if key.num_qubits() != product_size {
-                panic!("Not all product spaces in hashmap are composed from the same number of qubits.");
-            }
-            vec_amplitudes[key.comp_basis()] = *val;
-        }
-    }
-
     /// Sets the amplitudes of a [SuperPosition] from a HashMap.
     ///
     /// States that are missing from the HashMap will be assumed to have 0 amplitude. An error will
     /// be returned if there is a [ProductState] that does not equal the dimension of the [SuperPosition].
-    pub fn set_amplitudes_from_states(
+   pub fn set_amplitudes_from_states(
         &self,
         amplitudes: &HashMap<ProductState, Complex<f64>>,
     ) -> Result<SuperPosition, QuantrError> {
@@ -369,6 +339,19 @@ impl SuperPosition {
             Err(QuantrError {
                 message: String::from("An empty Hashmap was given to set the amplitudes. This Hashmap needs at least one (key, value) pair."),
             })
+        }
+    }
+
+    fn from_hash_to_array(
+        hash_amplitudes: &HashMap<ProductState, Complex<f64>>,
+        vec_amplitudes: &mut Vec<Complex<f64>>,
+        product_size: usize,
+    ){
+        for (key, val) in hash_amplitudes {
+            if key.num_qubits() != product_size {
+                panic!("Not all product spaces in HashMap are composed from the same number of qubits.");
+            }
+            vec_amplitudes[key.comp_basis()] = *val;
         }
     }
 }

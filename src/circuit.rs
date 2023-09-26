@@ -36,6 +36,9 @@ pub mod states;
 use self::error::QuantrError;
 use crate::circuit::states::{ProductState, Qubit, SuperPosition};
 
+// The tolerance for declaring non-zero amplitudes.
+const ZERO_MARGIN: f64 = 0.01;
+
 /// Distinguishes observable and non-observable quantities.
 ///
 /// For example, this will distinguish the retreival of a superposition (that cannot be measured
@@ -761,7 +764,7 @@ impl<'a> Circuit<'a> {
         mapped_states: &mut HashMap<ProductState, Complex<f64>>,
     ) {
         for (state, state_amp) in gate_image.into_iter() {
-            if state_amp.abs_square() < 0.01 {
+            if state_amp.abs_square() < ZERO_MARGIN {
                 continue;
             }
             // Insert these image states back into a product space
