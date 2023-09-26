@@ -33,8 +33,8 @@ use crate::circuit::states::{ProductState, Qubit, SuperPosition};
 use crate::QuantrError;
 
 pub mod printer;
-pub mod states;
 mod standard_gate_ops;
+pub mod states;
 
 // The tolerance for declaring non-zero amplitudes.
 const ZERO_MARGIN: f64 = 0.01;
@@ -342,7 +342,7 @@ impl<'a> Circuit<'a> {
     ///
     /// A HashMap is used to place gates onto their desired position; where the key is the position
     /// and the value is the [StandardGate]. This is similar to [Circuit::add_gate], however not
-    /// all wires have to be accounted for. 
+    /// all wires have to be accounted for.
     ///
     /// # Example
     /// ```
@@ -462,7 +462,7 @@ impl<'a> Circuit<'a> {
     ///
     /// Peform repeated measurements where a register is attached to the circuit, the reuslting
     /// superposition measured, and then the reduced state recorded. If the HashMap does not
-    /// include a product state, then it was not observed over the `n` measurements. 
+    /// include a product state, then it was not observed over the `n` measurements.
     ///
     /// # Example
     /// ```

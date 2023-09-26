@@ -19,8 +19,8 @@
 //!  ⋮    ⋮
 //!  ```
 
-use crate::QuantrError;
 use crate::complex::Complex;
+use crate::QuantrError;
 use crate::{complex_Re, complex_zero};
 use std::collections::HashMap;
 use std::hash::Hash;
@@ -247,13 +247,13 @@ impl SuperPosition {
         }
     }
 
-
     /// Retrieves the coefficient of the product state labelled in the computational basis.
-    pub fn get_amplitude_from_state(&self, prod_state: ProductState) -> Result<Complex<f64>, QuantrError> {
+    pub fn get_amplitude_from_state(
+        &self,
+        prod_state: ProductState,
+    ) -> Result<Complex<f64>, QuantrError> {
         if 2usize.pow(prod_state.state.len() as u32) != self.amplitudes.len() {
-            return Err(QuantrError { 
-                message: format!("Unable to retreive product state, |{:?}> with dimension {}. The superposition is a linear combination of states with different dimension. These dimensions should be equal.", prod_state.as_string(), prod_state.num_qubits()),
-            });
+            return Err(QuantrError { message: format!("Unable to retreive product state, |{:?}> with dimension {}. The superposition is a linear combination of states with different dimension. These dimensions should be equal.", prod_state.as_string(), prod_state.num_qubits()),});
         }
         Ok(*self.amplitudes.get(prod_state.comp_basis()).unwrap())
     }
@@ -268,7 +268,7 @@ impl SuperPosition {
                 message: format!("The slice given to set the amplitudes in the computational basis has length {}, when it should have length {}.", amplitudes.len(), self.amplitudes.len()),
             });
         }
-       
+
         if !Self::equal_within_error(amplitudes.iter().map(|x| x.abs_square()).sum::<f64>(), 1f64) {
             return Err(QuantrError {
                 message: String::from("Slice given to set amplitudes in super position does not conserve probability, the absolute square sum of the coefficents must be one."),
@@ -295,7 +295,7 @@ impl SuperPosition {
     }
 
     // Sets the amplitudes of a [SuperPosition] from a HashMap.
-    // States that are missing from the HashMap will be assumed to have 0 amplitude. 
+    // States that are missing from the HashMap will be assumed to have 0 amplitude.
     pub(super) fn set_amplitudes_from_states(
         &self,
         amplitudes: &HashMap<ProductState, Complex<f64>>,
@@ -373,7 +373,8 @@ mod tests {
                     complex_zero!()
                 ])
                 .unwrap()
-                .get_amplitude_from_state(ProductState::new(&[Qubit::Zero, Qubit::One])).unwrap(),
+                .get_amplitude_from_state(ProductState::new(&[Qubit::Zero, Qubit::One]))
+                .unwrap(),
             complex_Re!(FRAC_1_SQRT_2)
         )
     }
@@ -445,7 +446,8 @@ mod tests {
                 complex_zero!(),
             ])
             .unwrap()
-            .get_amplitude_from_state(ProductState::new(&[Qubit::Zero, Qubit::One, Qubit::One])).unwrap();
+            .get_amplitude_from_state(ProductState::new(&[Qubit::Zero, Qubit::One, Qubit::One]))
+            .unwrap();
     }
 
     #[test]
