@@ -19,8 +19,7 @@
 // !!! Developer Warning !!!
 // This module is very messy, and it's code will be cleared up in a near future update.
 
-use crate::circuit::StandardGate;
-use crate::circuit::{Circuit, GateInfo, GateSize};
+use super::{StandardGate, Circuit, GateInfo, GateSize};
 use std::fs::File;
 use std::io::Write;
 use std::path::Path;

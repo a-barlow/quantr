@@ -29,12 +29,12 @@ use rand::Rng;
 use std::collections::HashMap;
 use std::ops::{Add, Mul};
 
-pub mod error;
-pub mod printer;
-mod standard_gate_ops;
-pub mod states;
-use self::error::QuantrError;
 use crate::circuit::states::{ProductState, Qubit, SuperPosition};
+use crate::QuantrError;
+
+pub mod printer;
+pub mod states;
+mod standard_gate_ops;
 
 // The tolerance for declaring non-zero amplitudes.
 const ZERO_MARGIN: f64 = 0.01;
@@ -174,8 +174,7 @@ impl<'a> Circuit<'a> {
     ///
     /// Expects the input vector to specify the gate that is added to *each* wire. That is, the
     /// length of the vector should equal the number of wires. To only add gates based on their
-    /// positions, see [Circuit::add_gates_with_positions] and [Circuit::add_gate]. An
-    /// [error::QuantrError] is returned if all wires are not accounted for.
+    /// positions, see [Circuit::add_gates_with_positions] and [Circuit::add_gate].
     ///
     /// # Example   
     /// ```
@@ -293,8 +292,7 @@ impl<'a> Circuit<'a> {
     /// Place a single gate repeatedly onto multiple wires.
     ///
     /// The top of the wire is in the 0th position. For adding multiple gates that are different,
-    /// please refer to [Circuit::add_gates] and [Circuit::add_gates_with_positions]. An
-    /// [error::QuantrError] will be returned if the vector contains positions that are equal.
+    /// please refer to [Circuit::add_gates] and [Circuit::add_gates_with_positions].
     ///
     /// # Example
     /// ```
@@ -344,8 +342,7 @@ impl<'a> Circuit<'a> {
     ///
     /// A HashMap is used to place gates onto their desired position; where the key is the position
     /// and the value is the [StandardGate]. This is similar to [Circuit::add_gate], however not
-    /// all wires have to be accounted for. An [error::QuantrError] will be returned if there is a
-    /// key that is greater than the size of the circuit.
+    /// all wires have to be accounted for. 
     ///
     /// # Example
     /// ```
@@ -427,7 +424,6 @@ impl<'a> Circuit<'a> {
     /// Returns the resulting superposition after the circuit has been simulated.
     ///
     /// This is a non-physical observable, as the superposition would reduce to a single state upon measurement.
-    /// Returnsan [error::QuantrError] if the circuit hasn't been simulated.
     ///
     /// # Example
     /// ```
@@ -466,8 +462,7 @@ impl<'a> Circuit<'a> {
     ///
     /// Peform repeated measurements where a register is attached to the circuit, the reuslting
     /// superposition measured, and then the reduced state recorded. If the HashMap does not
-    /// include a product state, then it was not observed over the `n` measurements. Returns an
-    /// [error::QuantrError] if the circuit hasn't been simulated.
+    /// include a product state, then it was not observed over the `n` measurements. 
     ///
     /// # Example
     /// ```
@@ -498,7 +493,7 @@ impl<'a> Circuit<'a> {
             Some(super_position) => {
                 // Peform bin count of states
                 let mut probabilities: HashMap<ProductState, f64> = Default::default();
-                for (key, value) in super_position.as_hash() {
+                for (key, value) in super_position.as_hash_map() {
                     probabilities.insert(key, value.abs_square());
                 }
 
@@ -651,7 +646,7 @@ impl<'a> Circuit<'a> {
         }
         // All states in register considers, and can create new super position
         // GET RID OF RETURNING SUPERPOSITION, INSTEAD JUST PASS REGISTER BY REFERENCE, &mut register
-        register.set_amplitudes_from_states(&mapped_states).unwrap()
+        register.set_amplitudes_from_states(&mapped_states)
     }
 
     // The following functions compartementalise the algorithms for applying a gate to the
