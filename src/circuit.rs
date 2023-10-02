@@ -162,12 +162,87 @@ impl<'a> Circuit<'a> {
         })
     }
 
-    /// Toggles if the circuit should print the progress of simulating each gate.
+    /// Adds a single gate to the circuit.
     ///
-    /// It will only show the application of non-identity gates. The toggle is set to `false`
-    /// for a new quantum circuit.
-    pub fn toggle_simulation_progress(&mut self) {
-        self.config_progress = !self.config_progress;
+    /// If wanting to add multiple gates, or a single gate repeatedly, across multiple wires, see
+    /// [Circuit::add_repeating_gate] and [Circuit::add_gates_with_positions] respectively.
+    ///
+    /// # Example
+    /// ```
+    /// use quantr::circuit::{Circuit, StandardGate};
+    ///
+    /// let mut quantum_circuit: Circuit = Circuit::new(3).unwrap();
+    /// quantum_circuit.add_gate(StandardGate::X, 0).unwrap();
+    ///
+    /// // Produces the circuit:
+    /// // |0> -- X --
+    /// // |0> -------
+    /// // |0> -------
+    /// ```
+    pub fn add_gate(&mut self, gate: StandardGate<'a>, position: usize) -> Result<(), QuantrError> {
+        Self::add_gates_with_positions(self, HashMap::from([(position, gate)]))
+    }
+
+    /// Add a column of gates based on their position on the wire.
+    ///
+    /// A HashMap is used to place gates onto their desired position; where the key is the position
+    /// and the value is the [StandardGate]. This is similar to [Circuit::add_gate], however not
+    /// all wires have to be accounted for.
+    ///
+    /// # Example
+    /// ```
+    /// use quantr::circuit::{Circuit, StandardGate};
+    /// use std::collections::HashMap;
+    ///
+    /// let mut quantum_circuit: Circuit = Circuit::new(3).unwrap();
+    /// // Adds gates on wires 0 and 2, implicitly leaving wire 1 bare.
+    /// quantum_circuit.add_gates_with_positions(
+    ///     HashMap::from(
+    ///         [(0, StandardGate::X), (2, StandardGate::H)]
+    ///     )
+    /// ).unwrap();
+    ///
+    /// // Produces the circuit:
+    /// // |0> -- X --
+    /// // |0> -------
+    /// // |0> -- H --
+    /// ```
+    pub fn add_gates_with_positions(
+        &mut self,
+        gates_with_positions: HashMap<usize, StandardGate<'a>>,
+    ) -> Result<(), QuantrError> {
+        // If any keys are out of bounds, return an error.
+        if let Some(out_of_bounds_key) =
+            gates_with_positions.keys().find(|k| *k >= &self.num_qubits)
+        {
+            return Err(QuantrError {
+                message: format!(
+                    "The position, {}, is out of bounds for the circuit with {} qubits.",
+                    out_of_bounds_key, self.num_qubits
+                ),
+            });
+        }
+
+        // Add gates from `gates_with_positions` based on their positions. For the lines that don't
+        // have a gate, the identity is added.
+        let mut gates_to_add: Vec<StandardGate> = Default::default();
+        for row_num in 0..self.num_qubits {
+            gates_to_add.push(
+                gates_with_positions
+                    .get(&row_num)
+                    .unwrap_or(&StandardGate::Id)
+                    .clone(),
+            );
+        }
+
+        // No overlapping gates
+        Self::has_overlapping_controls_and_target(&gates_to_add)?;
+
+        // Push any multi-controlled gates to isolated columns
+        Self::push_multi_gates(&mut gates_to_add);
+
+        self.circuit_gates.extend(gates_to_add);
+        Ok(())
     }
 
     /// Add a column of gates.
@@ -338,90 +413,8 @@ impl<'a> Circuit<'a> {
         self.add_gates(gates)
     }
 
-    /// Add a column of gates based on their position on the wire.
-    ///
-    /// A HashMap is used to place gates onto their desired position; where the key is the position
-    /// and the value is the [StandardGate]. This is similar to [Circuit::add_gate], however not
-    /// all wires have to be accounted for.
-    ///
-    /// # Example
-    /// ```
-    /// use quantr::circuit::{Circuit, StandardGate};
-    /// use std::collections::HashMap;
-    ///
-    /// let mut quantum_circuit: Circuit = Circuit::new(3).unwrap();
-    /// // Adds gates on wires 0 and 2, implicitly leaving wire 1 bare.
-    /// quantum_circuit.add_gates_with_positions(
-    ///     HashMap::from(
-    ///         [(0, StandardGate::X), (2, StandardGate::H)]
-    ///     )
-    /// ).unwrap();
-    ///
-    /// // Produces the circuit:
-    /// // |0> -- X --
-    /// // |0> -------
-    /// // |0> -- H --
-    /// ```
-    pub fn add_gates_with_positions(
-        &mut self,
-        gates_with_positions: HashMap<usize, StandardGate<'a>>,
-    ) -> Result<(), QuantrError> {
-        // If any keys are out of bounds, return an error.
-        if let Some(out_of_bounds_key) =
-            gates_with_positions.keys().find(|k| *k >= &self.num_qubits)
-        {
-            return Err(QuantrError {
-                message: format!(
-                    "The position, {}, is out of bounds for the circuit with {} qubits.",
-                    out_of_bounds_key, self.num_qubits
-                ),
-            });
-        }
-
-        // Add gates from `gates_with_positions` based on their positions. For the lines that don't
-        // have a gate, the identity is added.
-        let mut gates_to_add: Vec<StandardGate> = Default::default();
-        for row_num in 0..self.num_qubits {
-            gates_to_add.push(
-                gates_with_positions
-                    .get(&row_num)
-                    .unwrap_or(&StandardGate::Id)
-                    .clone(),
-            );
-        }
-
-        // No overlapping gates
-        Self::has_overlapping_controls_and_target(&gates_to_add)?;
-
-        // Push any multi-controlled gates to isolated columns
-        Self::push_multi_gates(&mut gates_to_add);
-
-        self.circuit_gates.extend(gates_to_add);
-        Ok(())
-    }
-
-    /// Adds a single gate to the circuit.
-    ///
-    /// If wanting to add multiple gates, or a single gate repeatedly, across multiple wires, see
-    /// [Circuit::add_repeating_gate] and [Circuit::add_gates_with_positions] respectively.
-    ///
-    /// # Example
-    /// ```
-    /// use quantr::circuit::{Circuit, StandardGate};
-    ///
-    /// let mut quantum_circuit: Circuit = Circuit::new(3).unwrap();
-    /// quantum_circuit.add_gate(StandardGate::X, 0).unwrap();
-    ///
-    /// // Produces the circuit:
-    /// // |0> -- X --
-    /// // |0> -------
-    /// // |0> -------
-    /// ```
-    pub fn add_gate(&mut self, gate: StandardGate<'a>, position: usize) -> Result<(), QuantrError> {
-        Self::add_gates_with_positions(self, HashMap::from([(position, gate)]))
-    }
-
-    /// Returns the resulting superposition after the circuit has been simulated.
+    /// Returns the resulting superposition after the circuit has been simulated using
+    /// [Circuit::simulate].
     ///
     /// This is a non-physical observable, as the superposition would reduce to a single state upon measurement.
     ///
@@ -462,7 +455,8 @@ impl<'a> Circuit<'a> {
     ///
     /// Peform repeated measurements where a register is attached to the circuit, the reuslting
     /// superposition measured, and then the reduced state recorded. If the HashMap does not
-    /// include a product state, then it was not observed over the `n` measurements.
+    /// include a product state, then it was not observed over the `n` measurements. This method
+    /// requires that the circuit has already been simulated by calling [Circuit::simulate].
     ///
     /// # Example
     /// ```
@@ -772,6 +766,14 @@ impl<'a> Circuit<'a> {
                 mapped_states.insert(swapped_state, state_amp.mul(amp));
             }
         }
+    }
+
+    /// Toggles if the circuit should print the progress of simulating each gate.
+    ///
+    /// It will only show the application of non-identity gates. The toggle is set to `false`
+    /// for a new quantum circuit.
+    pub fn toggle_simulation_progress(&mut self) {
+        self.config_progress = !self.config_progress;
     }
 }
 
