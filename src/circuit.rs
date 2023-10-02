@@ -151,6 +151,10 @@ impl<'a> Circuit<'a> {
             return Err(QuantrError {
                 message: String::from("The initialised circuit must have 50 or less qubits."),
             });
+        } else if num_qubits == 0 {
+            return Err(QuantrError {
+                message: String::from("The initiliased circuit must have at least one wire."),
+            });
         }
 
         let circuit_gates: Vec<StandardGate> = Vec::new();
@@ -640,7 +644,7 @@ impl<'a> Circuit<'a> {
         }
         // All states in register considers, and can create new super position
         // GET RID OF RETURNING SUPERPOSITION, INSTEAD JUST PASS REGISTER BY REFERENCE, &mut register
-        register.set_amplitudes_from_states(&mapped_states)
+        register.set_amplitudes_from_states_unchecked(&mapped_states)
     }
 
     // The following functions compartementalise the algorithms for applying a gate to the

@@ -294,9 +294,50 @@ impl SuperPosition {
         num < compare_num + Self::ERROR_MARGIN && num > compare_num - Self::ERROR_MARGIN
     }
 
+    /// Returns a superposition constructed from a HashMap with [ProductState] keys and amplitudes
+    /// that are `Complex<f64>` values.
+    ///
+    /// The amplitudes are checked for probability conservation, and that the product states are
+    /// dimensionally consistent. States that are missing will assume to have zero amplitude.
+    pub fn set_amplitudes_from_states(
+        &self,
+        amplitudes: &HashMap<ProductState, Complex<f64>>,
+    ) -> Result<SuperPosition, QuantrError> {
+        // Check if amplitudes and product states are correct.
+        if amplitudes.is_empty() {
+            return Err(QuantrError { message: String::from("An empty HashMap was given. A superposition must have at least one non-zero state.") });
+        }
+
+        let product_size: usize = self.amplitudes.len().trailing_zeros() as usize;
+        let mut total_amplitude: f64 = 0f64;
+        for (states, amplitude) in amplitudes {
+            if states.num_qubits() != product_size {
+                return Err(QuantrError { message: format!("The first state has product dimension of {}, whilst the state, |{}>, found as a key in the HashMap has dimension {}.", product_size, states.as_string(), states.num_qubits()) });
+            }
+            total_amplitude += amplitude.abs_square();
+        }
+
+        if !Self::equal_within_error(total_amplitude, Self::ERROR_MARGIN) {
+            return Err(QuantrError { message: String::from("The total sum of the absolute square of all amplitudes does not equal 1. That is, the superpositon does not conserve probability.") });
+        }
+
+        // Start conversion
+
+        let mut new_amps: Vec<Complex<f64>> =
+            vec![complex_zero!(); 2usize.pow(product_size as u32)];
+
+        Self::from_hash_to_array(amplitudes, &mut new_amps);
+
+        Ok(SuperPosition {
+            amplitudes: new_amps,
+            product_dim: self.product_dim,
+            index: 0,
+        })
+    }
+
     // Sets the amplitudes of a [SuperPosition] from a HashMap.
     // States that are missing from the HashMap will be assumed to have 0 amplitude.
-    pub(super) fn set_amplitudes_from_states(
+    pub(super) fn set_amplitudes_from_states_unchecked(
         &self,
         amplitudes: &HashMap<ProductState, Complex<f64>>,
     ) -> SuperPosition {
@@ -430,9 +471,47 @@ mod tests {
                 .unwrap()
                 .amplitudes,
             SuperPosition::new(2)
-                .set_amplitudes_from_states(&states)
+                .set_amplitudes_from_states_unchecked(&states)
                 .amplitudes
         )
+    }
+
+    #[test]
+    #[should_panic]
+    fn sets_amplitude_from_states_wrong_dimension() {
+        let states: HashMap<ProductState, Complex<f64>> = HashMap::from([
+            (
+                ProductState::new(&[Qubit::Zero, Qubit::One]),
+                complex_Re!(FRAC_1_SQRT_2),
+            ),
+            (
+                ProductState::new(&[Qubit::One, Qubit::Zero, Qubit::One]),
+                complex_Im!(-FRAC_1_SQRT_2),
+            ),
+        ]);
+
+        SuperPosition::new(2)
+            .set_amplitudes_from_states(&states)
+            .unwrap();
+    }
+
+    #[test]
+    #[should_panic]
+    fn sets_amplitude_from_states_breaks_probability() {
+        let states: HashMap<ProductState, Complex<f64>> = HashMap::from([
+            (
+                ProductState::new(&[Qubit::Zero, Qubit::One]),
+                complex_Re!(FRAC_1_SQRT_2),
+            ),
+            (
+                ProductState::new(&[Qubit::One, Qubit::Zero]),
+                complex_Im!(-FRAC_1_SQRT_2 * 0.5f64),
+            ),
+        ]);
+
+        SuperPosition::new(2)
+            .set_amplitudes_from_states(&states)
+            .unwrap();
     }
 
     #[test]
