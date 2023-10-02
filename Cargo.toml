@@ -4,12 +4,12 @@ version = "0.1.2"
 edition = "2021"
 license = "EUPL-1.2"
 readme = "README.md"
-keywords = ["quantum", "computer", "computing", "simulator"]
+keywords = ["quantum-computer", "quantum-circuit-simulator", "quantum"]
 categories = ["science", "simulation"]
 authors = ["Andrew Barlow <a.barlow.dev@gmail.com>"]
 repository = "https://github.com/a-barlow/quantr"
 homepage = "https://github.com/a-barlow/quantr"
-description = "Readily create and simulate quantum circuits."
+description = "Readily create, simulate and print quantum circuits."
 
 [dependencies]
 rand = "0.8.5"
