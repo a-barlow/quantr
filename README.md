@@ -45,10 +45,6 @@ implementation of the Grover's algorithm.
 
 ### Limitations (currently)
 
-- Inserting **multiple n-gates by themselves or with other single 
-  gates** causes an issue for the printer. For now, the user has to 
-  manually make sure that the n-gates are added by themselves, one 
-  column at a time. In the near future, this will be resolved.
 - There is **no noise** consideration, or ability to introduce noise.
 - There is **no ability to add classical circuits**.
 - The circuit size has an **upper bound of 50 qubits**. Although, due to
