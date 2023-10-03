@@ -19,8 +19,8 @@
 //!  ⋮    ⋮
 //!  ```
 
-use super::error::QuantrError;
 use crate::complex::Complex;
+use crate::QuantrError;
 use crate::{complex_Re, complex_zero};
 use std::collections::HashMap;
 use std::hash::Hash;
@@ -81,19 +81,9 @@ impl ProductState {
 
     // This operation could just be changed to inverting the qubits, as qubits can only be in two
     // states.
-    /// Changes the qubits at specified positions within the product state with a slice of other
-    /// qubits.
-    ///
-    /// # Example
-    /// ```
-    /// use quantr::circuit::states::{ProductState, Qubit};
-    ///
-    /// let state: ProductState = ProductState::new(&[Qubit::Zero, Qubit::Zero, Qubit::Zero, Qubit::Zero]); // |0000>
-    ///
-    /// let edited_state: ProductState = state.insert_qubits(&[Qubit::One, Qubit::One], &[1, 3]); // |0101>
-    /// assert_eq!(edited_state.state, [Qubit::Zero, Qubit::One, Qubit::Zero, Qubit::One])
-    /// ```
-    pub fn insert_qubits(&self, qubits: &[Qubit], pos: &[usize]) -> ProductState {
+    // Changes the qubits at specified positions within the product state with a slice of other
+    // qubits.
+    pub(super) fn insert_qubits(&self, qubits: &[Qubit], pos: &[usize]) -> ProductState {
         let mut edited_qubits: Vec<Qubit> = self.state.clone();
         let num_qubits: usize = qubits.len();
 
@@ -107,8 +97,8 @@ impl ProductState {
         ProductState::new(&edited_qubits)
     }
 
-    /// Returns the dimension of the product state.
-    pub fn num_qubits(&self) -> usize {
+    // Returns the dimension of the product state.
+    fn num_qubits(&self) -> usize {
         self.state.len()
     }
 
@@ -120,8 +110,8 @@ impl ProductState {
         self
     }
 
-    /// Returns the qubit in the product state given a position.
-    pub fn get(&self, qubit_number: usize) -> Qubit {
+    // Returns the qubit in the product state given a position.
+    pub(super) fn get(&self, qubit_number: usize) -> Qubit {
         self.state[qubit_number]
     }
 
@@ -136,8 +126,8 @@ impl ProductState {
             .collect::<String>()
     }
 
-    /// Converts the computational basis labelling (a binary integer), into base 10.
-    pub fn comp_basis(&self) -> usize {
+    // Converts the computational basis labelling (a binary integer), into base 10.
+    fn comp_basis(&self) -> usize {
         self.state
             .iter()
             .rev()
@@ -149,9 +139,9 @@ impl ProductState {
             .fold(0, |sum, i| sum + i) as usize
     }
 
-    /// Produces a product states based on converting a base 10 number to binary, where the product
-    /// state in the computational basis is defined from this labelling.
-    pub fn binary_basis(index: usize, basis_size: usize) -> ProductState {
+    // Produces a product states based on converting a base 10 number to binary, where the product
+    // state in the computational basis is defined from this labelling.
+    fn binary_basis(index: usize, basis_size: usize) -> ProductState {
         let binary_index: Vec<Qubit> = (0..basis_size)
             .rev()
             .map(|n| match (index >> n) & 1 == 1 {
@@ -179,8 +169,7 @@ pub struct SuperPosition {
 /// # Example
 /// ```
 /// use quantr::circuit::states::{ProductState, Qubit, SuperPosition};
-/// use quantr::complex::Complex;
-/// use quantr::{complex_Re, complex_Re_vec, complex_zero};
+/// use quantr::{complex_Re, complex_Re_vec, complex_zero, complex::Complex};
 /// use std::f64::consts::FRAC_1_SQRT_2;
 ///
 /// let super_pos: SuperPosition = SuperPosition::new(2)
@@ -236,46 +225,6 @@ impl<'a> Iterator for SuperPositionIterator<'a> {
 impl SuperPosition {
     const ERROR_MARGIN: f64 = 0.00000001f64;
 
-    /// Retrieves the coefficient of the product state labelled in the computational basis.
-    pub fn get_amp_from_state(&self, prod_state: ProductState) -> Complex<f64> {
-        if 2usize.pow(prod_state.state.len() as u32) != self.amplitudes.len() {
-            panic!("Unable to retreive product state from superposition that contains product states of different dimension.");
-        }
-
-        *self.amplitudes.get(prod_state.comp_basis()).unwrap()
-    }
-
-    /// Creates a HashMap of the superposition with [ProductState] as keys.
-    ///
-    /// Similar to [SuperPosition::as_hash_string] that converts the [ProductState] to a string
-    /// instead.
-    pub fn as_hash(&self) -> HashMap<ProductState, Complex<f64>> {
-        let mut super_pos_as_hash: HashMap<ProductState, Complex<f64>> = Default::default();
-        for (i, amp) in self.amplitudes.iter().enumerate() {
-            if amp.abs_square() != 0f64 {
-                super_pos_as_hash.insert(ProductState::binary_basis(i, self.product_dim), *amp);
-            }
-        }
-        super_pos_as_hash
-    }
-
-    /// Creates a HashMap where the keys are string labels of the product states in the
-    /// computatonal basis.
-    ///
-    /// Similar to [SuperPosition::as_hash], which uses the [ProductState] struct instead as a key.
-    pub fn as_hash_string(&self) -> HashMap<String, Complex<f64>> {
-        let mut super_pos_as_hash: HashMap<String, Complex<f64>> = Default::default();
-        for (i, amp) in self.amplitudes.iter().enumerate() {
-            super_pos_as_hash.insert(
-                (0..self.product_dim)
-                    .map(|n| ((i >> n) & 1).to_string())
-                    .collect::<String>(),
-                *amp,
-            );
-        }
-        super_pos_as_hash
-    }
-
     /// Creates a superposition in the |0..0> state.
     pub fn new(num_qubits: usize) -> SuperPosition {
         let mut new_amps: Vec<Complex<f64>> = vec![complex_zero!(); 2usize.pow(num_qubits as u32)];
@@ -287,10 +236,8 @@ impl SuperPosition {
         }
     }
 
-    /// Retrieves the coefficient of the product state given the list index.
-    ///
-    /// If the index is out of bounds, it returns a [super::error::QuantrError].
-    pub fn get_amp_from_pos(&self, pos: usize) -> Result<Complex<f64>, QuantrError> {
+    /// Retrieves the coefficient of the product state given by the list index.
+    pub fn get_amplitude(&self, pos: usize) -> Result<Complex<f64>, QuantrError> {
         if pos >= self.amplitudes.len() {
             let length = self.amplitudes.len();
             Err(QuantrError { message: format!("Failed to retrieve amplitude from list. Index given was, {pos}, which is greater than length of list, {length}."), 
@@ -300,29 +247,31 @@ impl SuperPosition {
         }
     }
 
-    fn equal_within_error(num: f64, compare_num: f64) -> bool {
-        num < compare_num + Self::ERROR_MARGIN && num > compare_num - Self::ERROR_MARGIN
-    }
-
-    fn copy_slice_to_vec(vector: &mut Vec<Complex<f64>>, slice: &[Complex<f64>]) {
-        for (pos, amp) in slice.iter().enumerate() {
-            vector[pos] = *amp;
+    /// Retrieves the coefficient of the product state labelled in the computational basis.
+    pub fn get_amplitude_from_state(
+        &self,
+        prod_state: ProductState,
+    ) -> Result<Complex<f64>, QuantrError> {
+        if 2usize.pow(prod_state.state.len() as u32) != self.amplitudes.len() {
+            return Err(QuantrError { message: format!("Unable to retreive product state, |{:?}> with dimension {}. The superposition is a linear combination of states with different dimension. These dimensions should be equal.", prod_state.as_string(), prod_state.num_qubits()),});
         }
+        Ok(*self.amplitudes.get(prod_state.comp_basis()).unwrap())
     }
 
-    /// Returns a new superposition with the desired slice of amplitudes.
+    /// Returns a new superposition in the computational basis.
     ///
     /// Checks to see if the amplitudes completely specify the amplitude of each state, in addition
     /// to it conserving probability.
     pub fn set_amplitudes(self, amplitudes: &[Complex<f64>]) -> Result<SuperPosition, QuantrError> {
         if amplitudes.len() != self.amplitudes.len() {
             return Err(QuantrError {
-                message: String::from("Unequal dimension in setting the amplitudes from a slice and the number of amplitudes in the super position."),
+                message: format!("The slice given to set the amplitudes in the computational basis has length {}, when it should have length {}.", amplitudes.len(), self.amplitudes.len()),
             });
         }
+
         if !Self::equal_within_error(amplitudes.iter().map(|x| x.abs_square()).sum::<f64>(), 1f64) {
             return Err(QuantrError {
-                message: String::from("Array slice given to set amplitudes in super position does not conserve probability, the absolute square sum of the coefficents must be one."),
+                message: String::from("Slice given to set amplitudes in super position does not conserve probability, the absolute square sum of the coefficents must be one."),
             });
         }
 
@@ -335,40 +284,95 @@ impl SuperPosition {
         })
     }
 
-    fn from_hash_to_array(
-        hash_amplitudes: &HashMap<ProductState, Complex<f64>>,
-        vec_amplitudes: &mut Vec<Complex<f64>>,
-        product_size: usize,
-    ) {
-        for (key, val) in hash_amplitudes {
-            if key.num_qubits() != product_size {
-                panic!("Not all product spaces in hashmap are composed from the same number of qubits.");
-            }
-            vec_amplitudes[key.comp_basis()] = *val;
+    fn copy_slice_to_vec(vector: &mut Vec<Complex<f64>>, slice: &[Complex<f64>]) {
+        for (pos, amp) in slice.iter().enumerate() {
+            vector[pos] = *amp;
         }
     }
 
-    /// Sets the amplitudes of a [SuperPosition] from a HashMap.
+    fn equal_within_error(num: f64, compare_num: f64) -> bool {
+        num < compare_num + Self::ERROR_MARGIN && num > compare_num - Self::ERROR_MARGIN
+    }
+
+    /// Returns a superposition constructed from a HashMap with [ProductState] keys and amplitudes
+    /// that are `Complex<f64>` values.
     ///
-    /// States that are missing from the HashMap will be assumed to have 0 amplitude. An error will
-    /// be returned if there is a [ProductState] that does not equal the dimension of the [SuperPosition].
+    /// The amplitudes are checked for probability conservation, and that the product states are
+    /// dimensionally consistent. States that are missing will assume to have zero amplitude.
     pub fn set_amplitudes_from_states(
         &self,
         amplitudes: &HashMap<ProductState, Complex<f64>>,
     ) -> Result<SuperPosition, QuantrError> {
-        if let Some(prod) = amplitudes.keys().next().clone() {
-            let product_size: usize = prod.num_qubits();
-            let mut new_amps: Vec<Complex<f64>> =
-                vec![complex_zero!(); 2usize.pow(product_size as u32)];
+        // Check if amplitudes and product states are correct.
+        if amplitudes.is_empty() {
+            return Err(QuantrError { message: String::from("An empty HashMap was given. A superposition must have at least one non-zero state.") });
+        }
 
-            Self::from_hash_to_array(amplitudes, &mut new_amps, product_size);
+        let product_size: usize = self.amplitudes.len().trailing_zeros() as usize;
+        let mut total_amplitude: f64 = 0f64;
+        for (states, amplitude) in amplitudes {
+            if states.num_qubits() != product_size {
+                return Err(QuantrError { message: format!("The first state has product dimension of {}, whilst the state, |{}>, found as a key in the HashMap has dimension {}.", product_size, states.as_string(), states.num_qubits()) });
+            }
+            total_amplitude += amplitude.abs_square();
+        }
 
-            // Reuses private method, maybe better to avoid to give better error messages.
-            SuperPosition::new(product_size).set_amplitudes(new_amps.as_slice())
-        } else {
-            Err(QuantrError {
-                message: String::from("An empty Hashmap was given to set the amplitudes. This Hashmap needs at least one (key, value) pair."),
-            })
+        if !Self::equal_within_error(total_amplitude, Self::ERROR_MARGIN) {
+            return Err(QuantrError { message: String::from("The total sum of the absolute square of all amplitudes does not equal 1. That is, the superpositon does not conserve probability.") });
+        }
+
+        // Start conversion
+
+        let mut new_amps: Vec<Complex<f64>> =
+            vec![complex_zero!(); 2usize.pow(product_size as u32)];
+
+        Self::from_hash_to_array(amplitudes, &mut new_amps);
+
+        Ok(SuperPosition {
+            amplitudes: new_amps,
+            product_dim: self.product_dim,
+            index: 0,
+        })
+    }
+
+    // Sets the amplitudes of a [SuperPosition] from a HashMap.
+    // States that are missing from the HashMap will be assumed to have 0 amplitude.
+    pub(super) fn set_amplitudes_from_states_unchecked(
+        &self,
+        amplitudes: &HashMap<ProductState, Complex<f64>>,
+    ) -> SuperPosition {
+        let product_size: usize = amplitudes.keys().next().unwrap().num_qubits();
+        let mut new_amps: Vec<Complex<f64>> =
+            vec![complex_zero!(); 2usize.pow(product_size as u32)];
+
+        Self::from_hash_to_array(amplitudes, &mut new_amps);
+
+        SuperPosition {
+            amplitudes: new_amps,
+            product_dim: self.product_dim,
+            index: 0,
+        }
+    }
+
+    /// Creates a HashMap of the superposition with [ProductState] as keys.
+    ///
+    /// The HashMap will not include states with amplitudes that are near zero.
+    pub fn as_hash_map(&self) -> HashMap<ProductState, Complex<f64>> {
+        let mut super_pos_as_hash: HashMap<ProductState, Complex<f64>> = Default::default();
+        for (i, amp) in self.amplitudes.iter().enumerate() {
+            if Self::equal_within_error(amp.abs_square(), 0f64) {
+                super_pos_as_hash.insert(ProductState::binary_basis(i, self.product_dim), *amp);
+            }
+        }
+        super_pos_as_hash
+    }
+
+    fn from_hash_to_array(
+        hash_amplitudes: &HashMap<ProductState, Complex<f64>>,
+        vec_amplitudes: &mut Vec<Complex<f64>>,
+    ) {
+        for (key, val) in hash_amplitudes {
+            vec_amplitudes[key.comp_basis()] = *val;
         }
     }
 }
@@ -410,7 +414,8 @@ mod tests {
                     complex_zero!()
                 ])
                 .unwrap()
-                .get_amp_from_state(ProductState::new(&[Qubit::Zero, Qubit::One])),
+                .get_amplitude_from_state(ProductState::new(&[Qubit::Zero, Qubit::One]))
+                .unwrap(),
             complex_Re!(FRAC_1_SQRT_2)
         )
     }
@@ -426,7 +431,7 @@ mod tests {
                     complex_zero!()
                 ])
                 .unwrap()
-                .get_amp_from_pos(2)
+                .get_amplitude(2)
                 .unwrap(),
             complex_Im!(-FRAC_1_SQRT_2)
         )
@@ -466,10 +471,47 @@ mod tests {
                 .unwrap()
                 .amplitudes,
             SuperPosition::new(2)
-                .set_amplitudes_from_states(&states)
-                .unwrap()
+                .set_amplitudes_from_states_unchecked(&states)
                 .amplitudes
         )
+    }
+
+    #[test]
+    #[should_panic]
+    fn sets_amplitude_from_states_wrong_dimension() {
+        let states: HashMap<ProductState, Complex<f64>> = HashMap::from([
+            (
+                ProductState::new(&[Qubit::Zero, Qubit::One]),
+                complex_Re!(FRAC_1_SQRT_2),
+            ),
+            (
+                ProductState::new(&[Qubit::One, Qubit::Zero, Qubit::One]),
+                complex_Im!(-FRAC_1_SQRT_2),
+            ),
+        ]);
+
+        SuperPosition::new(2)
+            .set_amplitudes_from_states(&states)
+            .unwrap();
+    }
+
+    #[test]
+    #[should_panic]
+    fn sets_amplitude_from_states_breaks_probability() {
+        let states: HashMap<ProductState, Complex<f64>> = HashMap::from([
+            (
+                ProductState::new(&[Qubit::Zero, Qubit::One]),
+                complex_Re!(FRAC_1_SQRT_2),
+            ),
+            (
+                ProductState::new(&[Qubit::One, Qubit::Zero]),
+                complex_Im!(-FRAC_1_SQRT_2 * 0.5f64),
+            ),
+        ]);
+
+        SuperPosition::new(2)
+            .set_amplitudes_from_states(&states)
+            .unwrap();
     }
 
     #[test]
@@ -483,7 +525,8 @@ mod tests {
                 complex_zero!(),
             ])
             .unwrap()
-            .get_amp_from_state(ProductState::new(&[Qubit::Zero, Qubit::One, Qubit::One]));
+            .get_amplitude_from_state(ProductState::new(&[Qubit::Zero, Qubit::One, Qubit::One]))
+            .unwrap();
     }
 
     #[test]
@@ -497,7 +540,7 @@ mod tests {
                 complex_zero!(),
             ])
             .unwrap()
-            .get_amp_from_pos(4)
+            .get_amplitude(4)
             .unwrap();
     }
 

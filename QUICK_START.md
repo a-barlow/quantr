@@ -50,7 +50,7 @@ So, the rest of the code will be inserted into this function. Let's
 first initialise a three qubit circuit:
 
 ```rust,ignore
-let mut circuit: Circuit = Circuit::new(3);
+let mut circuit: Circuit = Circuit::new(3).unwrap();
 ```
 
 Grover's algorithm requires that the starting state is in a 
@@ -166,7 +166,7 @@ dependency.
 use quantr::circuit::{printer::Printer, Circuit, Measurement, StandardGate};
 
 fn main() {
-    let mut circuit = Circuit::new(3);
+    let mut circuit = Circuit::new(3).unwrap();
 
     // Kick state into superposition of equal weights
     circuit

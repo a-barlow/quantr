@@ -12,3 +12,6 @@
 
 pub mod circuit;
 pub mod complex;
+mod error;
+
+use error::QuantrError;

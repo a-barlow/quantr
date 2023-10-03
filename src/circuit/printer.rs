@@ -19,15 +19,17 @@
 // !!! Developer Warning !!!
 // This module is very messy, and it's code will be cleared up in a near future update.
 
-use crate::circuit::StandardGate;
-use crate::circuit::{Circuit, GateInfo, GateSize};
+use super::{Circuit, GateInfo, GateSize, StandardGate};
 use std::fs::File;
 use std::io::Write;
 use std::path::Path;
 
 const GATE_WIDTH_MIN: usize = 3;
 
-/// Handles the printing of the given circuit.
+/// Constructs the diagram of a given circuit.
+///
+/// The methods [Printer::print_diagram] and [Printer::save_diagram] print the diagram to the
+/// console, and save the diagram to a text file respectively.
 pub struct Printer<'a> {
     circuit: &'a Circuit<'a>,
     diagram: Option<String>,
@@ -62,6 +64,8 @@ impl Printer<'_> {
     }
 
     /// Prints the circuit to the console in UTF-8.
+    ///
+    /// A warning is printed to the console if the circuit diagram is expected to exceed 72 chars.
     pub fn print_diagram(&mut self) {
         if self.circuit.circuit_gates.len() / self.circuit.num_qubits > 14 {
             println!("\x1b[93m[Quantr Warning] The string displaying the circuit diagram exceeds 72 chars, causing the circuit to render incorrectly in terminals (due to the wrapping). Instead, consider saving the string to a .txt file by using Printer::save_diagram.\x1b[0m");
@@ -354,7 +358,7 @@ mod tests {
 
     #[test]
     fn producing_string_circuit() {
-        let mut quantum_circuit = Circuit::new(4);
+        let mut quantum_circuit = Circuit::new(4).unwrap();
         quantum_circuit.add_gate(StandardGate::H, 3).unwrap();
         quantum_circuit
             .add_repeating_gate(StandardGate::Y, vec![0, 1])
