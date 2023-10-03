@@ -18,7 +18,7 @@ _If it's a feature, please add examples on how you would use it._
 
 ## Is this pull request a major or minor change with respect to the `dev` branch?
 
-_Please refer to [semantic versioning for Rust](https://doc.rust-lang.org/cargo/reference/semver.html). If this is a major/breaking change, please add an explanation to why it could not be minor, or equally why it should break the current version.
+_Please refer to [semantic versioning for Rust](https://doc.rust-lang.org/cargo/reference/semver.html). If this is a major/breaking change, please add an explanation to why it could not be minor, or equally why it should break the current version._
 
 ## What do the unit tests cover?
 
