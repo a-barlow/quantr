@@ -69,6 +69,8 @@ pub struct ProductState {
 }
 
 impl ProductState {
+    // This should return a result. Would be a breaking change, and possibl slow down the main
+    // algorithm.
     /// Creates a single product state from a slice of qubits.
     ///
     /// The product state is mapped to bra-ket notation like so:
