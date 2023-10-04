@@ -362,7 +362,7 @@ impl SuperPosition {
     pub fn as_hash_map(&self) -> HashMap<ProductState, Complex<f64>> {
         let mut super_pos_as_hash: HashMap<ProductState, Complex<f64>> = Default::default();
         for (i, amp) in self.amplitudes.iter().enumerate() {
-            if Self::equal_within_error(amp.abs_square(), 0f64) {
+            if !Self::equal_within_error(amp.abs_square(), 0f64) {
                 super_pos_as_hash.insert(ProductState::binary_basis(i, self.product_dim), *amp);
             }
         }
