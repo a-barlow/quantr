@@ -8,7 +8,8 @@
 * Author: Andrew Rowan Barlow <a.barlow.dev@gmail.com>
 */
 
-use quantr::circuit::{states::SuperPosition, Circuit, Measurement::NonObservable, StandardGate};
+use quantr::circuit::states::{ProductState, Qubit, SuperPosition};
+use quantr::circuit::{Circuit, Measurement::{NonObservable, Observable}, StandardGate};
 use quantr::{complex::Complex, complex_Re};
 use std::f64::consts::FRAC_1_SQRT_2;
 const ERROR_MARGIN: f64 = 0.00000001f64;
@@ -61,6 +62,16 @@ fn grovers_3qubit() {
 
     if let NonObservable(output_register) = circuit.get_superposition().unwrap() {
         compare_complex_lists_and_register(&correct_super, output_register);
+    }
+
+    if let Observable(bin_count) = circuit.repeat_measurement(500).unwrap() {
+        for (state, count) in bin_count {
+            match state.as_string().as_str() {
+                "011"
+                | "111" => assert!(count > 200usize),
+                _ => assert_eq!(count, 0usize),
+            }
+        }
     }
 }
 
