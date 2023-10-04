@@ -2,6 +2,13 @@
 
 This file logs the versions of quantr.
 
+## 0.2.1 - Fixed `Circuit::repeat_measurement`
+
+Fix:
+
+- The method `Circuit::repeat_measurement` now works as expected. In
+  release 0.2.0, this method only returned an empty hash map.
+
 ## 0.2.0 - Input validation and isolating multi-controlled gates
 
 Features:
