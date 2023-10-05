@@ -2,6 +2,13 @@
 
 This file logs the versions of quantr.
 
+## 0.2.2 - UNTITLED 
+
+Additions:
+
+- A usage section in the README.md, displaying a small snippet of quantr
+  code.
+
 ## 0.2.1 - Fixed `Circuit::repeat_measurement`
 
 Fix:

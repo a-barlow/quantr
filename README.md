@@ -46,10 +46,9 @@ implementation of the Grover's algorithm.
 
 ### Usage
 
-An example of simulating and printing 3 qubit circuit with toffoli and
-hadamrd gates:
+An example of simulating and printing 2 qubit circuit:
 
-```rust, ignore
+```rust
 use quantr::circuit::{Circuit, StandardGate, printer::Printer, 
             Measurement::Observable, Measurement::NonObservable};
 
@@ -89,6 +88,9 @@ fn main() {
 
 }
 ```
+
+A more detailed example of using quantr is given in the [quick start
+guide](QUICK_START.md).
 
 ### Limitations (currently)
 
