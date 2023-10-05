@@ -15,16 +15,17 @@ test](https://github.com/a-barlow/quantr/workflows/cargo%20test/badge.svg)](http
 > [other simulations](#other-quantum-computer-simulators) if you are 
 > intending to use quantr for projects.  
 
-A Rust library crate that builds, prints and simulates a quantum computer.
+A Rust library crate that builds, prints and simulates a quantum
+computer.
 
 This crate allows the user to build a quantum circuit by adding columns
 of gates via various methods. Once the circuit has been built, then it
-can be simulated which attaches the register |00..0>, resulting in a
+can be simulated, which attaches the register |00..0> resulting in a
 superposition that can be measured.
 
 For a brief example of using quantr, see the 
 [quick start guide](QUICK_START.md) which walks through an
-implementation of the Grover's algorithm.
+implementation of Grover's algorithm.
 
 ### Defining features
 
@@ -35,10 +36,10 @@ implementation of the Grover's algorithm.
 - Prints the circuit diagram to the terminal, or saves it to a text
   file, as a UTF-8 string.
 - Custom gates can be implemented easily by giving their explicit linear
-  mappings on states. This allows the user to avoid representing the
-  gates as matrices.
+  mappings on product states. This allows the user to avoid representing
+  the gates as matrices.
 - Attempts to minimise memory consumption by not using matrices nor
-  sparse matrices, and instead uses functions to represent the linear
+  sparse matrices, but instead uses functions to represent the linear
   mapping of gates.
 - Only safe Rust code is used, and the only dependency is the
   [rand](https://docs.rs/rand/latest/rand/) crate.
@@ -46,7 +47,7 @@ implementation of the Grover's algorithm.
 
 ### Usage
 
-An example of simulating and printing 2 qubit circuit:
+An example of simulating and printing a two qubit circuit:
 
 ```rust
 use quantr::circuit::{Circuit, StandardGate, printer::Printer, 
@@ -63,7 +64,6 @@ fn main() {
         .add_gate(StandardGate::CNot(0), 1)
         .unwrap();
     
-    
     let mut printer = Printer::new(&quantum_circuit);
     printer.print_diagram();
     // The above prints the following:
@@ -77,8 +77,9 @@ fn main() {
 
     quantum_circuit.simulate();
 
-    // Prints the number of times that each state was observered over 500 measurments of
-    // superpositions.
+    // Below prints the number of times that each state was observered 
+    // over 500 measurements of superpositions.
+
     if let Observable(bin_count) = quantum_circuit.repeat_measurement(500).unwrap() {
         println!("[Observable] Bin count of observed states.");
         for (state, count) in bin_count {
@@ -91,11 +92,11 @@ fn main() {
 
 A more detailed example of using quantr is given in the [quick start
 guide](QUICK_START.md).
-
+ 
 ### Limitations (currently)
 
 - There is **no noise** consideration, or ability to introduce noise.
-- There is **no ability to add classical circuits**.
+- There is **no ability to add classical wires**.
 - The circuit size has an **upper bound of 50 qubits**. Although, due to
   incomplete optimisations, it's recommended that the circuit size
   should be much less.
