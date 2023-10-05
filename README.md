@@ -43,6 +43,53 @@ implementation of the Grover's algorithm.
 - Only safe Rust code is used, and the only dependency is the
   [rand](https://docs.rs/rand/latest/rand/) crate.
 
+
+### Usage
+
+An example of simulating and printing 3 qubit circuit with toffoli and
+hadamrd gates:
+
+```rust, ignore
+use quantr::circuit::{Circuit, StandardGate, printer::Printer, 
+            Measurement::Observable, Measurement::NonObservable};
+
+fn main() {
+
+    let mut quantum_circuit: Circuit = Circuit::new(2).unwrap();
+
+    quantum_circuit 
+        .add_gates(vec![StandardGate::H, StandardGate::H])
+        .unwrap();
+    quantum_circuit
+        .add_gate(StandardGate::CNot(0), 1)
+        .unwrap();
+    
+    
+    let mut printer = Printer::new(&quantum_circuit);
+    printer.print_diagram();
+    // The above prints the following:
+    // ┏━━━┓     
+    // ┨ H ┠──█──
+    // ┗━━━┛  │  
+    //        │  
+    // ┏━━━┓┏━┷━┓
+    // ┨ H ┠┨ X ┠
+    // ┗━━━┛┗━━━┛
+
+    quantum_circuit.simulate();
+
+    // Prints the number of times that each state was observered over 500 measurments of
+    // superpositions.
+    if let Observable(bin_count) = quantum_circuit.repeat_measurement(500).unwrap() {
+        println!("[Observable] Bin count of observed states.");
+        for (state, count) in bin_count {
+            println!("|{}> observed {} times", state.as_string(), count);
+        }
+    }
+
+}
+```
+
 ### Limitations (currently)
 
 - There is **no noise** consideration, or ability to introduce noise.
@@ -90,9 +137,9 @@ computing in Rust.
 
 A useful and very practical simulator for learning quantum computing is
 [Quirk](https://algassert.com/quirk). It's a real-time online simulator
-that interfaces via drag-and-drop gates. Note that Quirk uses the 
-reverse ordering of labelling their states from the quantum circuit as 
-defined here.
+that interfaces via drag-and-drop gates. Note that the labelling of the
+states in the computational basis in Quirk is reversed when compared to
+quantr's labelling of such states.
 
 ### Licence 
 
