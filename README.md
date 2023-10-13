@@ -51,7 +51,7 @@ An example of simulating and printing a two qubit circuit:
 
 ```rust
 use quantr::circuit::{Circuit, StandardGate, printer::Printer, 
-            Measurement::Observable, Measurement::NonObservable};
+            Measurement::Observable};
 
 fn main() {
 

@@ -799,11 +799,7 @@ mod tests {
     }
 
     fn equal_within_error(num: f64, compare_num: f64) -> bool {
-        if num < compare_num + ERROR_MARGIN && num > compare_num - ERROR_MARGIN {
-            true
-        } else {
-            false
-        }
+        num < compare_num + ERROR_MARGIN && num > compare_num - ERROR_MARGIN
     }
 
     fn compare_circuit(quantum_circuit: Circuit, correct_register: &[Complex<f64>]) {
