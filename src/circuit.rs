@@ -112,7 +112,6 @@ pub enum StandardGate<'a> {
     Custom(fn(ProductState) -> SuperPosition, &'a [usize], String),
 }
 
-
 impl<'a> StandardGate<'a> {
     // Retreives the list of nodes within a gate.
     fn get_nodes(&self) -> Option<Vec<usize>> {

@@ -61,7 +61,7 @@ struct Extrema {
 }
 
 impl Printer<'_> {
-    /// Handle the printing of the given circuit. 
+    /// Handle the printing of the given circuit.
     pub fn new<'a>(circuit: &'a Circuit) -> Printer<'a> {
         Printer {
             circuit,
@@ -73,7 +73,7 @@ impl Printer<'_> {
     ///
     /// A warning is printed to the console if the circuit diagram is expected to exceed 72 chars.
     pub fn print_diagram(&mut self) {
-        if self.circuit.circuit_gates.len() / self.circuit.num_qubits > 14 { 
+        if self.circuit.circuit_gates.len() / self.circuit.num_qubits > 14 {
             println!("\x1b[93m[Quantr Warning] The string displaying the circuit diagram exceeds 72 chars, which could cause the circuit to render incorrectly in terminals (due to the wrapping). Instead, consider saving the string to a .txt file by using Printer::save_diagram.\x1b[0m");
         }
         println!("{}", self.get_or_make_diagram());
@@ -118,65 +118,75 @@ impl Printer<'_> {
     fn get_or_make_diagram(&mut self) -> String {
         match &self.diagram {
             Some(diagram) => diagram.to_string(),
-            None => {
-                self.make_diagram()
-            }
+            None => self.make_diagram(),
         }
     }
 
     fn make_diagram(&mut self) -> String {
         // num qubits cannot be zero due to initialisation
         let number_of_columns: usize = self.circuit.circuit_gates.len() / self.circuit.num_qubits;
-        let mut printed_diagram: Vec<String> = vec!["".to_string(); 4 * self.circuit.num_qubits + 1];
+        let mut printed_diagram: Vec<String> =
+            vec!["".to_string(); 4 * self.circuit.num_qubits + 1];
 
         for column_num in 0..number_of_columns {
-
             // Get a column of gates with all names and length of names
-            let (gate_info_column, longest_name_length): (Vec<GatePrinterInfo>, usize) = Self::into_printer_gate_info(self.get_column_of_gates(column_num));
+            let (gate_info_column, longest_name_length): (Vec<GatePrinterInfo>, usize) =
+                Self::into_printer_gate_info(self.get_column_of_gates(column_num));
 
             let diagram_schematic = DiagramSchema {
                 longest_name_length,
-                gate_info_column 
+                gate_info_column,
             };
 
-            if let Some((position, multi_gate_info)) = Self::get_multi_gate(&diagram_schematic.gate_info_column) {
+            if let Some((position, multi_gate_info)) =
+                Self::get_multi_gate(&diagram_schematic.gate_info_column)
+            {
                 // Deals with column of single multi-gate
-                Self::draw_multi_gates(&mut printed_diagram, multi_gate_info, &self.circuit.num_qubits, position);
+                Self::draw_multi_gates(
+                    &mut printed_diagram,
+                    multi_gate_info,
+                    &self.circuit.num_qubits,
+                    position,
+                );
             } else {
                 // Deals with single gates
                 Self::draw_single_gates(&mut printed_diagram, diagram_schematic);
             }
         }
 
-        // Collect all the strings to return a single string giving the diagram 
+        // Collect all the strings to return a single string giving the diagram
         let final_diagram = printed_diagram
-                .into_iter()
-                .fold(String::from(""), |acc, line| acc + &line + &"\n");
+            .into_iter()
+            .fold(String::from(""), |acc, line| acc + &line + &"\n");
 
         self.diagram = Some(final_diagram.clone());
 
         final_diagram
     }
-    
+
     fn get_column_of_gates(&self, column_num: usize) -> &[StandardGate] {
         &self.circuit.circuit_gates
-                [column_num * self.circuit.num_qubits..(column_num + 1) * self.circuit.num_qubits]
+            [column_num * self.circuit.num_qubits..(column_num + 1) * self.circuit.num_qubits]
     }
 
-    fn into_printer_gate_info<'a>(gates_column: &'a [StandardGate<'a>]) -> (Vec<GatePrinterInfo<'a>>, usize) {
+    fn into_printer_gate_info<'a>(
+        gates_column: &'a [StandardGate<'a>],
+    ) -> (Vec<GatePrinterInfo<'a>>, usize) {
         let mut gates_infos: Vec<GatePrinterInfo> = Default::default();
         let mut longest_name_length: usize = 1usize;
         for gate in gates_column.into_iter() {
             let gate_size: GateSize = super::Circuit::classify_gate_size(gate);
             let gate_name: String = Self::get_gate_name(gate);
             let gate_name_length: usize = gate_name.len();
-            if gate_name_length > longest_name_length { longest_name_length = gate_name_length.clone() }
-            gates_infos.push(GatePrinterInfo {  
+            if gate_name_length > longest_name_length {
+                longest_name_length = gate_name_length.clone()
+            }
+            gates_infos.push(GatePrinterInfo {
                 gate_size,
                 gate_name,
                 gate_name_length,
-                gate
-            })  
+                gate,
+            })
         }
         (gates_infos, longest_name_length)
     }
@@ -198,11 +208,13 @@ impl Printer<'_> {
     }
 
     // Finds if there is a gate with one/multiple control nodes
-    fn get_multi_gate<'a>(gates: &Vec<GatePrinterInfo<'a>>) -> Option<(usize, GatePrinterInfo<'a>)> {
+    fn get_multi_gate<'a>(
+        gates: &Vec<GatePrinterInfo<'a>>,
+    ) -> Option<(usize, GatePrinterInfo<'a>)> {
         for (pos, gate_info) in gates.iter().enumerate() {
             match gate_info.gate_size {
-               GateSize::Single => (),
-               _ => return Some((pos, gate_info.clone())),
+                GateSize::Single => (),
+                _ => return Some((pos, gate_info.clone())),
             }
         }
         None
@@ -213,17 +225,23 @@ impl Printer<'_> {
         for (pos, gate_info) in diagram_scheme.gate_info_column.iter().enumerate() {
             let padding: usize = diagram_scheme.longest_name_length - gate_info.gate_name_length;
             let cache: RowSchematic = match gate_info.gate {
-                StandardGate::Id => RowSchematic { 
-                    top: " ".repeat(diagram_scheme.longest_name_length+4), 
-                    name: "─".repeat(diagram_scheme.longest_name_length+4), 
-                    bottom: " ".repeat(diagram_scheme.longest_name_length+4), 
-                    connection: " ".repeat(diagram_scheme.longest_name_length+4), 
-                }, 
-                _ => RowSchematic { 
-                    top: "┏━".to_string() + &"━".repeat(gate_info.gate_name_length) + &"━┓" + &" ".repeat(padding), 
-                    name: "┨ ".to_string() + &gate_info.gate_name + &" ┠" + &"─".repeat(padding) , 
-                    bottom: "┗━".to_string() + &"━".repeat(gate_info.gate_name_length) + &"━┛" + &" ".repeat(padding),
-                    connection: " ".repeat(diagram_scheme.longest_name_length+4)
+                StandardGate::Id => RowSchematic {
+                    top: " ".repeat(diagram_scheme.longest_name_length + 4),
+                    name: "─".repeat(diagram_scheme.longest_name_length + 4),
+                    bottom: " ".repeat(diagram_scheme.longest_name_length + 4),
+                    connection: " ".repeat(diagram_scheme.longest_name_length + 4),
+                },
+                _ => RowSchematic {
+                    top: "┏━".to_string()
+                        + &"━".repeat(gate_info.gate_name_length)
+                        + &"━┓"
+                        + &" ".repeat(padding),
+                    name: "┨ ".to_string() + &gate_info.gate_name + &" ┠" + &"─".repeat(padding),
+                    bottom: "┗━".to_string()
+                        + &"━".repeat(gate_info.gate_name_length)
+                        + &"━┛"
+                        + &" ".repeat(padding),
+                    connection: " ".repeat(diagram_scheme.longest_name_length + 4),
                 },
             };
             Self::add_string_to_schematic(row_schematics, pos, cache)
@@ -231,78 +249,114 @@ impl Printer<'_> {
     }
 
     // Draw a single column containing a multigate function.
-    fn draw_multi_gates<'a>(row_schematics: &mut Vec<String>, multi_gate_info: GatePrinterInfo<'a>, column_size: &usize, position: usize) 
-    {
-        let mut control_nodes: Vec<usize> = multi_gate_info.gate.get_nodes().expect("Single gate in drawing multi gate.");
+    fn draw_multi_gates<'a>(
+        row_schematics: &mut Vec<String>,
+        multi_gate_info: GatePrinterInfo<'a>,
+        column_size: &usize,
+        position: usize,
+    ) {
+        let mut control_nodes: Vec<usize> = multi_gate_info
+            .gate
+            .get_nodes()
+            .expect("Single gate in drawing multi gate.");
         control_nodes.push(position);
 
-        let (min, max): (usize, usize) = (*control_nodes.iter().min().unwrap(), *control_nodes.iter().max().unwrap());
+        let (min, max): (usize, usize) = (
+            *control_nodes.iter().min().unwrap(),
+            *control_nodes.iter().max().unwrap(),
+        );
 
         let extreme_nodes: Extrema = Extrema { max, min };
 
         for row in 0..*column_size {
-            let cache: RowSchematic =  
-                if row == position {
-                    RowSchematic {
-                        top:  "┏━".to_string() + if position > extreme_nodes.min {"┷"} else {"━"} + &"━".repeat(multi_gate_info.gate_name_length-1) + &"━┓",
-                        name: "┨ ".to_string() + &multi_gate_info.gate_name + &" ┠",
-                        bottom: "┗━".to_string() + if position < extreme_nodes.max {"┯"} else {"━"} + &"━".repeat(multi_gate_info.gate_name_length-1) + &"━┛",
-                        connection: "  ".to_string() + if position < extreme_nodes.max {"│"} else {" "} + &" ".repeat(multi_gate_info.gate_name_length+1),
-                    }
-                } else if row == extreme_nodes.min {
-                    RowSchematic {
-                        top: " ".repeat(multi_gate_info.gate_name_length+4),
-                        name: "──█──".to_string() + &"─".repeat(multi_gate_info.gate_name_length-1),
-                        bottom: "  │  ".to_string() + &" ".repeat(multi_gate_info.gate_name_length-1),
-                        connection: "  │  ".to_string() + &" ".repeat(multi_gate_info.gate_name_length-1),  
-                    }
-                } else if row == extreme_nodes.max {
-                    RowSchematic {
-                        top: "  │  ".to_string() + &" ".repeat(multi_gate_info.gate_name_length-1),                    
-                        name: "──█──".to_string() + &"─".repeat(multi_gate_info.gate_name_length-1),
-                        bottom: " ".repeat(multi_gate_info.gate_name_length+4),
-                        connection: " ".repeat(multi_gate_info.gate_name_length+4),
-                    }
-                } else if control_nodes.contains(&row) {
-                    RowSchematic {
-                        top: "  │  ".to_string() + &" ".repeat(multi_gate_info.gate_name_length-1),  
-                        name: "──█──".to_string() + &"─".repeat(multi_gate_info.gate_name_length-1),
-                        bottom: "  │  ".to_string() + &" ".repeat(multi_gate_info.gate_name_length-1),
-                        connection: "  │  ".to_string() + &" ".repeat(multi_gate_info.gate_name_length-1),  
-                    }
-                } else if (extreme_nodes.min..=extreme_nodes.max).contains(&row) {
-                    RowSchematic {
-                        top: "  │  ".to_string() + &" ".repeat(multi_gate_info.gate_name_length-1),  
-                        name: "─────".to_string() + &"─".repeat(multi_gate_info.gate_name_length-1),
-                        bottom: "  │  ".to_string() + &" ".repeat(multi_gate_info.gate_name_length-1),
-                        connection: "  │  ".to_string() + &" ".repeat(multi_gate_info.gate_name_length-1),  
-                    }
-
-                } else {
-                    RowSchematic {
-                        top: " ".repeat(multi_gate_info.gate_name_length+4),
-                        name: "─────".to_string() + &"─".repeat(multi_gate_info.gate_name_length-1),
-                        bottom: " ".to_string() + &" ".repeat(multi_gate_info.gate_name_length+3),
-                        connection: " ".to_string() + &" ".repeat(multi_gate_info.gate_name_length+3),  
-                    }
-                };
+            let cache: RowSchematic = if row == position {
+                RowSchematic {
+                    top: "┏━".to_string()
+                        + if position > extreme_nodes.min {
+                            "┷"
+                        } else {
+                            "━"
+                        }
+                        + &"━".repeat(multi_gate_info.gate_name_length - 1)
+                        + &"━┓",
+                    name: "┨ ".to_string() + &multi_gate_info.gate_name + &" ┠",
+                    bottom: "┗━".to_string()
+                        + if position < extreme_nodes.max {
+                            "┯"
+                        } else {
+                            "━"
+                        }
+                        + &"━".repeat(multi_gate_info.gate_name_length - 1)
+                        + &"━┛",
+                    connection: "  ".to_string()
+                        + if position < extreme_nodes.max {
+                            "│"
+                        } else {
+                            " "
+                        }
+                        + &" ".repeat(multi_gate_info.gate_name_length + 1),
+                }
+            } else if row == extreme_nodes.min {
+                RowSchematic {
+                    top: " ".repeat(multi_gate_info.gate_name_length + 4),
+                    name: "──█──".to_string() + &"─".repeat(multi_gate_info.gate_name_length - 1),
+                    bottom: "  │  ".to_string() + &" ".repeat(multi_gate_info.gate_name_length - 1),
+                    connection: "  │  ".to_string()
+                        + &" ".repeat(multi_gate_info.gate_name_length - 1),
+                }
+            } else if row == extreme_nodes.max {
+                RowSchematic {
+                    top: "  │  ".to_string() + &" ".repeat(multi_gate_info.gate_name_length - 1),
+                    name: "──█──".to_string() + &"─".repeat(multi_gate_info.gate_name_length - 1),
+                    bottom: " ".repeat(multi_gate_info.gate_name_length + 4),
+                    connection: " ".repeat(multi_gate_info.gate_name_length + 4),
+                }
+            } else if control_nodes.contains(&row) {
+                RowSchematic {
+                    top: "  │  ".to_string() + &" ".repeat(multi_gate_info.gate_name_length - 1),
+                    name: "──█──".to_string() + &"─".repeat(multi_gate_info.gate_name_length - 1),
+                    bottom: "  │  ".to_string() + &" ".repeat(multi_gate_info.gate_name_length - 1),
+                    connection: "  │  ".to_string()
+                        + &" ".repeat(multi_gate_info.gate_name_length - 1),
+                }
+            } else if (extreme_nodes.min..=extreme_nodes.max).contains(&row) {
+                RowSchematic {
+                    top: "  │  ".to_string() + &" ".repeat(multi_gate_info.gate_name_length - 1),
+                    name: "─────".to_string() + &"─".repeat(multi_gate_info.gate_name_length - 1),
+                    bottom: "  │  ".to_string() + &" ".repeat(multi_gate_info.gate_name_length - 1),
+                    connection: "  │  ".to_string()
+                        + &" ".repeat(multi_gate_info.gate_name_length - 1),
+                }
+            } else {
+                RowSchematic {
+                    top: " ".repeat(multi_gate_info.gate_name_length + 4),
+                    name: "─────".to_string() + &"─".repeat(multi_gate_info.gate_name_length - 1),
+                    bottom: " ".to_string() + &" ".repeat(multi_gate_info.gate_name_length + 3),
+                    connection: " ".to_string() + &" ".repeat(multi_gate_info.gate_name_length + 3),
+                }
+            };
             Self::add_string_to_schematic(row_schematics, row, cache)
         }
     }
 
     // Adds a gate to the vector of strings.
-    fn add_string_to_schematic(schematic: &mut Vec<String>, row_schem_num: usize, cache: RowSchematic) {
-        schematic[row_schem_num*4].push_str(&cache.top);
-        schematic[row_schem_num*4 + 1].push_str(&cache.name);
-        schematic[row_schem_num*4 + 2].push_str(&cache.bottom);
-        schematic[row_schem_num*4 + 3].push_str(&cache.connection);
+    fn add_string_to_schematic(
+        schematic: &mut Vec<String>,
+        row_schem_num: usize,
+        cache: RowSchematic,
+    ) {
+        schematic[row_schem_num * 4].push_str(&cache.top);
+        schematic[row_schem_num * 4 + 1].push_str(&cache.name);
+        schematic[row_schem_num * 4 + 2].push_str(&cache.bottom);
+        schematic[row_schem_num * 4 + 3].push_str(&cache.connection);
     }
-
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::circuit::{printer::Printer, Circuit, StandardGate, SuperPosition, ProductState, Qubit};
+    use crate::circuit::{
+        printer::Printer, Circuit, ProductState, Qubit, StandardGate, SuperPosition,
+    };
     use crate::complex::Complex;
     use crate::complex_Re_array;
     // These are primarily tested by making sure they print correctly to
@@ -310,12 +364,14 @@ mod tests {
 
     fn example_cnot(prod: ProductState) -> SuperPosition {
         let input_register: [Qubit; 2] = [prod.state[0], prod.state[1]];
-        SuperPosition::new(2).set_amplitudes(match input_register {
-            [Qubit::Zero, Qubit::Zero] => &complex_Re_array!(1f64, 0f64, 0f64, 0f64),
-            [Qubit::Zero, Qubit::One]  => &complex_Re_array!(0f64, 1f64, 0f64, 0f64),
-            [Qubit::One, Qubit::Zero]  => &complex_Re_array!(0f64, 0f64, 0f64, 1f64),
-            [Qubit::One, Qubit::One]   => &complex_Re_array!(0f64, 0f64, 1f64, 0f64),
-        }).unwrap()
+        SuperPosition::new(2)
+            .set_amplitudes(match input_register {
+                [Qubit::Zero, Qubit::Zero] => &complex_Re_array!(1f64, 0f64, 0f64, 0f64),
+                [Qubit::Zero, Qubit::One] => &complex_Re_array!(0f64, 1f64, 0f64, 0f64),
+                [Qubit::One, Qubit::Zero] => &complex_Re_array!(0f64, 0f64, 0f64, 1f64),
+                [Qubit::One, Qubit::One] => &complex_Re_array!(0f64, 0f64, 1f64, 0f64),
+            })
+            .unwrap()
     }
 
     #[test]
@@ -343,7 +399,14 @@ mod tests {
     fn producing_string_circuit_custom() {
         let mut quantum_circuit = Circuit::new(4).unwrap();
         quantum_circuit.add_gate(StandardGate::H, 3).unwrap();
-        quantum_circuit.add_gates(vec![StandardGate::H, StandardGate::Custom(example_cnot, &[3], "Custom CNot".to_string()), StandardGate::Id, StandardGate::X]).unwrap();
+        quantum_circuit
+            .add_gates(vec![
+                StandardGate::H,
+                StandardGate::Custom(example_cnot, &[3], "Custom CNot".to_string()),
+                StandardGate::Id,
+                StandardGate::X,
+            ])
+            .unwrap();
         quantum_circuit
             .add_repeating_gate(StandardGate::Y, vec![0, 1])
             .unwrap();
@@ -355,7 +418,7 @@ mod tests {
         quantum_circuit.add_gate(StandardGate::CNot(2), 1).unwrap();
 
         let mut circuit_printer: Printer = Printer::new(&quantum_circuit);
-        
+
         //circuit_printer.print_diagram();
 
         assert_eq!(circuit_printer.get_diagram(), "     ┏━━━┓               ┏━━━┓           ┏━━━┓     \n─────┨ H ┠───────────────┨ Y ┠──█────────┨ X ┠─────\n     ┗━━━┛               ┗━━━┛  │        ┗━┯━┛     \n                                │          │       \n          ┏━━━━━━━━━━━━━┓┏━━━┓┏━┷━━┓       │  ┏━━━┓\n──────────┨ Custom CNot ┠┨ Y ┠┨ To ┠──█───────┨ X ┠\n          ┗━┯━━━━━━━━━━━┛┗━━━┛┗━┯━━┛  │    │  ┗━┯━┛\n            │                   │     │    │    │  \n            │                   │     │    │    │  \n───────────────────────────────────────────█────█──\n            │                   │     │            \n            │                   │     │            \n┏━━━┓┏━━━┓  │                   │   ┏━┷━┓          \n┨ H ┠┨ X ┠──█───────────────────█───┨ X ┠──────────\n┗━━━┛┗━━━┛                          ┗━━━┛          \n                                                   \n\n".to_string());
