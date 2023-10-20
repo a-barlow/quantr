@@ -9,6 +9,14 @@ Additions:
 - A usage section in the README.md, displaying a small snippet of quantr
   code.
 
+Fixes:
+
+- Custom gates added to columns were not automatically pushed so that
+  they were isolated.
+- The `Printer` struct now prints double gates, triple gates and custom
+  gates correctly, in addition to adjusting to the circuit diagram for
+  variable length of the gate names.
+
 ## 0.2.1 - Fixed `Circuit::repeat_measurement`
 
 Fix:
