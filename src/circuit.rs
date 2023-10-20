@@ -112,9 +112,29 @@ pub enum StandardGate<'a> {
     Custom(fn(ProductState) -> SuperPosition, &'a [usize], String),
 }
 
+
+impl<'a> StandardGate<'a> {
+    // Retreives the list of nodes within a gate.
+    fn get_nodes(&self) -> Option<Vec<usize>> {
+        match self {
+            StandardGate::Id
+            | StandardGate::H
+            | StandardGate::X
+            | StandardGate::Y
+            | StandardGate::Z => None,
+            StandardGate::CNot(c)
+            | StandardGate::Swap(c)
+            | StandardGate::CZ(c)
+            | StandardGate::CY(c) => Some(vec![*c]),
+            StandardGate::Toffoli(c1, c2) => Some(vec![*c1, *c2]),
+            StandardGate::Custom(_, nodes, _) => Some(nodes.to_vec()),
+        }
+    }
+}
+
 /// For identifying which gates are single, double etc.
-#[derive(Debug)]
-enum GateSize {
+#[derive(Debug, Clone)]
+pub(crate) enum GateSize {
     Single,
     Double,
     Triple,
@@ -310,7 +330,7 @@ impl<'a> Circuit<'a> {
         } else {
             for (pos, gate) in gates.iter().enumerate() {
                 match Self::classify_gate_size(gate) {
-                    GateSize::Double | GateSize::Triple => {
+                    GateSize::Double | GateSize::Triple | GateSize::Custom => {
                         let mut temp_vec = vec![StandardGate::Id; gates.len()];
                         temp_vec[pos] = gate.clone();
                         extended_vec.extend(temp_vec);
@@ -589,7 +609,7 @@ impl<'a> Circuit<'a> {
     // Helps in constructing a bundle. This ultimately makes the match statements more concise.
     // Maybe best to see if this can be hardcoded in before hand; that is the bundles are added to
     // the circuit instead?
-    fn classify_gate_size(gate: &StandardGate) -> GateSize {
+    pub(crate) fn classify_gate_size(gate: &StandardGate) -> GateSize {
         match gate {
             StandardGate::Id
             | StandardGate::H
