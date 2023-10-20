@@ -2,11 +2,11 @@
 
 This file logs the versions of quantr.
 
-## 0.2.2 - UNTITLED 
+## 0.2.2 - Fixing the `Printer` and pushing of custom functions 
 
 Additions:
 
-- A usage section in the README.md, displaying a small snippet of quantr
+- A usage section in the README.md; displaying a small snippet of quantr
   code.
 
 Fixes:
