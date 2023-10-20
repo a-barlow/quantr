@@ -2,6 +2,21 @@
 
 This file logs the versions of quantr.
 
+## 0.2.2 - Fixing the `Printer` and pushing of custom functions 
+
+Additions:
+
+- A usage section in the README.md; displaying a small snippet of quantr
+  code.
+
+Fixes:
+
+- Custom gates added to columns were not automatically pushed so that
+  they were isolated.
+- The `Printer` struct now prints double gates, triple gates and custom
+  gates correctly, in addition to adjusting to the circuit diagram for
+  variable length of the gate names.
+
 ## 0.2.1 - Fixed `Circuit::repeat_measurement`
 
 Fix:
@@ -13,15 +28,14 @@ Fix:
 
 Features:
 
-- Gates with multiple control nodes are now automatically pushed to
-  columns where they are isolated. This automatic pushing occurs when
-  the user attempts to add several multi-control node gates at the same
-  time via the methods that append gates to the circuit.
-- All methods and initialisations of structs return a 
-  `Result<_,QuantError>`.
+- Gates with multiple control nodes (multi-control gates) are now
+  automatically pushed to columns so that they are isolated. This
+  automatic pushing occurs when the user attempts to add several
+  multi-control gates at the same time via the methods that append gates
+  to the circuit. 
 - The documentation has been re-shuffled for the `circuit` module, where
-  they are now ordered in such a way that they are most likely to be
-  used.
+  the methods are now in order of when they would be used in a
+  simulation of a circuit. 
 - Compiled with Rust 1.72.1.
 
 Breaking changes:
@@ -31,22 +45,24 @@ Breaking changes:
 - A circuit now has an upper bound of 50 qubits (although, much less is
   recommended due to incomplete optimisations).
 - The following methods have now been made unavailable to the user:
-    - `States::insert_qubits`
-    - `States::num_qubits`
-    - `States::get`
-    - `States::comp_basis`
-    - `States::binary_basis`
+    - `ProductStates::insert_qubits`
+    - `ProductStates::num_qubits`
+    - `ProductStates::get`
+    - `ProductStates::comp_basis`
+    - `ProductStates::binary_basis`
 - The following methods have been removed:
-    - `States::as_hash_string`
+    - `SuperPosition::as_hash_string`
 - The following methods have been renamed:
-    - `States::as_hash` -> `States::as_hash_map`
-    - `States::get_amp_from_pos` -> `States::get_amplitude`
-    - `States::get_amp_from_state` -> `States::get_amplitude_from_state`
-- `QuantrError` is no longer accessible nor referenced in documentation.
+    - `SuperPosition::as_hash` -> `States::as_hash_map`
+    - `SuperPosition::get_amp_from_pos` -> `States::get_amplitude`
+    - `SuperPosition::get_amp_from_state` ->
+      `States::get_amplitude_from_state`
+- `QuantrError` is no longer accessible to the user.
 
 Additions:
 
-- Unit tests for adding multiple gates with multiple control nodes.
+- Unit tests for adding multiple multi-control gates.
+- Unit tests for user validation of various methods.
 
 ## 0.1.2 - CZ and Swap gate confusion
 

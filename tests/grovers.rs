@@ -90,9 +90,5 @@ fn compare_complex_lists_and_register(correct_list: &[Complex<f64>], register: &
 }
 
 fn equal_within_error(num: f64, compare_num: f64) -> bool {
-    if num < compare_num + ERROR_MARGIN && num > compare_num - ERROR_MARGIN {
-        true
-    } else {
-        false
-    }
+    num < compare_num + ERROR_MARGIN && num > compare_num - ERROR_MARGIN
 }
