@@ -128,6 +128,14 @@ impl ProductState {
             .collect::<String>()
     }
 
+    /// Returns the [ProductState] as a [SuperPosition].
+    pub fn as_super_position(self) -> SuperPosition {
+        SuperPosition::new(self.num_qubits())
+            .set_amplitudes_from_states_unchecked(
+                &HashMap::from([(self, complex_Re!(1f64))])
+            ) 
+    }
+    
     // Converts the computational basis labelling (a binary integer), into base 10.
     fn comp_basis(&self) -> usize {
         self.state
@@ -384,6 +392,17 @@ mod tests {
     use super::*;
     use crate::complex_Im;
     use std::f64::consts::FRAC_1_SQRT_2;
+
+    #[test]
+    fn converts_productstate_to_superpos() {
+        assert_eq!(
+            ProductState::new(&[Qubit::One, Qubit::Zero]).as_super_position(),
+            SuperPosition::new(2).set_amplitudes(&[complex_zero!(),  
+                                                 complex_zero!(), 
+                                                 complex_Re!(1f64), 
+                                                 complex_zero!()]).unwrap()
+        )
+    }
 
     #[test]
     fn converts_from_binary_to_comp_basis() {
