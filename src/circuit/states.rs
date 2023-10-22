@@ -104,6 +104,17 @@ impl ProductState {
         self.state.len()
     }
 
+    /// Inverts a binary digit that represent the product state.
+    pub fn invert_digit(&mut self, place_num: usize) -> Result<(), QuantrError> {
+        if place_num >= self.num_qubits() {
+            return Err(QuantrError { message: format!("The position of the binary digit, {}, is out of bounds. The product dimension is {}, and so the position must be strictly less.", place_num, self.num_qubits()) })
+        }
+
+        let old_qubit: Qubit = self.state[place_num].clone();
+        self.state[place_num] = if old_qubit == Qubit::Zero {Qubit:: One } else {Qubit::Zero};
+        Ok(())
+    } 
+
     /// Concatenate a product state with a qubit.
     ///
     /// In effect, this is using the tensor prodcut to create a new state.
@@ -584,5 +595,15 @@ mod tests {
             ProductState::new(&[Qubit::One, Qubit::One, Qubit::Zero]),
             ProductState::binary_basis(6, 3)
         )
+    }
+
+    #[test]
+    fn inverting_binary_digit() {
+        let mut inverted = ProductState::new(&[Qubit::One, Qubit::One, Qubit::Zero]);
+        inverted.invert_digit(2).unwrap();
+        assert_eq!(
+            ProductState::new(&[Qubit::One, Qubit::One, Qubit::One]),
+            inverted
+         )
     }
 }
