@@ -197,11 +197,11 @@ impl Printer<'_> {
             StandardGate::H => "H".to_string(),
             StandardGate::Y => "Y".to_string(),
             StandardGate::Z => "Z".to_string(),
-            StandardGate::Swap(_) => "Swap".to_string(),
+            StandardGate::Swap(_) => "Sw".to_string(),
             StandardGate::CZ(_) => "Z".to_string(),
             StandardGate::CY(_) => "Y".to_string(),
             StandardGate::CNot(_) => "X".to_string(),
-            StandardGate::Toffoli(_, _) => "To".to_string(),
+            StandardGate::Toffoli(_, _) => "X".to_string(),
             StandardGate::Custom(_, _, name) => name.to_string(),
             _ => String::from("#"),
         }
@@ -390,9 +390,9 @@ mod tests {
 
         let mut circuit_printer: Printer = Printer::new(&quantum_circuit);
 
-        //circuit_printer.print_diagram();
+        circuit_printer.print_diagram();
 
-        assert_eq!(circuit_printer.get_diagram(), "     ┏━━━┓           ┏━━━┓     \n─────┨ Y ┠──█────────┨ X ┠─────\n     ┗━━━┛  │        ┗━┯━┛     \n            │          │       \n     ┏━━━┓┏━┷━━┓       │  ┏━━━┓\n─────┨ Y ┠┨ To ┠──█───────┨ X ┠\n     ┗━━━┛┗━┯━━┛  │    │  ┗━┯━┛\n            │     │    │    │  \n            │     │    │    │  \n───────────────────────█────█──\n            │     │            \n            │     │            \n┏━━━┓       │   ┏━┷━┓          \n┨ H ┠───────█───┨ X ┠──────────\n┗━━━┛           ┗━━━┛          \n                               \n\n".to_string());
+        assert_eq!(circuit_printer.get_diagram(), "     ┏━━━┓          ┏━━━┓     \n─────┨ Y ┠──█───────┨ X ┠─────\n     ┗━━━┛  │       ┗━┯━┛     \n            │         │       \n     ┏━━━┓┏━┷━┓       │  ┏━━━┓\n─────┨ Y ┠┨ X ┠──█───────┨ X ┠\n     ┗━━━┛┗━┯━┛  │    │  ┗━┯━┛\n            │    │    │    │  \n            │    │    │    │  \n──────────────────────█────█──\n            │    │            \n            │    │            \n┏━━━┓       │  ┏━┷━┓          \n┨ H ┠───────█──┨ X ┠──────────\n┗━━━┛          ┗━━━┛          \n                              \n\n".to_string());
     }
 
     #[test]
@@ -419,8 +419,8 @@ mod tests {
 
         let mut circuit_printer: Printer = Printer::new(&quantum_circuit);
 
-        //circuit_printer.print_diagram();
+        circuit_printer.print_diagram();
 
-        assert_eq!(circuit_printer.get_diagram(), "     ┏━━━┓               ┏━━━┓           ┏━━━┓     \n─────┨ H ┠───────────────┨ Y ┠──█────────┨ X ┠─────\n     ┗━━━┛               ┗━━━┛  │        ┗━┯━┛     \n                                │          │       \n          ┏━━━━━━━━━━━━━┓┏━━━┓┏━┷━━┓       │  ┏━━━┓\n──────────┨ Custom CNot ┠┨ Y ┠┨ To ┠──█───────┨ X ┠\n          ┗━┯━━━━━━━━━━━┛┗━━━┛┗━┯━━┛  │    │  ┗━┯━┛\n            │                   │     │    │    │  \n            │                   │     │    │    │  \n───────────────────────────────────────────█────█──\n            │                   │     │            \n            │                   │     │            \n┏━━━┓┏━━━┓  │                   │   ┏━┷━┓          \n┨ H ┠┨ X ┠──█───────────────────█───┨ X ┠──────────\n┗━━━┛┗━━━┛                          ┗━━━┛          \n                                                   \n\n".to_string());
+        assert_eq!(circuit_printer.get_diagram(), "     ┏━━━┓               ┏━━━┓          ┏━━━┓     \n─────┨ H ┠───────────────┨ Y ┠──█───────┨ X ┠─────\n     ┗━━━┛               ┗━━━┛  │       ┗━┯━┛     \n                                │         │       \n          ┏━━━━━━━━━━━━━┓┏━━━┓┏━┷━┓       │  ┏━━━┓\n──────────┨ Custom CNot ┠┨ Y ┠┨ X ┠──█───────┨ X ┠\n          ┗━┯━━━━━━━━━━━┛┗━━━┛┗━┯━┛  │    │  ┗━┯━┛\n            │                   │    │    │    │  \n            │                   │    │    │    │  \n──────────────────────────────────────────█────█──\n            │                   │    │            \n            │                   │    │            \n┏━━━┓┏━━━┓  │                   │  ┏━┷━┓          \n┨ H ┠┨ X ┠──█───────────────────█──┨ X ┠──────────\n┗━━━┛┗━━━┛                         ┗━━━┛          \n                                                  \n\n".to_string());
     }
 }
