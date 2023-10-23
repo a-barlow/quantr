@@ -147,7 +147,7 @@ impl ProductState {
     }
 
     /// Returns the [ProductState] as a [SuperPosition].
-    pub fn as_super_position(self) -> SuperPosition {
+    pub fn to_super_position(self) -> SuperPosition {
         SuperPosition::new(self.num_qubits())
             .set_amplitudes_from_states_unchecked(&HashMap::from([(self, complex_Re!(1f64))]))
     }
@@ -412,7 +412,7 @@ mod tests {
     #[test]
     fn converts_productstate_to_superpos() {
         assert_eq!(
-            ProductState::new(&[Qubit::One, Qubit::Zero]).as_super_position(),
+            ProductState::new(&[Qubit::One, Qubit::Zero]).to_super_position(),
             SuperPosition::new(2)
                 .set_amplitudes(&[
                     complex_zero!(),
