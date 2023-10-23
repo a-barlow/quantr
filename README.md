@@ -1,7 +1,7 @@
 # 🚧 quantr 🚧 
 
 [![Static
-Badge](https://img.shields.io/badge/Version%20-%201.72.1%20-%20%20(185%2C71%2C0)?style=fat&logo=rust&color=%23B94700)](https://releases.rs/)
+Badge](https://img.shields.io/badge/Version%20-%201.73.0%20-%20%20(185%2C71%2C0)?style=fat&logo=rust&color=%23B94700)](https://releases.rs/)
 [![cargo
 test](https://github.com/a-barlow/quantr/workflows/cargo%20test/badge.svg)](https://github.com/a-barlow/quantr/actions/workflows/rust.yml)
 [![cargo test

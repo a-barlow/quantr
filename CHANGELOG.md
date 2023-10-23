@@ -12,7 +12,7 @@ states, especially when defining custom functions.
 - [circuit::states::ProductStates] has two new methods:
     - [ProductStates::invert_digit] will invert the qubit digit that
       represents the state. 
-    - [ProductStates::as_super_position] transforms the product state
+    - [ProductStates::to_super_position] transforms the product state
       into a superposition with one amplitude.
 
 Fixes:
