@@ -322,7 +322,7 @@ impl Printer<'_> {
             } else if (extreme_nodes.min..=extreme_nodes.max).contains(&row) {
                 RowSchematic {
                     top: "  │  ".to_string() + &" ".repeat(multi_gate_info.gate_name_length - 1),
-                    name: "─────".to_string() + &"─".repeat(multi_gate_info.gate_name_length - 1),
+                    name: "──┼──".to_string() + &"─".repeat(multi_gate_info.gate_name_length - 1),
                     bottom: "  │  ".to_string() + &" ".repeat(multi_gate_info.gate_name_length - 1),
                     connection: "  │  ".to_string()
                         + &" ".repeat(multi_gate_info.gate_name_length - 1),
@@ -392,7 +392,7 @@ mod tests {
 
         circuit_printer.print_diagram();
 
-        assert_eq!(circuit_printer.get_diagram(), "     ┏━━━┓          ┏━━━┓     \n─────┨ Y ┠──█───────┨ X ┠─────\n     ┗━━━┛  │       ┗━┯━┛     \n            │         │       \n     ┏━━━┓┏━┷━┓       │  ┏━━━┓\n─────┨ Y ┠┨ X ┠──█───────┨ X ┠\n     ┗━━━┛┗━┯━┛  │    │  ┗━┯━┛\n            │    │    │    │  \n            │    │    │    │  \n──────────────────────█────█──\n            │    │            \n            │    │            \n┏━━━┓       │  ┏━┷━┓          \n┨ H ┠───────█──┨ X ┠──────────\n┗━━━┛          ┗━━━┛          \n                              \n\n".to_string());
+        assert_eq!(circuit_printer.get_diagram(), "     ┏━━━┓          ┏━━━┓     \n─────┨ Y ┠──█───────┨ X ┠─────\n     ┗━━━┛  │       ┗━┯━┛     \n            │         │       \n     ┏━━━┓┏━┷━┓       │  ┏━━━┓\n─────┨ Y ┠┨ X ┠──█────┼──┨ X ┠\n     ┗━━━┛┗━┯━┛  │    │  ┗━┯━┛\n            │    │    │    │  \n            │    │    │    │  \n────────────┼────┼────█────█──\n            │    │            \n            │    │            \n┏━━━┓       │  ┏━┷━┓          \n┨ H ┠───────█──┨ X ┠──────────\n┗━━━┛          ┗━━━┛          \n                              \n\n".to_string());
     }
 
     #[test]
@@ -421,6 +421,6 @@ mod tests {
 
         circuit_printer.print_diagram();
 
-        assert_eq!(circuit_printer.get_diagram(), "     ┏━━━┓               ┏━━━┓          ┏━━━┓     \n─────┨ H ┠───────────────┨ Y ┠──█───────┨ X ┠─────\n     ┗━━━┛               ┗━━━┛  │       ┗━┯━┛     \n                                │         │       \n          ┏━━━━━━━━━━━━━┓┏━━━┓┏━┷━┓       │  ┏━━━┓\n──────────┨ Custom CNot ┠┨ Y ┠┨ X ┠──█───────┨ X ┠\n          ┗━┯━━━━━━━━━━━┛┗━━━┛┗━┯━┛  │    │  ┗━┯━┛\n            │                   │    │    │    │  \n            │                   │    │    │    │  \n──────────────────────────────────────────█────█──\n            │                   │    │            \n            │                   │    │            \n┏━━━┓┏━━━┓  │                   │  ┏━┷━┓          \n┨ H ┠┨ X ┠──█───────────────────█──┨ X ┠──────────\n┗━━━┛┗━━━┛                         ┗━━━┛          \n                                                  \n\n".to_string());
+        assert_eq!(circuit_printer.get_diagram(), "     ┏━━━┓               ┏━━━┓          ┏━━━┓     \n─────┨ H ┠───────────────┨ Y ┠──█───────┨ X ┠─────\n     ┗━━━┛               ┗━━━┛  │       ┗━┯━┛     \n                                │         │       \n          ┏━━━━━━━━━━━━━┓┏━━━┓┏━┷━┓       │  ┏━━━┓\n──────────┨ Custom CNot ┠┨ Y ┠┨ X ┠──█────┼──┨ X ┠\n          ┗━┯━━━━━━━━━━━┛┗━━━┛┗━┯━┛  │    │  ┗━┯━┛\n            │                   │    │    │    │  \n            │                   │    │    │    │  \n────────────┼───────────────────┼────┼────█────█──\n            │                   │    │            \n            │                   │    │            \n┏━━━┓┏━━━┓  │                   │  ┏━┷━┓          \n┨ H ┠┨ X ┠──█───────────────────█──┨ X ┠──────────\n┗━━━┛┗━━━┛                         ┗━━━┛          \n                                                  \n\n".to_string());
     }
 }
