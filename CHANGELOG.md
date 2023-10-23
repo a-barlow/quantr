@@ -2,6 +2,26 @@
 
 This file logs the versions of quantr.
 
+## 0.2.3 - UNTITLED
+
+Features:
+
+These features are mainly introduced for easier manipulation of product
+states, especially when defining custom functions.
+
+- [circuit::states::ProductStates] has two new methods:
+    - [ProductStates::invert_digit] will invert the qubit digit that
+      represents the state. 
+    - [ProductStates::as_super_position] transforms the product state
+      into a superposition with one amplitude.
+
+Fixes:
+
+- The labelling of the toffoli gate by the printer has changed from 'To'
+  to 'X'.
+- The labelling of the swap gate by the printer has changed from 'Swap'
+  to 'Sw'.
+
 ## 0.2.2 - Fixing the `Printer` and pushing of custom functions 
 
 Additions:

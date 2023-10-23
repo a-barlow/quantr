@@ -104,6 +104,24 @@ impl ProductState {
         self.state.len()
     }
 
+    /// Inverts a binary digit that represents the product state.
+    ///
+    /// The position counting starts from the far most left qubit. An error will be returned if the
+    /// position is larger or equal to the product dimension of the state.
+    pub fn invert_digit(&mut self, place_num: usize) -> Result<(), QuantrError> {
+        if place_num >= self.num_qubits() {
+            return Err(QuantrError { message: format!("The position of the binary digit, {}, is out of bounds. The product dimension is {}, and so the position must be strictly less.", place_num, self.num_qubits()) });
+        }
+
+        let old_qubit: Qubit = self.state[place_num].clone();
+        self.state[place_num] = if old_qubit == Qubit::Zero {
+            Qubit::One
+        } else {
+            Qubit::Zero
+        };
+        Ok(())
+    }
+
     /// Concatenate a product state with a qubit.
     ///
     /// In effect, this is using the tensor prodcut to create a new state.
@@ -126,6 +144,12 @@ impl ProductState {
                 Qubit::One => "1",
             })
             .collect::<String>()
+    }
+
+    /// Returns the [ProductState] as a [SuperPosition].
+    pub fn to_super_position(self) -> SuperPosition {
+        SuperPosition::new(self.num_qubits())
+            .set_amplitudes_from_states_unchecked(&HashMap::from([(self, complex_Re!(1f64))]))
     }
 
     // Converts the computational basis labelling (a binary integer), into base 10.
@@ -386,6 +410,21 @@ mod tests {
     use std::f64::consts::FRAC_1_SQRT_2;
 
     #[test]
+    fn converts_productstate_to_superpos() {
+        assert_eq!(
+            ProductState::new(&[Qubit::One, Qubit::Zero]).to_super_position(),
+            SuperPosition::new(2)
+                .set_amplitudes(&[
+                    complex_zero!(),
+                    complex_zero!(),
+                    complex_Re!(1f64),
+                    complex_zero!()
+                ])
+                .unwrap()
+        )
+    }
+
+    #[test]
     fn converts_from_binary_to_comp_basis() {
         assert_eq!(
             ProductState::new(&[Qubit::One, Qubit::Zero, Qubit::One]).comp_basis(),
@@ -564,6 +603,16 @@ mod tests {
         assert_eq!(
             ProductState::new(&[Qubit::One, Qubit::One, Qubit::Zero]),
             ProductState::binary_basis(6, 3)
+        )
+    }
+
+    #[test]
+    fn inverting_binary_digit() {
+        let mut inverted = ProductState::new(&[Qubit::One, Qubit::One, Qubit::Zero]);
+        inverted.invert_digit(2).unwrap();
+        assert_eq!(
+            ProductState::new(&[Qubit::One, Qubit::One, Qubit::One]),
+            inverted
         )
     }
 }
