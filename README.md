@@ -44,7 +44,6 @@ implementation of Grover's algorithm.
 - Only safe Rust code is used, and the only dependency is the
   [rand](https://docs.rs/rand/latest/rand/) crate.
 
-
 ### Usage
 
 An example of simulating and printing a two qubit circuit:
@@ -134,9 +133,8 @@ moving into the directory, and running `cargo doc --open`.
 
 ### Other quantum computer simulators 
 
-As of 27th July 2023, the website [Are We Quantum
-Yet](https://arewequantumyet.github.io/]) lists all things quantum
-computing in Rust. 
+The website [Are We Quantum Yet](https://arewequantumyet.github.io)
+(checked 24/10/23) lists all things quantum computing in Rust. 
 
 A useful and very practical simulator for learning quantum computing is
 [Quirk](https://algassert.com/quirk). It's a real-time online simulator
