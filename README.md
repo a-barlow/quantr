@@ -42,7 +42,8 @@ implementation of Grover's algorithm.
   sparse matrices, but instead uses functions to represent the linear
   mapping of gates.
 - Only safe Rust code is used, and the only dependency is the
-  [rand](https://docs.rs/rand/latest/rand/) crate.
+  [rand](https://docs.rs/rand/latest/rand/) crate and its
+  sub-dependencies.
 
 ### Usage
 
