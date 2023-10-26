@@ -15,6 +15,10 @@ states, especially when defining custom functions.
     - [ProductStates::to_super_position] transforms the product state
       into a superposition with one amplitude.
 - Additional examples added to circuits and printer methods.
+- A Grovers algorithm example has been added to the cargo. This example
+  is the completed code from the
+  [quantr-book](https://a-barlow.github.io/quantr-book/), and can be
+  run with `cargo run --example grovers`. 
 
 Fixes:
 
