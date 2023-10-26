@@ -14,6 +14,7 @@ states, especially when defining custom functions.
       represents the state. 
     - [ProductStates::to_super_position] transforms the product state
       into a superposition with one amplitude.
+- Additional examples added to circuits and printer methods.
 
 Fixes:
 
@@ -21,10 +22,29 @@ Fixes:
   to 'X'.
 - The labelling of the swap gate by the printer has changed from 'Swap'
   to 'Sw'.
+- The printer will now print vertical lines overlapping the horizontal
+  wires as connected lines; they are no longer spaced. This was decided
+  as for large diagrams, the 'unconnected' wires strained the eyes. It
+  was also noted that the 'scintillating grid illusion' occurs for big
+  diagrams when there are many nodes.
+
+Deprecated:
+
+- `Printer::flush` is deprecated and will be removed next major update,
+  as it cannot be used as the quantum circuit struct it borrows is
+  mutable, and thus cannot mutate the circuit after printing it. This
+  method makes no sense to exist then.
+
+Tests:
+
+- New grovers test that implements a 3x3 single row of sudoku solver.
+- Add unit test of inverting binary digits labelling computational basis
+  using `ProductStates::invert_digit`.
+- Add unit test of `Product::to_super_position`.
 
 ## 0.2.2 - Fixing the `Printer` and pushing of custom functions 
 
-Additions:
+Features:
 
 - A usage section in the README.md; displaying a small snippet of quantr
   code.
@@ -79,7 +99,7 @@ Breaking changes:
       `States::get_amplitude_from_state`
 - `QuantrError` is no longer accessible to the user.
 
-Additions:
+Tests:
 
 - Unit tests for adding multiple multi-control gates.
 - Unit tests for user validation of various methods.
@@ -96,7 +116,7 @@ Fixes:
   the mapping of the |11> state. Now, the swap gate has the correct
   definition.
 
-Additions:
+Tests:
 
 - An extra unit tests that now verifies the mappings of the swap and CZ
   gates, in addition to acknowledging that they're different.
