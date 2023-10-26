@@ -165,6 +165,14 @@ impl<'a> Circuit<'a> {
     ///
     /// The target qubits used in defining custom functions must out live the slice of target
     /// qubits given to the custom function.
+    ///
+    /// # Example
+    /// ```
+    /// use quantr::circuit::Circuit;
+    ///
+    /// // Initialises a 3 qubit circuit.
+    /// let quantum_circuit: Circuit = Circuit::new(3).unwrap();
+    /// ```
     pub fn new(num_qubits: usize) -> Result<Circuit<'a>, QuantrError> {
         if num_qubits > CIRCUIT_MAX_QUBITS {
             return Err(QuantrError {
@@ -198,9 +206,9 @@ impl<'a> Circuit<'a> {
     /// quantum_circuit.add_gate(StandardGate::X, 0).unwrap();
     ///
     /// // Produces the circuit:
-    /// // |0> -- X --
-    /// // |0> -------
-    /// // |0> -------
+    /// // -- X --
+    /// // -------
+    /// // -------
     /// ```
     pub fn add_gate(&mut self, gate: StandardGate<'a>, position: usize) -> Result<(), QuantrError> {
         Self::add_gates_with_positions(self, HashMap::from([(position, gate)]))
@@ -226,9 +234,9 @@ impl<'a> Circuit<'a> {
     /// ).unwrap();
     ///
     /// // Produces the circuit:
-    /// // |0> -- X --
-    /// // |0> -------
-    /// // |0> -- H --
+    /// // -- X --
+    /// // -------
+    /// // -- H --
     /// ```
     pub fn add_gates_with_positions(
         &mut self,
@@ -284,9 +292,9 @@ impl<'a> Circuit<'a> {
     /// quantum_circuit.add_gates(gates_to_add).unwrap();
     ///
     /// // Produces the circuit:
-    /// // |0> -- H --
-    /// // |0> -- X --
-    /// // |0> -- Y --
+    /// // -- H --
+    /// // -- X --
+    /// // -- Y --
     /// ```
     pub fn add_gates(&mut self, mut gates: Vec<StandardGate<'a>>) -> Result<(), QuantrError> {
         // Ensured we have a gate for every wire.
@@ -400,9 +408,9 @@ impl<'a> Circuit<'a> {
     /// quantum_circuit.add_repeating_gate(StandardGate::H, vec![1, 2]).unwrap();
     ///
     /// // Produces the circuit:
-    /// // |0> -------
-    /// // |0> -- H --
-    /// // |0> -- H --
+    /// // -------
+    /// // -- H --
+    /// // -- H --
     /// ```
     pub fn add_repeating_gate(
         &mut self,
@@ -545,6 +553,21 @@ impl<'a> Circuit<'a> {
     ///
     /// See [Circuit::get_superposition] and [Circuit::repeat_measurement] for details on obtaining
     /// observables from the resulting superposition.
+    ///
+    /// # Example
+    /// ```
+    /// use quantr::circuit::{Circuit, StandardGate};
+    ///
+    /// let mut circuit = Circuit::new(3).unwrap();
+    /// circuit.add_gate(StandardGate::H, 2).unwrap();
+    ///
+    /// circuit.simulate();
+    ///
+    /// // Simulates the circuit:
+    /// // |0> -------
+    /// // |0> -- H --
+    /// // |0> -- H --
+    /// ````
     pub fn simulate(&mut self) {
         // Form the initial state if the product space, that is |0...0>
         let mut register: SuperPosition = SuperPosition::new(self.num_qubits);
@@ -795,6 +818,18 @@ impl<'a> Circuit<'a> {
     ///
     /// It will only show the application of non-identity gates. The toggle is set to `false`
     /// for a new quantum circuit.
+    ///
+    /// # Example
+    /// ```
+    /// use quantr::circuit::{Circuit, StandardGate};
+    ///
+    /// let mut circuit = Circuit::new(3).unwrap();
+    /// circuit.add_gate(StandardGate::H, 2).unwrap();
+    ///
+    /// circuit.toggle_simulation_progress();
+    ///
+    /// circuit.simulate(); // Simulates and prints progress.
+    /// ```
     pub fn toggle_simulation_progress(&mut self) {
         self.config_progress = !self.config_progress;
     }

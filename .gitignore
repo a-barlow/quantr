@@ -1,4 +1,5 @@
 /target
+/diagram.txt
 /Cargo.lock
 /TODO.md
 /src/main.rs
