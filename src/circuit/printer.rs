@@ -107,7 +107,9 @@ impl Printer<'_> {
     /// qc.add_gate(StandardGate::CNot(0), 1).unwrap();
     ///
     /// let mut printer: Printer = Printer::new(&qc);
-    /// printer.print_diagram();
+    /// // printer.save_diagram("diagram.txt").unwrap();
+    /// // Saves in directory of Cargo project.
+    /// // (Commented so it doesn't create file during `cargo test`.)
     /// ```
     pub fn save_diagram(&mut self, file_path: &str) -> std::io::Result<()> {
         let path: &Path = Path::new(file_path);
@@ -128,7 +130,7 @@ impl Printer<'_> {
     ///
     /// let mut printer: Printer = Printer::new(&qc);
     /// // printer.print_and_save_diagram("diagram.txt").unwrap();
-    /// // Saves in directory of cargo project.
+    /// // Saves in directory of cargo project, and prints to console.
     /// // (Commented so it doesn't create file during `cargo test`.)
     /// ```
     pub fn print_and_save_diagram(&mut self, file_path: &str) -> std::io::Result<()> {
