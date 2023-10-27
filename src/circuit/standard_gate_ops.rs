@@ -15,7 +15,7 @@
 
 use crate::circuit::states::{ProductState, Qubit, SuperPosition};
 use crate::complex::Complex;
-use crate::{complex_Im, complex_Im_array, complex_Re, complex_Re_array, complex_zero};
+use crate::{complex, complex_Im, complex_Im_array, complex_Re, complex_Re_array, complex_zero};
 use std::f64::consts::FRAC_1_SQRT_2;
 
 // The following gates (inlcuding triple and custom) are mapping qubits via the
@@ -45,6 +45,38 @@ pub fn hadamard(register: Qubit) -> SuperPosition {
     SuperPosition::new(1).set_amplitudes(match register {
         Qubit::Zero => &complex_Re_array!(FRAC_1_SQRT_2, FRAC_1_SQRT_2),
         Qubit::One => &complex_Re_array!(FRAC_1_SQRT_2, -FRAC_1_SQRT_2),
+    }).unwrap()
+}
+
+#[rustfmt::skip]
+pub fn tgate(register: Qubit) -> SuperPosition {
+    SuperPosition::new(1).set_amplitudes(match register {
+        Qubit::Zero => &[complex_Re!(1f64), complex_zero!()],
+        Qubit::One => &[complex_zero!(), complex!(FRAC_1_SQRT_2, FRAC_1_SQRT_2)],
+    }).unwrap()
+}
+
+#[rustfmt::skip]
+pub fn tgatedag(register: Qubit) -> SuperPosition {
+    SuperPosition::new(1).set_amplitudes(match register {
+        Qubit::Zero => &[complex_Re!(1f64), complex_zero!()],
+        Qubit::One => &[complex_zero!(), complex!(FRAC_1_SQRT_2, -FRAC_1_SQRT_2)],
+    }).unwrap()
+}
+
+#[rustfmt::skip]
+pub fn phase(register: Qubit) -> SuperPosition {
+    SuperPosition::new(1).set_amplitudes(match register {
+        Qubit::Zero => &[complex_Re!(1f64), complex_zero!()],
+        Qubit::One => &[complex_zero!(), complex_Im!(1f64)],
+    }).unwrap()
+}
+
+#[rustfmt::skip]
+pub fn phasedag(register: Qubit) -> SuperPosition {
+    SuperPosition::new(1).set_amplitudes(match register {
+        Qubit::Zero => &[complex_Re!(1f64), complex_zero!()],
+        Qubit::One => &[complex_zero!(), complex_Im!(-1f64)],
     }).unwrap()
 }
 
