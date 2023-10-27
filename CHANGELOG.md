@@ -2,7 +2,7 @@
 
 This file logs the versions of quantr.
 
-## 0.2.3 - S and T gates, and extra functionality for `ProductState`.
+## 0.2.4 -  S and T gates, and extra functionality for `ProductState`.
 
 Features:
 
@@ -44,6 +44,11 @@ Tests:
 - Add unit test of inverting binary digits labelling computational basis
   using `ProductStates::invert_digit`.
 - Add unit test of `Product::to_super_position`.
+
+## 0.2.3 - !! YANKED VERSION !!
+
+There was a problem in implementing the Gitflow strategy, resulting in
+some commits not appearing in the master branch.
 
 ## 0.2.2 - Fixing the `Printer` and pushing of custom functions 
 
