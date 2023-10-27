@@ -2,16 +2,13 @@
 
 This file logs the versions of quantr.
 
-## 0.2.3 - UNTITLED
+## 0.2.3 - S and T gates, and extra functionality for `ProductState`.
 
 Features:
 
-These features are mainly introduced for easier manipulation of product
-states, especially when defining custom functions.
-
 - [circuit::states::ProductStates] has two new methods:
     - [ProductStates::invert_digit] will invert the qubit digit that
-      represents the state. 
+      represents the state.
     - [ProductStates::to_super_position] transforms the product state
       into a superposition with one amplitude.
 - Additional examples added to circuits and printer methods.
@@ -19,6 +16,8 @@ states, especially when defining custom functions.
   is the completed code from the
   [quantr-book](https://a-barlow.github.io/quantr-book/), and can be
   run with `cargo run --example grovers`. 
+- Phase gate and conjugate has been added.
+- T gate and conjugate has been added.
 
 Fixes:
 
