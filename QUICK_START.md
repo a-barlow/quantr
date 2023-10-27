@@ -13,7 +13,8 @@ offers a good explanation of Grover's. This guide does not attempt to
 explain either of these subjects in detail.
 
 The complete code that is built from following this guide is available
-at the end.
+at the end. Or, the code can be found in `examples/grovers.rs`, and ran
+from the root directory with `cargo run --example grovers`.
 
 ---
 
@@ -158,9 +159,9 @@ This completes the construction and measurement of a three qubit
 Grover's circuit. Other functions (which include examples in their
 documentation) can add gates in other ways.
 
-The following is the completed code. This can be copied directly to your
-`main.rs` and ran with `cargo run`. Make sure that quantr is added as a
-dependency.
+The following is the completed code. This can also be found in
+`examples/grovers.rs`, and ran with `cargo run --example grovers` from
+the root directory.
 
 ```rust,ignore
 use quantr::circuit::{printer::Printer, Circuit, Measurement, StandardGate};
