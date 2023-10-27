@@ -51,6 +51,9 @@ pub enum Measurement<T> {
 
 /// Gates that can be added to a [Circuit] struct.
 ///
+/// Matrix representations of these gates can be found at 
+/// [https://www.quantum-inspire.com/kbase/cqasm-qubit-gate-operations/].
+///
 /// Currently, this enum has the `#[non_exhaustive]` as it's
 /// yet undecided what will be included as a standard gate. This will
 /// lessen the impact of breaking changes in the future.
@@ -61,7 +64,15 @@ pub enum StandardGate<'a> {
     Id,
     /// Hadamard.
     H,
-    /// Pauli-X
+    /// Phase.
+    S,
+    /// Phase dagger.
+    Sdag,
+    /// T.
+    T,
+    /// T dagger.
+    Tdag,
+    /// Pauli-X.
     X,
     /// Pauli-Y.
     Y,
@@ -118,6 +129,10 @@ impl<'a> StandardGate<'a> {
         match self {
             StandardGate::Id
             | StandardGate::H
+            | StandardGate::S
+            | StandardGate::Sdag
+            | StandardGate::T
+            | StandardGate::Tdag
             | StandardGate::X
             | StandardGate::Y
             | StandardGate::Z => None,
@@ -635,6 +650,10 @@ impl<'a> Circuit<'a> {
         match gate {
             StandardGate::Id
             | StandardGate::H
+            | StandardGate::S
+            | StandardGate::Sdag
+            | StandardGate::T
+            | StandardGate::Tdag
             | StandardGate::X
             | StandardGate::Y
             | StandardGate::Z => GateSize::Single,
@@ -696,6 +715,10 @@ impl<'a> Circuit<'a> {
         let operator: fn(Qubit) -> SuperPosition = match single_gate.name {
             StandardGate::Id => standard_gate_ops::identity,
             StandardGate::H => standard_gate_ops::hadamard,
+            StandardGate::S => standard_gate_ops::phase,
+            StandardGate::Sdag => standard_gate_ops::phasedag,
+            StandardGate::T => standard_gate_ops::tgate,
+            StandardGate::Tdag => standard_gate_ops::tgatedag,
             StandardGate::X => standard_gate_ops::pauli_x,
             StandardGate::Y => standard_gate_ops::pauli_y,
             StandardGate::Z => standard_gate_ops::pauli_z,
@@ -838,7 +861,7 @@ impl<'a> Circuit<'a> {
 #[rustfmt::skip]
 #[cfg(test)]
 mod tests {
-    use crate::{complex_Im, complex_Re, complex_Re_array, complex_zero};
+    use crate::{complex_Im, complex_Re, complex_Re_array, complex_zero, complex};
     use std::f64::consts::FRAC_1_SQRT_2;
     use crate::circuit::Measurement::NonObservable;
     use super::*;
@@ -872,7 +895,6 @@ mod tests {
         }).unwrap()
     }
 
-    
     // No expected panic message as the eample_cnot function is an address in memory, that will
     // change everytime.
     #[test]
@@ -946,6 +968,33 @@ mod tests {
     //
     // All circuit tests were calculated by hand.
     //
+    
+    #[test]
+    fn swap_and_conjugate_gates() {
+        let mut circuit = Circuit::new(2).unwrap();
+        circuit.add_gates(vec!(StandardGate::H, StandardGate::H)).unwrap();
+        circuit.add_gates(vec!(StandardGate::S, StandardGate::Sdag)).unwrap();
+        circuit.simulate();
+
+        let correct_register: [Complex<f64>; 4] = [
+            complex_Re!(0.5f64), complex_Im!(-0.5f64),
+            complex_Im!(0.5f64), complex_Re!(0.5f64)];
+        compare_circuit(circuit, &correct_register);
+    }
+
+    #[test]
+    fn t_and_conjugate_gates() {
+        let mut circuit = Circuit::new(2).unwrap();
+        circuit.add_gates(vec!(StandardGate::H, StandardGate::H)).unwrap();
+        circuit.add_gates(vec!(StandardGate::T, StandardGate::Tdag)).unwrap();
+        circuit.simulate();
+
+        let correct_register: [Complex<f64>; 4] = [
+            complex_Re!(0.5f64), complex!(0.5f64*FRAC_1_SQRT_2, -0.5f64*FRAC_1_SQRT_2),
+            complex!(0.5f64*FRAC_1_SQRT_2, 0.5f64*FRAC_1_SQRT_2), complex_Re!(0.5f64)];
+        compare_circuit(circuit, &correct_register);
+    }
+
 
     #[test]
     fn custom_gates() {
@@ -1004,8 +1053,6 @@ mod tests {
         assert!(vec!(StandardGate::X, StandardGate::Id, StandardGate::H)
                 .iter().all(|item| quantum_circuit.circuit_gates.contains(item)));
     }
-
-    
 
     #[test]
     fn runs_three_pauli_gates_with_hadamard() {
