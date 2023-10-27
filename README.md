@@ -1,7 +1,7 @@
 # 🚧 quantr 🚧 
 
 [![Static
-Badge](https://img.shields.io/badge/Version%20-%201.72.1%20-%20%20(185%2C71%2C0)?style=fat&logo=rust&color=%23B94700)](https://releases.rs/)
+Badge](https://img.shields.io/badge/Version%20-%201.73.0%20-%20%20(185%2C71%2C0)?style=fat&logo=rust&color=%23B94700)](https://releases.rs/)
 [![cargo
 test](https://github.com/a-barlow/quantr/workflows/cargo%20test/badge.svg)](https://github.com/a-barlow/quantr/actions/workflows/rust.yml)
 [![cargo test
@@ -42,8 +42,8 @@ implementation of Grover's algorithm.
   sparse matrices, but instead uses functions to represent the linear
   mapping of gates.
 - Only safe Rust code is used, and the only dependency is the
-  [rand](https://docs.rs/rand/latest/rand/) crate.
-
+  [rand](https://docs.rs/rand/latest/rand/) crate and its
+  sub-dependencies.
 
 ### Usage
 
@@ -134,9 +134,8 @@ moving into the directory, and running `cargo doc --open`.
 
 ### Other quantum computer simulators 
 
-As of 27th July 2023, the website [Are We Quantum
-Yet](https://arewequantumyet.github.io/]) lists all things quantum
-computing in Rust. 
+The website [Are We Quantum Yet](https://arewequantumyet.github.io)
+(checked 24/10/23) lists all things quantum computing in Rust. 
 
 A useful and very practical simulator for learning quantum computing is
 [Quirk](https://algassert.com/quirk). It's a real-time online simulator

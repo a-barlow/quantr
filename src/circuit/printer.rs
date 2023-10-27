@@ -16,9 +16,6 @@
 //! cache can be removed with [Printer::flush] to force the [Printer] to construct the circuit
 //! diagram again.
 
-// !!! Developer Warning !!!
-// This module is very messy, and it's code will be cleared up in a near future update.
-
 use super::{Circuit, GateSize, StandardGate};
 use std::fs::File;
 use std::io::Write;
@@ -72,6 +69,25 @@ impl Printer<'_> {
     /// Prints the circuit to the console in UTF-8.
     ///
     /// A warning is printed to the console if the circuit diagram is expected to exceed 72 chars.
+    ///
+    /// # Example
+    /// ```
+    /// use quantr::circuit::{Circuit, StandardGate, printer::Printer};
+    ///
+    /// let mut qc: Circuit = Circuit::new(2).unwrap();
+    /// qc.add_gate(StandardGate::CNot(0), 1).unwrap();
+    ///
+    /// let mut printer: Printer = Printer::new(&qc);
+    /// printer.print_diagram();
+    ///
+    /// // The above prints:
+    /// // ──█──
+    /// //   │  
+    /// //   │  
+    /// // ┏━┷━┓
+    /// // ┨ X ┠
+    /// // ┗━━━┛
+    /// ```
     pub fn print_diagram(&mut self) {
         if self.circuit.circuit_gates.len() / self.circuit.num_qubits > 14 {
             println!("\x1b[93m[Quantr Warning] The string displaying the circuit diagram exceeds 72 chars, which could cause the circuit to render incorrectly in terminals (due to the wrapping). Instead, consider saving the string to a .txt file by using Printer::save_diagram.\x1b[0m");
@@ -82,6 +98,19 @@ impl Printer<'_> {
     /// Saves the circuit diagram to a text file in UTF-8 chars.
     ///
     /// If the file already exists, it will overwrite it.
+    ///
+    /// # Example
+    /// ```
+    /// use quantr::circuit::{Circuit, StandardGate, printer::Printer};
+    ///
+    /// let mut qc: Circuit = Circuit::new(2).unwrap();
+    /// qc.add_gate(StandardGate::CNot(0), 1).unwrap();
+    ///
+    /// let mut printer: Printer = Printer::new(&qc);
+    /// // printer.save_diagram("diagram.txt").unwrap();
+    /// // Saves in directory of Cargo project.
+    /// // (Commented so it doesn't create file during `cargo test`.)
+    /// ```
     pub fn save_diagram(&mut self, file_path: &str) -> std::io::Result<()> {
         let path: &Path = Path::new(file_path);
         let mut file = File::create(&path)?;
@@ -91,6 +120,19 @@ impl Printer<'_> {
     /// Prints the circuit diagram to the terminal and saves it to a text file in UTF-8.
     ///
     /// Essentially, this is a combination of [Printer::save_diagram] and [Printer::print_diagram].
+    ///
+    /// # Example
+    /// ```
+    /// use quantr::circuit::{Circuit, StandardGate, printer::Printer};
+    ///
+    /// let mut qc: Circuit = Circuit::new(2).unwrap();
+    /// qc.add_gate(StandardGate::CNot(0), 1).unwrap();
+    ///
+    /// let mut printer: Printer = Printer::new(&qc);
+    /// // printer.print_and_save_diagram("diagram.txt").unwrap();
+    /// // Saves in directory of cargo project, and prints to console.
+    /// // (Commented so it doesn't create file during `cargo test`.)
+    /// ```
     pub fn print_and_save_diagram(&mut self, file_path: &str) -> std::io::Result<()> {
         let diagram: String = self.get_or_make_diagram();
 
@@ -102,14 +144,29 @@ impl Printer<'_> {
     }
 
     /// Returns the circuit diagram that is made from UTF-8 chars.
+    ///
+    /// # Example
+    /// ```
+    /// use quantr::circuit::{Circuit, StandardGate, printer::Printer};
+    ///
+    /// let mut qc: Circuit = Circuit::new(2).unwrap();
+    /// qc.add_gate(StandardGate::CNot(0), 1).unwrap();
+    ///
+    /// let mut printer: Printer = Printer::new(&qc);
+    /// println!("{}", printer.get_diagram()); // equivalent to Printer::print_diagram
+    /// ```
     pub fn get_diagram(&mut self) -> String {
         self.get_or_make_diagram()
     }
 
+    /// Will be depreceated as it cannot be used due to lifetime borrowing, and the quantum circuit
+    /// needs to be mutable.
+    ///
     /// Removes the cache of the circuit diagram.
     ///
     /// Future calls to print the diagram will have to build the diagram from scratch. Can be used
     /// if the circuit has been updated, and the printer needs to rebuild the diagram.
+    #[deprecated]
     pub fn flush(&mut self) {
         self.diagram = None;
     }
@@ -197,11 +254,11 @@ impl Printer<'_> {
             StandardGate::H => "H".to_string(),
             StandardGate::Y => "Y".to_string(),
             StandardGate::Z => "Z".to_string(),
-            StandardGate::Swap(_) => "Swap".to_string(),
+            StandardGate::Swap(_) => "Sw".to_string(),
             StandardGate::CZ(_) => "Z".to_string(),
             StandardGate::CY(_) => "Y".to_string(),
             StandardGate::CNot(_) => "X".to_string(),
-            StandardGate::Toffoli(_, _) => "To".to_string(),
+            StandardGate::Toffoli(_, _) => "X".to_string(),
             StandardGate::Custom(_, _, name) => name.to_string(),
             _ => String::from("#"),
         }
@@ -322,7 +379,7 @@ impl Printer<'_> {
             } else if (extreme_nodes.min..=extreme_nodes.max).contains(&row) {
                 RowSchematic {
                     top: "  │  ".to_string() + &" ".repeat(multi_gate_info.gate_name_length - 1),
-                    name: "─────".to_string() + &"─".repeat(multi_gate_info.gate_name_length - 1),
+                    name: "──┼──".to_string() + &"─".repeat(multi_gate_info.gate_name_length - 1),
                     bottom: "  │  ".to_string() + &" ".repeat(multi_gate_info.gate_name_length - 1),
                     connection: "  │  ".to_string()
                         + &" ".repeat(multi_gate_info.gate_name_length - 1),
@@ -390,9 +447,9 @@ mod tests {
 
         let mut circuit_printer: Printer = Printer::new(&quantum_circuit);
 
-        //circuit_printer.print_diagram();
+        circuit_printer.print_diagram();
 
-        assert_eq!(circuit_printer.get_diagram(), "     ┏━━━┓           ┏━━━┓     \n─────┨ Y ┠──█────────┨ X ┠─────\n     ┗━━━┛  │        ┗━┯━┛     \n            │          │       \n     ┏━━━┓┏━┷━━┓       │  ┏━━━┓\n─────┨ Y ┠┨ To ┠──█───────┨ X ┠\n     ┗━━━┛┗━┯━━┛  │    │  ┗━┯━┛\n            │     │    │    │  \n            │     │    │    │  \n───────────────────────█────█──\n            │     │            \n            │     │            \n┏━━━┓       │   ┏━┷━┓          \n┨ H ┠───────█───┨ X ┠──────────\n┗━━━┛           ┗━━━┛          \n                               \n\n".to_string());
+        assert_eq!(circuit_printer.get_diagram(), "     ┏━━━┓          ┏━━━┓     \n─────┨ Y ┠──█───────┨ X ┠─────\n     ┗━━━┛  │       ┗━┯━┛     \n            │         │       \n     ┏━━━┓┏━┷━┓       │  ┏━━━┓\n─────┨ Y ┠┨ X ┠──█────┼──┨ X ┠\n     ┗━━━┛┗━┯━┛  │    │  ┗━┯━┛\n            │    │    │    │  \n            │    │    │    │  \n────────────┼────┼────█────█──\n            │    │            \n            │    │            \n┏━━━┓       │  ┏━┷━┓          \n┨ H ┠───────█──┨ X ┠──────────\n┗━━━┛          ┗━━━┛          \n                              \n\n".to_string());
     }
 
     #[test]
@@ -419,8 +476,8 @@ mod tests {
 
         let mut circuit_printer: Printer = Printer::new(&quantum_circuit);
 
-        //circuit_printer.print_diagram();
+        circuit_printer.print_diagram();
 
-        assert_eq!(circuit_printer.get_diagram(), "     ┏━━━┓               ┏━━━┓           ┏━━━┓     \n─────┨ H ┠───────────────┨ Y ┠──█────────┨ X ┠─────\n     ┗━━━┛               ┗━━━┛  │        ┗━┯━┛     \n                                │          │       \n          ┏━━━━━━━━━━━━━┓┏━━━┓┏━┷━━┓       │  ┏━━━┓\n──────────┨ Custom CNot ┠┨ Y ┠┨ To ┠──█───────┨ X ┠\n          ┗━┯━━━━━━━━━━━┛┗━━━┛┗━┯━━┛  │    │  ┗━┯━┛\n            │                   │     │    │    │  \n            │                   │     │    │    │  \n───────────────────────────────────────────█────█──\n            │                   │     │            \n            │                   │     │            \n┏━━━┓┏━━━┓  │                   │   ┏━┷━┓          \n┨ H ┠┨ X ┠──█───────────────────█───┨ X ┠──────────\n┗━━━┛┗━━━┛                          ┗━━━┛          \n                                                   \n\n".to_string());
+        assert_eq!(circuit_printer.get_diagram(), "     ┏━━━┓               ┏━━━┓          ┏━━━┓     \n─────┨ H ┠───────────────┨ Y ┠──█───────┨ X ┠─────\n     ┗━━━┛               ┗━━━┛  │       ┗━┯━┛     \n                                │         │       \n          ┏━━━━━━━━━━━━━┓┏━━━┓┏━┷━┓       │  ┏━━━┓\n──────────┨ Custom CNot ┠┨ Y ┠┨ X ┠──█────┼──┨ X ┠\n          ┗━┯━━━━━━━━━━━┛┗━━━┛┗━┯━┛  │    │  ┗━┯━┛\n            │                   │    │    │    │  \n            │                   │    │    │    │  \n────────────┼───────────────────┼────┼────█────█──\n            │                   │    │            \n            │                   │    │            \n┏━━━┓┏━━━┓  │                   │  ┏━┷━┓          \n┨ H ┠┨ X ┠──█───────────────────█──┨ X ┠──────────\n┗━━━┛┗━━━┛                         ┗━━━┛          \n                                                  \n\n".to_string());
     }
 }
