@@ -52,7 +52,7 @@ pub enum Measurement<T> {
 /// Gates that can be added to a [Circuit] struct.
 ///
 /// Matrix representations of these gates can be found at
-/// [https://www.quantum-inspire.com/kbase/cqasm-qubit-gate-operations/].
+/// <https://www.quantum-inspire.com/kbase/cqasm-qubit-gate-operations/>.
 ///
 /// Currently, this enum has the `#[non_exhaustive]` as it's
 /// yet undecided what will be included as a standard gate. This will

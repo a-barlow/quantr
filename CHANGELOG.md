@@ -2,7 +2,19 @@
 
 This file logs the versions of quantr.
 
-## 0.2.4 -  S and T gates, and extra functionality for `ProductState`.
+## 0.2.4 - Add S (Phase) and T gates
+
+Features:
+
+- Phase gate and conjugate has been added.
+- T gate and conjugate has been added.
+
+Tests:
+
+- Unit tests for Phase and T gates, with their conjugates, are tested in
+  2 qubit circuits.
+
+## 0.2.3 - Extra functionality for `ProductState` and added examples
 
 Features:
 
@@ -16,8 +28,6 @@ Features:
   is the completed code from the
   [quantr-book](https://a-barlow.github.io/quantr-book/), and can be
   run with `cargo run --example grovers`. 
-- Phase gate and conjugate has been added.
-- T gate and conjugate has been added.
 
 Fixes:
 
@@ -44,11 +54,6 @@ Tests:
 - Add unit test of inverting binary digits labelling computational basis
   using `ProductStates::invert_digit`.
 - Add unit test of `Product::to_super_position`.
-
-## 0.2.3 - !! YANKED VERSION !!
-
-There was a problem in implementing the Gitflow strategy, resulting in
-some commits not appearing in the master branch.
 
 ## 0.2.2 - Fixing the `Printer` and pushing of custom functions 
 
