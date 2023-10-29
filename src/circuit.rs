@@ -90,10 +90,10 @@ pub enum StandardGate<'a> {
     Toffoli(usize, usize),
     /// Defines a custom gate.
     ///
-    /// The arguments define the mapping of the
-    /// gate; the position of the qubit states that the gate acts on;
-    /// and a name that will be displayed in the printed diagram
-    /// respectively.
+    /// The arguments define the mapping of the gate; the position of the qubit states 
+    /// that the gate acts on; and a name that will be displayed in the printed diagram
+    /// respectively. The name of the custom gate should be in ASCII for it to render properly
+    /// when printing the circuit diagram.
     ///
     /// # Example
     /// ```
@@ -339,6 +339,11 @@ impl<'a> Circuit<'a> {
         let mut found_multi: bool = false;
         let mut found_second: bool = false;
         for gate in gates.iter() {
+            if let StandardGate::Custom(_, _, name) = gate {
+                if !name.is_ascii() {
+                    println!("\x1b[93m[Quantr Warning] The custom function name, {}, is not in ASCII. This could lead to problems in printing the circuit diagram. This warning will be promoted to an Error in the next major release.\x1b[0m");
+                }
+            }
             if gate != &StandardGate::Id {
                 if found_multi {
                     found_second = true;
