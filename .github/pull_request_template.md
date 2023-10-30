@@ -2,6 +2,8 @@ I acknowledge that:
 
 - [] my code passes all tests by running `cargo test`;
 - [] my code is formatted with `cargo fmt`;
+- [] my code successfully compiles the documentation without warnings
+  using `cargo doc`;
 - [] I have added unit testing to test my new code (if applicable);
 - [] I have signed off on all commits with my name and email;
 - [] I have answered all the questions below and given justification
