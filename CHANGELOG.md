@@ -2,6 +2,16 @@
 
 This file logs the versions of quantr.
 
+## 0.2.5 - Algorithm optimisations and ASCII warnings
+
+Fixes:
+
+- T and S conjugate gates now have ASCII names when printed in a circuit
+  diagram. Before hand, this would have potentially ruined circuit
+  diagrams.
+- A warning has now been added when ASCII strings are used to label
+  custom functions.
+
 ## 0.2.4 - Add S (Phase) and T gates
 
 Features:
