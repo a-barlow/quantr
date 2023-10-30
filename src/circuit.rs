@@ -90,7 +90,7 @@ pub enum StandardGate<'a> {
     Toffoli(usize, usize),
     /// Defines a custom gate.
     ///
-    /// The arguments define the mapping of the gate; the position of the qubit states 
+    /// The arguments define the mapping of the gate; the position of the qubit states
     /// that the gate acts on; and a name that will be displayed in the printed diagram
     /// respectively. The name of the custom gate should be in ASCII for it to render properly
     /// when printing the circuit diagram.
@@ -341,7 +341,7 @@ impl<'a> Circuit<'a> {
         for gate in gates.iter() {
             if let StandardGate::Custom(_, _, name) = gate {
                 if !name.is_ascii() {
-                    println!("\x1b[93m[Quantr Warning] The custom function name, {}, is not in ASCII. This could lead to problems in printing the circuit diagram. This warning will be promoted to an Error in the next major release.\x1b[0m");
+                    println!("\x1b[93m[Quantr Warning] The custom function name, {}, does not only use ASCII chars. This could lead to problems in printing the circuit diagram. This warning will be promoted to an Error in the next major release.\x1b[0m", name);
                 }
             }
             if gate != &StandardGate::Id {
@@ -1222,5 +1222,13 @@ mod tests {
 
         compare_circuit(circuit, &correct_register);
 
+    }
+    
+    #[test]
+    fn custom_non_ascii_name() {
+        let mut circuit = Circuit::new(3).unwrap();
+
+        circuit.add_gate(StandardGate::Custom(example_cnot, &[0], "NonAscii†".to_string()), 1).unwrap();
+        // in future, this should panic. For now, this is a warning message.
     }
 }
