@@ -43,6 +43,26 @@ pub struct Complex<T> {
     pub imaginary: T,
 }
 
+impl Complex<f64> {
+    /// Returns `exp(i*theta)` as a complex number.
+    pub fn expi(theta: f64) -> Complex<f64> {
+        Complex { 
+            real: theta.cos(), 
+            imaginary: theta.sin(),
+        }
+    }
+}
+
+impl Complex<f32> {
+    /// Returns `exp(i*theta)` as a complex number.
+    pub fn expi(theta: f32) -> Complex<f32> {
+        Complex { 
+            real: theta.cos(), 
+            imaginary: theta.sin(),
+        }
+    }
+}
+
 /// Addition of two generic complex numbers.
 impl<T: Add<Output = T>> Add for Complex<T> {
     type Output = Self;
