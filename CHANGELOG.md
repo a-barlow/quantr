@@ -6,6 +6,11 @@ This file logs the versions of quantr.
 
 Features:
 
+- `SuperPosition` now has a new publicly available filed that specifies
+  the product dimension of the superposition (the number of qubits in
+  each computational state).
+- Added `Circuit::simulate_with_register`, which allows to attach a
+  custom register defined by a `SuperPosition`.
 - All gates from the cQASM instruction set have now been added. The
   gates that were added to complete this set are:
   - Rx (Rotation around x-axis)

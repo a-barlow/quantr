@@ -192,7 +192,7 @@ impl ProductState {
 #[derive(PartialEq, Debug, Clone)]
 pub struct SuperPosition {
     pub amplitudes: Vec<Complex<f64>>,
-    product_dim: usize,
+    pub product_dim: usize,
     index: usize,
 }
 
