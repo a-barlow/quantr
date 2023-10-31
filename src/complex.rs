@@ -55,8 +55,8 @@ impl Complex<f64> {
     /// let num: Complex<f64> = Complex::<f64>::expi(0.5f64 * PI);
     /// ```
     pub fn expi(theta: f64) -> Complex<f64> {
-        Complex { 
-            real: theta.cos(), 
+        Complex {
+            real: theta.cos(),
             imaginary: theta.sin(),
         }
     }
@@ -75,8 +75,8 @@ impl Complex<f32> {
     /// ```
 
     pub fn expi(theta: f32) -> Complex<f32> {
-        Complex { 
-            real: theta.cos(), 
+        Complex {
+            real: theta.cos(),
             imaginary: theta.sin(),
         }
     }

@@ -67,7 +67,7 @@ pub enum StandardGate<'a> {
     /// Rotation around x-axis, with angle.
     Rx(f64),
     /// Rotation around y-axis, with angle.
-    Ry(f64), 
+    Ry(f64),
     /// Rotation around z-axis, with angle.
     Rz(f64),
     /// Rotation of +π/2 around x-axis.
@@ -156,19 +156,19 @@ impl<'a> StandardGate<'a> {
             | StandardGate::X
             | StandardGate::Y
             | StandardGate::Z
-            | StandardGate::Rx(_) 
-            | StandardGate::Ry(_) 
-            | StandardGate::Rz(_) 
+            | StandardGate::Rx(_)
+            | StandardGate::Ry(_)
+            | StandardGate::Rz(_)
             | StandardGate::Phase(_)
-            | StandardGate::X90 
+            | StandardGate::X90
             | StandardGate::Y90
-            | StandardGate::MX90 
+            | StandardGate::MX90
             | StandardGate::MY90 => None,
             StandardGate::CNot(c)
             | StandardGate::Swap(c)
             | StandardGate::CZ(c)
-            | StandardGate::CY(c) 
-            | StandardGate::CR(_, c) 
+            | StandardGate::CY(c)
+            | StandardGate::CR(_, c)
             | StandardGate::CRk(_, c) => Some(vec![*c]),
             StandardGate::Toffoli(c1, c2) => Some(vec![*c1, *c2]),
             StandardGate::Custom(_, nodes, _) => Some(nodes.to_vec()),
@@ -691,20 +691,20 @@ impl<'a> Circuit<'a> {
             | StandardGate::Tdag
             | StandardGate::X
             | StandardGate::Y
-            | StandardGate::Z 
+            | StandardGate::Z
             | StandardGate::Rx(_)
             | StandardGate::Ry(_)
-            | StandardGate::Rz(_) 
+            | StandardGate::Rz(_)
             | StandardGate::Phase(_)
-            | StandardGate::X90 
+            | StandardGate::X90
             | StandardGate::Y90
-            | StandardGate::MX90 
+            | StandardGate::MX90
             | StandardGate::MY90 => GateSize::Single,
             StandardGate::CNot(_)
             | StandardGate::Swap(_)
             | StandardGate::CZ(_)
-            | StandardGate::CY(_) 
-            | StandardGate::CR(_, _) 
+            | StandardGate::CY(_)
+            | StandardGate::CR(_, _)
             | StandardGate::CRk(_, _) => GateSize::Double,
             StandardGate::Toffoli(_, _) => GateSize::Triple,
             StandardGate::Custom(_, _, _) => GateSize::Custom,
@@ -796,17 +796,16 @@ impl<'a> Circuit<'a> {
             standard_gate_ops::cr(
                 prod_state
                     .get(control)
-                    .join(prod_state.get(double_gate.position)), 
-                angle
+                    .join(prod_state.get(double_gate.position)),
+                angle,
             )
-        }
-        else if let StandardGate::CRk(k, control) = double_gate.name {
+        } else if let StandardGate::CRk(k, control) = double_gate.name {
             positions.push(control);
             standard_gate_ops::crk(
                 prod_state
                     .get(control)
-                    .join(prod_state.get(double_gate.position)), 
-                k
+                    .join(prod_state.get(double_gate.position)),
+                k,
             )
         } else {
             let control_node: usize;

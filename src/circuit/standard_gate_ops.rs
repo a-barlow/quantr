@@ -17,7 +17,7 @@ use crate::circuit::states::{ProductState, Qubit, SuperPosition};
 use crate::complex::Complex;
 use crate::{complex, complex_Im, complex_Im_array, complex_Re, complex_Re_array, complex_zero};
 use std::f64::consts::FRAC_1_SQRT_2;
-use std::ops::{Mul, Div};
+use std::ops::{Div, Mul};
 
 // The following gates (inlcuding triple and custom) are mapping qubits via the
 // computational basis:
