@@ -45,6 +45,15 @@ pub struct Complex<T> {
 
 impl Complex<f64> {
     /// Returns `exp(i*theta)` as a complex number.
+    ///
+    /// # Example
+    /// ```
+    /// use quantr::complex::Complex;
+    /// use quantr::complex_Im;
+    /// use std::f64::consts::PI;
+    ///
+    /// let num: Complex<f64> = Complex::<f64>::expi(0.5f64 * PI);
+    /// ```
     pub fn expi(theta: f64) -> Complex<f64> {
         Complex { 
             real: theta.cos(), 
@@ -55,6 +64,16 @@ impl Complex<f64> {
 
 impl Complex<f32> {
     /// Returns `exp(i*theta)` as a complex number.
+    ///
+    /// # Example
+    /// ```
+    /// use quantr::complex::Complex;
+    /// use quantr::complex_Im;
+    /// use std::f32::consts::PI;
+    ///
+    /// let num: Complex<f32> = Complex::<f32>::expi(0.5f32 * PI);
+    /// ```
+
     pub fn expi(theta: f32) -> Complex<f32> {
         Complex { 
             real: theta.cos(), 

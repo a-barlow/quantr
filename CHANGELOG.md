@@ -2,7 +2,13 @@
 
 This file logs the versions of quantr.
 
-## 0.2.5 - Algorithm optimisations and ASCII warnings
+## 0.2.5 - Complex exponential, ASCII warnings and gates
+
+Features:
+
+- `Complex` now has an `expi` function, which implements the complex
+  exponential raised to a real number. This returns a `Complex<f64>` or
+  `Complex<f32>`.
 
 Fixes:
 
@@ -41,7 +47,7 @@ Features:
 
 Fixes:
 
-- The labelling of the toffoli gate by the printer has changed from 'To'
+- The labelling of the Toffoli gate by the printer has changed from 'To'
   to 'X'.
 - The labelling of the swap gate by the printer has changed from 'Swap'
   to 'Sw'.
