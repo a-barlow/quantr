@@ -6,6 +6,18 @@ This file logs the versions of quantr.
 
 Features:
 
+- All gates from the cQASM instruction set have now been added. The
+  gates that were added to complete this set are:
+  - Rx (Rotation around x-axis)
+  - Ry (Rotation around y-axis)
+  - Rz (Rotation around z-axis)
+  - X90 (90 degree rotation around x-axis)
+  - MX90 (conjugate of above)
+  - Y90 (90 degree rotation around y-axis)
+  - MY90 (conjugate of above)
+  - Phase (implements a global phase change on single qubit)
+  - CR (controlled rotation)
+  - CRk (controlled rotation for QFT implementation)
 - `Complex` now has an `expi` function, which implements the complex
   exponential raised to a real number. This returns a `Complex<f64>` or
   `Complex<f32>`.
