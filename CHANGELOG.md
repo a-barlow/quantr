@@ -2,7 +2,58 @@
 
 This file logs the versions of quantr.
 
-## 0.2.4 -  S and T gates, and extra functionality for `ProductState`.
+## 0.2.5 - Complex exponential, ASCII warnings and gates
+
+Features:
+
+- `SuperPosition` now has a new publicly available field that specifies
+  the product dimension of the superposition (the number of qubits in
+  each computational state).
+- Added `Circuit::simulate_with_register`, which allows to attach a
+  custom register defined by a `SuperPosition`.
+- All gates from the cQASM instruction set have now been added. The
+  gates that were added to complete this set are:
+  - Rx (Rotation around x-axis)
+  - Ry (Rotation around y-axis)
+  - Rz (Rotation around z-axis)
+  - X90 (90 degree rotation around x-axis)
+  - MX90 (conjugate of above)
+  - Y90 (90 degree rotation around y-axis)
+  - MY90 (conjugate of above)
+  - Phase (implements a global phase change on single qubit)
+  - CR (controlled rotation)
+  - CRk (controlled rotation for QFT implementation)
+- `Complex` now has an `expi` function, which implements the complex
+  exponential raised to a real number. This returns a `Complex<f64>` or
+  `Complex<f32>`.
+
+Fixes:
+
+- T and S conjugate gates now have ASCII names when printed in a circuit
+  diagram. Before hand, this would have potentially ruined circuit
+  diagrams.
+- A warning has now been added when ASCII strings are used to label
+  custom functions.
+
+Optimisations:
+
+- A new method in `SuperPosition` was added to bypass checks on
+  conservation of probability for standard gates (that have been checked
+  manually).
+
+## 0.2.4 - Add S (Phase) and T gates
+
+Features:
+
+- Phase gate and conjugate has been added.
+- T gate and conjugate has been added.
+
+Tests:
+
+- Unit tests for Phase and T gates, with their conjugates, are tested in
+  2 qubit circuits.
+
+## 0.2.3 - Extra functionality for `ProductState` and added examples
 
 Features:
 
@@ -16,12 +67,10 @@ Features:
   is the completed code from the
   [quantr-book](https://a-barlow.github.io/quantr-book/), and can be
   run with `cargo run --example grovers`. 
-- Phase gate and conjugate has been added.
-- T gate and conjugate has been added.
 
 Fixes:
 
-- The labelling of the toffoli gate by the printer has changed from 'To'
+- The labelling of the Toffoli gate by the printer has changed from 'To'
   to 'X'.
 - The labelling of the swap gate by the printer has changed from 'Swap'
   to 'Sw'.
@@ -44,11 +93,6 @@ Tests:
 - Add unit test of inverting binary digits labelling computational basis
   using `ProductStates::invert_digit`.
 - Add unit test of `Product::to_super_position`.
-
-## 0.2.3 - !! YANKED VERSION !!
-
-There was a problem in implementing the Gitflow strategy, resulting in
-some commits not appearing in the master branch.
 
 ## 0.2.2 - Fixing the `Printer` and pushing of custom functions 
 

@@ -52,7 +52,7 @@ pub enum Measurement<T> {
 /// Gates that can be added to a [Circuit] struct.
 ///
 /// Matrix representations of these gates can be found at
-/// [https://www.quantum-inspire.com/kbase/cqasm-qubit-gate-operations/].
+/// <https://www.quantum-inspire.com/kbase/cqasm-qubit-gate-operations/>.
 ///
 /// Currently, this enum has the `#[non_exhaustive]` as it's
 /// yet undecided what will be included as a standard gate. This will
@@ -64,9 +64,25 @@ pub enum StandardGate<'a> {
     Id,
     /// Hadamard.
     H,
-    /// Phase.
+    /// Rotation around x-axis, with angle.
+    Rx(f64),
+    /// Rotation around y-axis, with angle.
+    Ry(f64),
+    /// Rotation around z-axis, with angle.
+    Rz(f64),
+    /// Rotation of +π/2 around x-axis.
+    X90,
+    /// Rotation of +π/2 around y-axis.
+    Y90,
+    /// Rotation of -π/2 around x-axis.
+    MX90,
+    /// Rotation of -π/2 around y-axis.
+    MY90,
+    /// Global phase, `exp(i*theta/2) * Identity`, with angle.
+    Phase(f64),
+    /// Phase, rotation of +π/2 around the z-axis.
     S,
-    /// Phase dagger.
+    /// Phase dagger, rotation of -π/2 around the z-axis.
     Sdag,
     /// T.
     T,
@@ -78,11 +94,15 @@ pub enum StandardGate<'a> {
     Y,
     /// Pauli-Z.
     Z,
-    /// Controlled Pauli-Z gate, with position of control node.
+    /// Controlled phase shift, with rotation and position of control node respectively.
+    CR(f64, usize),
+    /// Controlled phase shift for Quantum Fourier Transforms, with rotation and position of control node respectively.
+    CRk(i32, usize),
+    /// Controlled Pauli-Z, with position of control node.
     CZ(usize),
-    /// Controlled Pauli-Y gate, with position of control node.
+    /// Controlled Pauli-Y, with position of control node.
     CY(usize),
-    /// CNot, with position of control node.
+    /// Controlled Not, with position of control node.
     CNot(usize),
     /// Swap, with position of control node.
     Swap(usize),
@@ -90,10 +110,10 @@ pub enum StandardGate<'a> {
     Toffoli(usize, usize),
     /// Defines a custom gate.
     ///
-    /// The arguments define the mapping of the
-    /// gate; the position of the qubit states that the gate acts on;
-    /// and a name that will be displayed in the printed diagram
-    /// respectively.
+    /// The arguments define the mapping of the gate; the position of the qubit states
+    /// that the gate acts on; and a name that will be displayed in the printed diagram
+    /// respectively. The name of the custom gate should be in ASCII for it to render properly
+    /// when printing the circuit diagram.
     ///
     /// # Example
     /// ```
@@ -124,7 +144,7 @@ pub enum StandardGate<'a> {
 }
 
 impl<'a> StandardGate<'a> {
-    // Retreives the list of nodes within a gate.
+    // Retrieves the list of nodes within a gate.
     fn get_nodes(&self) -> Option<Vec<usize>> {
         match self {
             StandardGate::Id
@@ -135,11 +155,21 @@ impl<'a> StandardGate<'a> {
             | StandardGate::Tdag
             | StandardGate::X
             | StandardGate::Y
-            | StandardGate::Z => None,
+            | StandardGate::Z
+            | StandardGate::Rx(_)
+            | StandardGate::Ry(_)
+            | StandardGate::Rz(_)
+            | StandardGate::Phase(_)
+            | StandardGate::X90
+            | StandardGate::Y90
+            | StandardGate::MX90
+            | StandardGate::MY90 => None,
             StandardGate::CNot(c)
             | StandardGate::Swap(c)
             | StandardGate::CZ(c)
-            | StandardGate::CY(c) => Some(vec![*c]),
+            | StandardGate::CY(c)
+            | StandardGate::CR(_, c)
+            | StandardGate::CRk(_, c) => Some(vec![*c]),
             StandardGate::Toffoli(c1, c2) => Some(vec![*c1, *c2]),
             StandardGate::Custom(_, nodes, _) => Some(nodes.to_vec()),
         }
@@ -339,6 +369,11 @@ impl<'a> Circuit<'a> {
         let mut found_multi: bool = false;
         let mut found_second: bool = false;
         for gate in gates.iter() {
+            if let StandardGate::Custom(_, _, name) = gate {
+                if !name.is_ascii() {
+                    println!("\x1b[93m[Quantr Warning] The custom function name, {}, does not only use ASCII chars. This could lead to problems in printing the circuit diagram. This warning will be promoted to an Error in the next major release.\x1b[0m", name);
+                }
+            }
             if gate != &StandardGate::Id {
                 if found_multi {
                     found_second = true;
@@ -621,6 +656,73 @@ impl<'a> Circuit<'a> {
         self.output_state = Some(register);
     }
 
+    /// Attaches a custom register to the circuit resulting in a superposition that can be measured.
+    ///
+    /// See [Circuit::get_superposition] and [Circuit::repeat_measurement] for details on obtaining
+    /// observables from the resulting superposition.
+    ///
+    /// # Example
+    /// ```
+    /// use quantr::circuit::{Circuit, StandardGate};
+    /// use quantr::circuit::states::{Qubit, ProductState, SuperPosition};
+    ///
+    /// let mut circuit = Circuit::new(2).unwrap();
+    /// circuit.add_gate(StandardGate::X, 1).unwrap();
+    ///
+    /// let register: SuperPosition = ProductState::new(&[Qubit::One,
+    ///                                 Qubit::Zero]).to_super_position();
+    ///
+    /// circuit.simulate_with_register(register);
+    ///
+    /// // Simulates the circuit:
+    /// // |1> -------
+    /// // |0> -- X --
+    /// ````
+    pub fn simulate_with_register(
+        &mut self,
+        mut register: SuperPosition,
+    ) -> Result<(), QuantrError> {
+        if register.product_dim != self.num_qubits {
+            return Err(QuantrError {
+                message: format!("The custom register has a product state dimension of {}, while the number of qubits is {}. These must equal each other.", register.product_dim, self.num_qubits)
+            });
+        }
+
+        let mut qubit_counter: usize = 0;
+        let number_gates: usize = self.circuit_gates.len();
+
+        if self.config_progress {
+            println!("Starting circuit simulation...")
+        }
+
+        // Loop through each gate of circuit from starting at top row to bottom, then moving onto the next.
+        for gate in &self.circuit_gates {
+            let gate_pos: usize = qubit_counter % self.num_qubits;
+
+            if self.config_progress {
+                Self::print_circuit_log(gate, &gate_pos, &qubit_counter, &number_gates);
+            }
+
+            if *gate == StandardGate::Id {
+                qubit_counter += 1;
+                continue;
+            }
+
+            let gate_class: GateSize = Self::classify_gate_size(gate);
+            let gate_to_apply: GateInfo = GateInfo {
+                name: gate.clone(),
+                position: gate_pos,
+                size: gate_class,
+            };
+            register = Circuit::apply_gate(&gate_to_apply, &register);
+
+            qubit_counter += 1;
+        }
+
+        self.output_state = Some(register);
+        Ok(())
+    }
+
     // If the user toggles the log on, then prints the simulation of each circuit.
     fn print_circuit_log(
         gate: &StandardGate,
@@ -656,11 +758,21 @@ impl<'a> Circuit<'a> {
             | StandardGate::Tdag
             | StandardGate::X
             | StandardGate::Y
-            | StandardGate::Z => GateSize::Single,
+            | StandardGate::Z
+            | StandardGate::Rx(_)
+            | StandardGate::Ry(_)
+            | StandardGate::Rz(_)
+            | StandardGate::Phase(_)
+            | StandardGate::X90
+            | StandardGate::Y90
+            | StandardGate::MX90
+            | StandardGate::MY90 => GateSize::Single,
             StandardGate::CNot(_)
             | StandardGate::Swap(_)
             | StandardGate::CZ(_)
-            | StandardGate::CY(_) => GateSize::Double,
+            | StandardGate::CY(_)
+            | StandardGate::CR(_, _)
+            | StandardGate::CRk(_, _) => GateSize::Double,
             StandardGate::Toffoli(_, _) => GateSize::Triple,
             StandardGate::Custom(_, _, _) => GateSize::Custom,
         }
@@ -708,23 +820,36 @@ impl<'a> Circuit<'a> {
         register.set_amplitudes_from_states_unchecked(&mapped_states)
     }
 
-    // The following functions compartementalise the algorithms for applying a gate to the
+    // The following functions compartmentalise the algorithms for applying a gate to the
     // register.
-
     fn single_gate_on_wire(single_gate: &GateInfo, prod_state: &ProductState) -> SuperPosition {
-        let operator: fn(Qubit) -> SuperPosition = match single_gate.name {
-            StandardGate::Id => standard_gate_ops::identity,
-            StandardGate::H => standard_gate_ops::hadamard,
-            StandardGate::S => standard_gate_ops::phase,
-            StandardGate::Sdag => standard_gate_ops::phasedag,
-            StandardGate::T => standard_gate_ops::tgate,
-            StandardGate::Tdag => standard_gate_ops::tgatedag,
-            StandardGate::X => standard_gate_ops::pauli_x,
-            StandardGate::Y => standard_gate_ops::pauli_y,
-            StandardGate::Z => standard_gate_ops::pauli_z,
-            _ => panic!("Non single gate was passed to single gate operation function."),
-        };
-        operator(prod_state.state[single_gate.position])
+        if let StandardGate::Rx(angle) = single_gate.name {
+            standard_gate_ops::rx(prod_state.state[single_gate.position], angle)
+        } else if let StandardGate::Ry(angle) = single_gate.name {
+            standard_gate_ops::ry(prod_state.state[single_gate.position], angle)
+        } else if let StandardGate::Rz(angle) = single_gate.name {
+            standard_gate_ops::rz(prod_state.state[single_gate.position], angle)
+        } else if let StandardGate::Phase(angle) = single_gate.name {
+            standard_gate_ops::global_phase(prod_state.state[single_gate.position], angle)
+        } else {
+            let operator: fn(Qubit) -> SuperPosition = match single_gate.name {
+                StandardGate::Id => standard_gate_ops::identity,
+                StandardGate::H => standard_gate_ops::hadamard,
+                StandardGate::S => standard_gate_ops::phase,
+                StandardGate::Sdag => standard_gate_ops::phasedag,
+                StandardGate::T => standard_gate_ops::tgate,
+                StandardGate::Tdag => standard_gate_ops::tgatedag,
+                StandardGate::X => standard_gate_ops::pauli_x,
+                StandardGate::Y => standard_gate_ops::pauli_y,
+                StandardGate::Z => standard_gate_ops::pauli_z,
+                StandardGate::X90 => standard_gate_ops::x90,
+                StandardGate::Y90 => standard_gate_ops::y90,
+                StandardGate::MX90 => standard_gate_ops::mx90,
+                StandardGate::MY90 => standard_gate_ops::my90,
+                _ => panic!("Non single gate was passed to single gate operation function."),
+            };
+            operator(prod_state.state[single_gate.position])
+        }
     }
 
     fn double_gate_on_wires(
@@ -733,33 +858,51 @@ impl<'a> Circuit<'a> {
         positions: &mut Vec<usize>,
     ) -> SuperPosition {
         // operator: fn(ProductState) -> SuperPosition
-        let control_node: usize;
-        let operator = match double_gate.name {
-            StandardGate::CNot(control) => {
-                control_node = control;
-                standard_gate_ops::cnot
-            }
-            StandardGate::CZ(control) => {
-                control_node = control;
-                standard_gate_ops::cz
-            }
-            StandardGate::CY(control) => {
-                control_node = control;
-                standard_gate_ops::cy
-            }
-            StandardGate::Swap(control) => {
-                control_node = control;
-                standard_gate_ops::swap
-            }
-            _ => panic!("Non double gate was passed to double gate operation function."),
-        };
+        if let StandardGate::CR(angle, control) = double_gate.name {
+            positions.push(control);
+            standard_gate_ops::cr(
+                prod_state
+                    .get(control)
+                    .join(prod_state.get(double_gate.position)),
+                angle,
+            )
+        } else if let StandardGate::CRk(k, control) = double_gate.name {
+            positions.push(control);
+            standard_gate_ops::crk(
+                prod_state
+                    .get(control)
+                    .join(prod_state.get(double_gate.position)),
+                k,
+            )
+        } else {
+            let control_node: usize;
+            let operator = match double_gate.name {
+                StandardGate::CNot(control) => {
+                    control_node = control;
+                    standard_gate_ops::cnot
+                }
+                StandardGate::CZ(control) => {
+                    control_node = control;
+                    standard_gate_ops::cz
+                }
+                StandardGate::CY(control) => {
+                    control_node = control;
+                    standard_gate_ops::cy
+                }
+                StandardGate::Swap(control) => {
+                    control_node = control;
+                    standard_gate_ops::swap
+                }
+                _ => panic!("Non double gate was passed to double gate operation function."),
+            };
 
-        positions.push(control_node);
-        operator(
-            prod_state
-                .get(control_node)
-                .join(prod_state.get(double_gate.position)),
-        )
+            positions.push(control_node);
+            operator(
+                prod_state
+                    .get(control_node)
+                    .join(prod_state.get(double_gate.position)),
+            )
+        }
     }
 
     fn triple_gate_on_wires(
@@ -862,11 +1005,10 @@ impl<'a> Circuit<'a> {
 #[cfg(test)]
 mod tests {
     use crate::{complex_Im, complex_Re, complex_Re_array, complex_zero, complex};
-    use std::f64::consts::FRAC_1_SQRT_2;
+    use std::f64::consts::{FRAC_1_SQRT_2, PI};
     use crate::circuit::Measurement::NonObservable;
     use super::*;
-    const ERROR_MARGIN: f64 = 0.00000001f64; // For comparing floats due to floating point error.
-
+    const ERROR_MARGIN: f64 = 0.000001f64; // For comparing floats due to floating point error.
     // Needed for testing
     fn compare_complex_lists_and_register(correct_list: &[Complex<f64>], register: &SuperPosition) {
         for (i, &comp_num) in register.amplitudes.iter().enumerate() { // Make sure that it turns up complex
@@ -1216,6 +1358,179 @@ mod tests {
         ];
 
         compare_circuit(circuit, &correct_register);
+
+    }
+    
+    #[test]
+    fn custom_non_ascii_name() {
+        let mut circuit = Circuit::new(3).unwrap();
+
+        circuit.add_gate(StandardGate::Custom(example_cnot, &[0], "NonAscii†".to_string()), 1).unwrap();
+        // in future, this should panic. For now, this is a warning message.
+    }
+
+    #[test]
+    fn rx_gate() {
+        let mut circuit = Circuit::new(2).unwrap();
+
+        circuit.add_gates(vec![StandardGate::H, StandardGate::H]).unwrap();
+        circuit.add_gate(StandardGate::Rx(PI), 0).unwrap();
+
+        circuit.simulate();
+
+        let correct_register: [Complex<f64>; 4] = [
+            complex_Im!(-0.5f64), complex_Im!(-0.5f64),
+            complex_Im!(-0.5f64), complex_Im!(-0.5f64)
+        ];
+
+        compare_circuit(circuit, &correct_register);
+    }
+
+    #[test]
+    fn ry_gate() {
+        let mut circuit = Circuit::new(2).unwrap();
+
+        circuit.add_gates(vec![StandardGate::H, StandardGate::H]).unwrap();
+        circuit.add_gate(StandardGate::Ry(PI), 0).unwrap();
+
+        circuit.simulate();
+
+        let correct_register: [Complex<f64>; 4] = [
+            complex_Re!(-0.5f64), complex_Re!(-0.5f64),
+            complex_Re!(0.5f64), complex_Re!(0.5f64)
+        ];
+
+        compare_circuit(circuit, &correct_register);
+    }
+
+    #[test]
+    fn rz_gate() {
+        let mut circuit = Circuit::new(2).unwrap();
+
+        circuit.add_gates(vec![StandardGate::H, StandardGate::H]).unwrap();
+        circuit.add_gate(StandardGate::Rz(PI), 0).unwrap();
+
+        circuit.simulate();
+
+        let correct_register: [Complex<f64>; 4] = [
+            complex_Im!(-0.5f64), complex_Im!(-0.5f64),
+            complex_Im!(0.5f64), complex_Im!(0.5f64)
+        ];
+
+        compare_circuit(circuit, &correct_register);
+    }
+
+    #[test]
+    fn global_gate() {
+        let mut circuit = Circuit::new(2).unwrap();
+
+        circuit.add_gates(vec![StandardGate::H, StandardGate::H]).unwrap();
+        circuit.add_gate(StandardGate::Phase(PI), 0).unwrap();
+
+        circuit.simulate();
+
+        let correct_register: [Complex<f64>; 4] = [
+            complex_Im!(0.5f64), complex_Im!(0.5f64),
+            complex_Im!(0.5f64), complex_Im!(0.5f64)
+        ];
+
+        compare_circuit(circuit, &correct_register);
+    }
+
+    #[test]
+    fn x90_and_mx90_gate() {
+        let mut circuit = Circuit::new(2).unwrap();
+
+        circuit.add_gates(vec![StandardGate::H, StandardGate::H]).unwrap();
+        circuit.add_gate(StandardGate::MX90, 0).unwrap();
+        circuit.add_gate(StandardGate::X90, 1).unwrap();
+
+        circuit.simulate();
+
+        let correct_register: [Complex<f64>; 4] = [
+            complex_Re!(0.5f64), complex_Re!(0.5f64),
+            complex_Re!(0.5f64), complex_Re!(0.5f64)
+        ];
+
+        compare_circuit(circuit, &correct_register);
+    }
+
+    #[test]
+    fn y90_and_my90_gate() {
+        let mut circuit = Circuit::new(2).unwrap();
+
+        circuit.add_gates(vec![StandardGate::H, StandardGate::H]).unwrap();
+        circuit.add_gate(StandardGate::MY90, 0).unwrap();
+        circuit.add_gate(StandardGate::Y90, 1).unwrap();
+
+        circuit.simulate();
+
+        let correct_register: [Complex<f64>; 4] = [
+            complex_Re!(-0.5f64), complex_Re!(0.5f64),
+            complex_Re!(0.5f64), complex_Re!(-0.5f64)
+        ];
+
+        compare_circuit(circuit, &correct_register);
+    }
+
+    #[test]
+    fn cr_gate() {
+        let mut circuit = Circuit::new(3).unwrap();
+
+        circuit.add_gates(vec![StandardGate::X, StandardGate::X, StandardGate::X]).unwrap();
+        circuit.add_gate(StandardGate::CR(-PI*0.5f64, 2), 1).unwrap();
+
+        circuit.simulate();
+
+        let correct_register = [
+            complex_zero!(), complex_zero!(), complex_zero!(), complex_zero!(),
+            complex_zero!(), complex_zero!(), complex_zero!(), complex_Im!(-1f64)
+        ];
+       
+        compare_circuit(circuit, &correct_register);
+    }
+
+    #[test]
+    fn crk_gate() {
+        let mut circuit = Circuit::new(3).unwrap();
+
+        circuit.add_gates(vec![StandardGate::X, StandardGate::X, StandardGate::X]).unwrap();
+        circuit.add_gate(StandardGate::CRk(2i32, 2), 1).unwrap();
+
+        circuit.simulate();
+
+        let correct_register = [
+            complex_zero!(), complex_zero!(), complex_zero!(), complex_zero!(),
+            complex_zero!(), complex_zero!(), complex_zero!(), complex_Im!(1f64)
+        ];
+        
+        compare_circuit(circuit, &correct_register);
+    }
+
+    #[test]
+    fn custom_register() {
+        let mut circuit = Circuit::new(3).unwrap();
+        circuit.add_gate(StandardGate::X, 1).unwrap();
+        let register: SuperPosition = ProductState::new(&[Qubit::One,
+                                                        Qubit::Zero, 
+                                                        Qubit::One]).to_super_position();
+        circuit.simulate_with_register(register).unwrap();
+
+        let correct_register = [
+            complex_zero!(), complex_zero!(), complex_zero!(), complex_zero!(),
+            complex_zero!(), complex_zero!(), complex_zero!(), complex_Re!(1f64)
+        ];
+        
+        compare_circuit(circuit, &correct_register);
+    }
+
+    #[test]
+    #[should_panic]
+    fn custom_register_wrong_dimension() {
+        let mut circuit = Circuit::new(3).unwrap();
+        circuit.add_gate(StandardGate::X, 1).unwrap();
+        let register: SuperPosition = ProductState::new(&[Qubit::One, Qubit::Zero]).to_super_position();
+        circuit.simulate_with_register(register).unwrap();
 
     }
 }

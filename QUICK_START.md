@@ -40,7 +40,7 @@ Add the following lines to the top of `main.rs`, and before `fn main()`:
 
 ```rust, ignore
 use quantr::circuit::{Circuit, StandardGate, printer::Printer, state::ProductState, Measurement};
-use std::HashMap;
+use std::collections::HashMap;
 ```
 
 These lines import the structs and enums that will be used throughout 

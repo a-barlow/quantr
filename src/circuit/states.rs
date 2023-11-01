@@ -35,6 +35,7 @@ pub enum Qubit {
 }
 
 impl Qubit {
+    // Change to `kronecker_prod`
     /// Defines the tensor product on two qubits.
     ///
     /// # Example
@@ -51,6 +52,7 @@ impl Qubit {
         ProductState::new(&[self, other])
     }
 
+    // Deprecated as it will soon change to `into_state`.
     /// Converts the [Qubit] to a [ProductState] struct.
     pub fn as_state(self) -> ProductState {
         ProductState::new(&[self])
@@ -122,6 +124,7 @@ impl ProductState {
         Ok(())
     }
 
+    // `kronecker_prod`
     /// Concatenate a product state with a qubit.
     ///
     /// In effect, this is using the tensor prodcut to create a new state.
@@ -135,6 +138,7 @@ impl ProductState {
         self.state[qubit_number]
     }
 
+    // `into_string`
     /// Returns the labelling of the product state as a String.
     pub fn as_string(&self) -> String {
         self.state
@@ -146,6 +150,7 @@ impl ProductState {
             .collect::<String>()
     }
 
+    // Change to `into_super_position`
     /// Returns the [ProductState] as a [SuperPosition].
     pub fn to_super_position(self) -> SuperPosition {
         SuperPosition::new(self.num_qubits())
@@ -180,13 +185,14 @@ impl ProductState {
     }
 }
 
+// Change amplitudes from Vec to Hashmap. Would make it faster for larger product dimesnions.
 /// A superposition of [ProductState]s.
 ///
 /// The ordering `amplitudes` correspond to state vectors in the computational basis.
 #[derive(PartialEq, Debug, Clone)]
 pub struct SuperPosition {
     pub amplitudes: Vec<Complex<f64>>,
-    product_dim: usize,
+    pub product_dim: usize,
     index: usize,
 }
 
@@ -318,6 +324,19 @@ impl SuperPosition {
 
     fn equal_within_error(num: f64, compare_num: f64) -> bool {
         num < compare_num + Self::ERROR_MARGIN && num > compare_num - Self::ERROR_MARGIN
+    }
+
+    pub(crate) fn set_amplitudes_unchecked(
+        self,
+        amplitudes: &[Complex<f64>],
+    ) -> Result<SuperPosition, QuantrError> {
+        let mut new_amps: Vec<Complex<f64>> = (*self.amplitudes).to_vec();
+        Self::copy_slice_to_vec(&mut new_amps, amplitudes);
+        Ok(SuperPosition {
+            amplitudes: new_amps,
+            product_dim: self.product_dim,
+            index: 0,
+        })
     }
 
     /// Returns a superposition constructed from a HashMap with [ProductState] keys and amplitudes
