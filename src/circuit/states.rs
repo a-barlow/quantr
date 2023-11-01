@@ -326,7 +326,10 @@ impl SuperPosition {
         num < compare_num + Self::ERROR_MARGIN && num > compare_num - Self::ERROR_MARGIN
     }
 
-    pub(crate) fn set_amplitudes_unchecked(self, amplitudes: &[Complex<f64>]) -> Result<SuperPosition, QuantrError> {
+    pub(crate) fn set_amplitudes_unchecked(
+        self,
+        amplitudes: &[Complex<f64>],
+    ) -> Result<SuperPosition, QuantrError> {
         let mut new_amps: Vec<Complex<f64>> = (*self.amplitudes).to_vec();
         Self::copy_slice_to_vec(&mut new_amps, amplitudes);
         Ok(SuperPosition {

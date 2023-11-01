@@ -678,13 +678,16 @@ impl<'a> Circuit<'a> {
     /// // |1> -------
     /// // |0> -- X --
     /// ````
-    pub fn simulate_with_register(&mut self, mut register: SuperPosition) -> Result<(), QuantrError> {
+    pub fn simulate_with_register(
+        &mut self,
+        mut register: SuperPosition,
+    ) -> Result<(), QuantrError> {
         if register.product_dim != self.num_qubits {
             return Err(QuantrError {
                 message: format!("The custom register has a product state dimension of {}, while the number of qubits is {}. These must equal each other.", register.product_dim, self.num_qubits)
             });
         }
-        
+
         let mut qubit_counter: usize = 0;
         let number_gates: usize = self.circuit_gates.len();
 
@@ -719,8 +722,6 @@ impl<'a> Circuit<'a> {
         self.output_state = Some(register);
         Ok(())
     }
-
-
 
     // If the user toggles the log on, then prints the simulation of each circuit.
     fn print_circuit_log(
