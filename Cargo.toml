@@ -1,6 +1,6 @@
 [package]
 name = "quantr"
-version = "0.2.4"
+version = "0.2.5"
 edition = "2021"
 license = "EUPL-1.2"
 readme = "README.md"
