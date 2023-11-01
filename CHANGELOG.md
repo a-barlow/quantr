@@ -6,7 +6,7 @@ This file logs the versions of quantr.
 
 Features:
 
-- `SuperPosition` now has a new publicly available filed that specifies
+- `SuperPosition` now has a new publicly available field that specifies
   the product dimension of the superposition (the number of qubits in
   each computational state).
 - Added `Circuit::simulate_with_register`, which allows to attach a
@@ -34,6 +34,12 @@ Fixes:
   diagrams.
 - A warning has now been added when ASCII strings are used to label
   custom functions.
+
+Optimisations:
+
+- A new method in `SuperPosition` was added to bypass checks on
+  conservation of probability for standard gates (that have been checked
+  manually).
 
 ## 0.2.4 - Add S (Phase) and T gates
 
