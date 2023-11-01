@@ -192,7 +192,7 @@ impl ProductState {
 #[derive(PartialEq, Debug, Clone)]
 pub struct SuperPosition {
     pub amplitudes: Vec<Complex<f64>>,
-    product_dim: usize,
+    pub product_dim: usize,
     index: usize,
 }
 
@@ -324,6 +324,19 @@ impl SuperPosition {
 
     fn equal_within_error(num: f64, compare_num: f64) -> bool {
         num < compare_num + Self::ERROR_MARGIN && num > compare_num - Self::ERROR_MARGIN
+    }
+
+    pub(crate) fn set_amplitudes_unchecked(
+        self,
+        amplitudes: &[Complex<f64>],
+    ) -> Result<SuperPosition, QuantrError> {
+        let mut new_amps: Vec<Complex<f64>> = (*self.amplitudes).to_vec();
+        Self::copy_slice_to_vec(&mut new_amps, amplitudes);
+        Ok(SuperPosition {
+            amplitudes: new_amps,
+            product_dim: self.product_dim,
+            index: 0,
+        })
     }
 
     /// Returns a superposition constructed from a HashMap with [ProductState] keys and amplitudes

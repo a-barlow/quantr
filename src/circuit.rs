@@ -656,6 +656,73 @@ impl<'a> Circuit<'a> {
         self.output_state = Some(register);
     }
 
+    /// Attaches a custom register to the circuit resulting in a superposition that can be measured.
+    ///
+    /// See [Circuit::get_superposition] and [Circuit::repeat_measurement] for details on obtaining
+    /// observables from the resulting superposition.
+    ///
+    /// # Example
+    /// ```
+    /// use quantr::circuit::{Circuit, StandardGate};
+    /// use quantr::circuit::states::{Qubit, ProductState, SuperPosition};
+    ///
+    /// let mut circuit = Circuit::new(2).unwrap();
+    /// circuit.add_gate(StandardGate::X, 1).unwrap();
+    ///
+    /// let register: SuperPosition = ProductState::new(&[Qubit::One,
+    ///                                 Qubit::Zero]).to_super_position();
+    ///
+    /// circuit.simulate_with_register(register);
+    ///
+    /// // Simulates the circuit:
+    /// // |1> -------
+    /// // |0> -- X --
+    /// ````
+    pub fn simulate_with_register(
+        &mut self,
+        mut register: SuperPosition,
+    ) -> Result<(), QuantrError> {
+        if register.product_dim != self.num_qubits {
+            return Err(QuantrError {
+                message: format!("The custom register has a product state dimension of {}, while the number of qubits is {}. These must equal each other.", register.product_dim, self.num_qubits)
+            });
+        }
+
+        let mut qubit_counter: usize = 0;
+        let number_gates: usize = self.circuit_gates.len();
+
+        if self.config_progress {
+            println!("Starting circuit simulation...")
+        }
+
+        // Loop through each gate of circuit from starting at top row to bottom, then moving onto the next.
+        for gate in &self.circuit_gates {
+            let gate_pos: usize = qubit_counter % self.num_qubits;
+
+            if self.config_progress {
+                Self::print_circuit_log(gate, &gate_pos, &qubit_counter, &number_gates);
+            }
+
+            if *gate == StandardGate::Id {
+                qubit_counter += 1;
+                continue;
+            }
+
+            let gate_class: GateSize = Self::classify_gate_size(gate);
+            let gate_to_apply: GateInfo = GateInfo {
+                name: gate.clone(),
+                position: gate_pos,
+                size: gate_class,
+            };
+            register = Circuit::apply_gate(&gate_to_apply, &register);
+
+            qubit_counter += 1;
+        }
+
+        self.output_state = Some(register);
+        Ok(())
+    }
+
     // If the user toggles the log on, then prints the simulation of each circuit.
     fn print_circuit_log(
         gate: &StandardGate,
@@ -1440,4 +1507,30 @@ mod tests {
         compare_circuit(circuit, &correct_register);
     }
 
+    #[test]
+    fn custom_register() {
+        let mut circuit = Circuit::new(3).unwrap();
+        circuit.add_gate(StandardGate::X, 1).unwrap();
+        let register: SuperPosition = ProductState::new(&[Qubit::One,
+                                                        Qubit::Zero, 
+                                                        Qubit::One]).to_super_position();
+        circuit.simulate_with_register(register).unwrap();
+
+        let correct_register = [
+            complex_zero!(), complex_zero!(), complex_zero!(), complex_zero!(),
+            complex_zero!(), complex_zero!(), complex_zero!(), complex_Re!(1f64)
+        ];
+        
+        compare_circuit(circuit, &correct_register);
+    }
+
+    #[test]
+    #[should_panic]
+    fn custom_register_wrong_dimension() {
+        let mut circuit = Circuit::new(3).unwrap();
+        circuit.add_gate(StandardGate::X, 1).unwrap();
+        let register: SuperPosition = ProductState::new(&[Qubit::One, Qubit::Zero]).to_super_position();
+        circuit.simulate_with_register(register).unwrap();
+
+    }
 }
