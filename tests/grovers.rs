@@ -8,13 +8,13 @@
 * Author: Andrew Rowan Barlow <a.barlow.dev@gmail.com>
 */
 
-use quantr::circuit::{
+use quantr::{
     states::{ProductState, Qubit, SuperPosition},
     Circuit,
     Measurement::{NonObservable, Observable},
     StandardGate,
 };
-use quantr::{complex::Complex, complex_Re};
+use quantr::{Complex, complex_Re};
 use std::f64::consts::FRAC_1_SQRT_2;
 const ERROR_MARGIN: f64 = 0.00000001f64;
 

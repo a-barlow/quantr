@@ -19,7 +19,7 @@
 //!  ⋮    ⋮
 //!  ```
 
-use crate::complex::Complex;
+use crate::Complex;
 use crate::QuantrError;
 use crate::{complex_Re, complex_zero};
 use std::collections::HashMap;
@@ -40,7 +40,7 @@ impl Qubit {
     ///
     /// # Example
     /// ```
-    /// use quantr::circuit::states::{ProductState, Qubit};
+    /// use quantr::states::{ProductState, Qubit};
     ///
     /// let qubit_a: Qubit = Qubit::Zero; // |0>
     /// let qubit_b: Qubit = Qubit::One;  // |1>
@@ -200,8 +200,8 @@ pub struct SuperPosition {
 ///
 /// # Example
 /// ```
-/// use quantr::circuit::states::{ProductState, Qubit, SuperPosition};
-/// use quantr::{complex_Re, complex_Re_vec, complex_zero, complex::Complex};
+/// use quantr::states::{ProductState, Qubit, SuperPosition};
+/// use quantr::{complex_Re, complex_Re_vec, complex_zero, Complex};
 /// use std::f64::consts::FRAC_1_SQRT_2;
 ///
 /// let super_pos: SuperPosition = SuperPosition::new(2)

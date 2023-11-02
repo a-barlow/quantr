@@ -72,7 +72,7 @@ impl Printer<'_> {
     ///
     /// # Example
     /// ```
-    /// use quantr::circuit::{Circuit, StandardGate, printer::Printer};
+    /// use quantr::{Circuit, StandardGate, Printer};
     ///
     /// let mut qc: Circuit = Circuit::new(2).unwrap();
     /// qc.add_gate(StandardGate::CNot(0), 1).unwrap();
@@ -101,7 +101,7 @@ impl Printer<'_> {
     ///
     /// # Example
     /// ```
-    /// use quantr::circuit::{Circuit, StandardGate, printer::Printer};
+    /// use quantr::{Circuit, StandardGate, Printer};
     ///
     /// let mut qc: Circuit = Circuit::new(2).unwrap();
     /// qc.add_gate(StandardGate::CNot(0), 1).unwrap();
@@ -123,7 +123,7 @@ impl Printer<'_> {
     ///
     /// # Example
     /// ```
-    /// use quantr::circuit::{Circuit, StandardGate, printer::Printer};
+    /// use quantr::{Circuit, StandardGate, Printer};
     ///
     /// let mut qc: Circuit = Circuit::new(2).unwrap();
     /// qc.add_gate(StandardGate::CNot(0), 1).unwrap();
@@ -147,7 +147,7 @@ impl Printer<'_> {
     ///
     /// # Example
     /// ```
-    /// use quantr::circuit::{Circuit, StandardGate, printer::Printer};
+    /// use quantr::{Circuit, StandardGate, Printer};
     ///
     /// let mut qc: Circuit = Circuit::new(2).unwrap();
     /// qc.add_gate(StandardGate::CNot(0), 1).unwrap();
@@ -425,10 +425,10 @@ impl Printer<'_> {
 
 #[cfg(test)]
 mod tests {
-    use crate::circuit::{
-        printer::Printer, Circuit, ProductState, Qubit, StandardGate, SuperPosition,
+    use crate::{
+        Printer, Circuit, StandardGate, states::{Qubit, ProductState, SuperPosition},
     };
-    use crate::complex::Complex;
+    use crate::Complex;
     use crate::complex_Re_array;
     // These are primarily tested by making sure they print correctly to
     // the terminal, and then copy the output for the assert_eq! macro.

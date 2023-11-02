@@ -50,7 +50,7 @@ implementation of Grover's algorithm.
 An example of simulating and printing a two qubit circuit:
 
 ```rust
-use quantr::circuit::{Circuit, StandardGate, printer::Printer, 
+use quantr::{Circuit, StandardGate, Printer, 
             Measurement::Observable};
 
 fn main() {

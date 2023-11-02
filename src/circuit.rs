@@ -23,13 +23,13 @@
 //! [Circuit::repeat_measurement], where a new register is attached before each measurment. Or, the
 //! explicit superpositon can be retreived using [Circuit::get_superposition].
 
-use crate::complex::Complex;
+use crate::Complex;
 use core::panic;
 use rand::Rng;
 use std::collections::HashMap;
 use std::ops::{Add, Mul};
 
-use crate::circuit::states::{ProductState, Qubit, SuperPosition};
+use crate::states::{ProductState, Qubit, SuperPosition};
 use crate::QuantrError;
 
 pub mod printer;
@@ -117,10 +117,9 @@ pub enum StandardGate<'a> {
     ///
     /// # Example
     /// ```
-    /// use quantr::circuit::{Circuit, StandardGate};
-    /// use quantr::circuit::states::{SuperPosition, ProductState, Qubit};
-    /// use quantr::complex::Complex;
-    /// use quantr::complex_Re_array;
+    /// use quantr::{Circuit, StandardGate};
+    /// use quantr::states::{SuperPosition, ProductState, Qubit};
+    /// use quantr::{Complex, complex_Re_array};
     ///
     /// // Defines a C-Not gate
     /// fn example_cnot(prod: ProductState) -> SuperPosition {
@@ -213,7 +212,7 @@ impl<'a> Circuit<'a> {
     ///
     /// # Example
     /// ```
-    /// use quantr::circuit::Circuit;
+    /// use quantr::Circuit;
     ///
     /// // Initialises a 3 qubit circuit.
     /// let quantum_circuit: Circuit = Circuit::new(3).unwrap();
@@ -245,7 +244,7 @@ impl<'a> Circuit<'a> {
     ///
     /// # Example
     /// ```
-    /// use quantr::circuit::{Circuit, StandardGate};
+    /// use quantr::{Circuit, StandardGate};
     ///
     /// let mut quantum_circuit: Circuit = Circuit::new(3).unwrap();
     /// quantum_circuit.add_gate(StandardGate::X, 0).unwrap();
@@ -267,7 +266,7 @@ impl<'a> Circuit<'a> {
     ///
     /// # Example
     /// ```
-    /// use quantr::circuit::{Circuit, StandardGate};
+    /// use quantr::{Circuit, StandardGate};
     /// use std::collections::HashMap;
     ///
     /// let mut quantum_circuit: Circuit = Circuit::new(3).unwrap();
@@ -329,7 +328,7 @@ impl<'a> Circuit<'a> {
     ///
     /// # Example   
     /// ```
-    /// use quantr::circuit::{Circuit, StandardGate};
+    /// use quantr::{Circuit, StandardGate};
     ///
     /// let mut quantum_circuit: Circuit = Circuit::new(3).unwrap();
     /// let gates_to_add: Vec<StandardGate> = vec![StandardGate::H, StandardGate::X, StandardGate::Y];
@@ -452,7 +451,7 @@ impl<'a> Circuit<'a> {
     ///
     /// # Example
     /// ```
-    /// use quantr::circuit::{Circuit, StandardGate};
+    /// use quantr::{Circuit, StandardGate};
     ///
     /// let mut quantum_circuit: Circuit = Circuit::new(3).unwrap();
     /// quantum_circuit.add_repeating_gate(StandardGate::H, vec![1, 2]).unwrap();
@@ -501,7 +500,7 @@ impl<'a> Circuit<'a> {
     ///
     /// # Example
     /// ```
-    /// use quantr::circuit::{states::SuperPosition, Circuit, Measurement::NonObservable, StandardGate};
+    /// use quantr::{states::SuperPosition, Circuit, Measurement::NonObservable, StandardGate};
     ///
     /// let mut circuit = Circuit::new(3).unwrap();
     ///
@@ -541,7 +540,7 @@ impl<'a> Circuit<'a> {
     ///
     /// # Example
     /// ```
-    /// use quantr::circuit::{states::SuperPosition, Circuit, Measurement::Observable, StandardGate};
+    /// use quantr::{states::SuperPosition, Circuit, Measurement::Observable, StandardGate};
     ///
     /// let mut circuit = Circuit::new(3).unwrap();
     ///
@@ -606,7 +605,7 @@ impl<'a> Circuit<'a> {
     ///
     /// # Example
     /// ```
-    /// use quantr::circuit::{Circuit, StandardGate};
+    /// use quantr::{Circuit, StandardGate};
     ///
     /// let mut circuit = Circuit::new(3).unwrap();
     /// circuit.add_gate(StandardGate::H, 2).unwrap();
@@ -663,8 +662,8 @@ impl<'a> Circuit<'a> {
     ///
     /// # Example
     /// ```
-    /// use quantr::circuit::{Circuit, StandardGate};
-    /// use quantr::circuit::states::{Qubit, ProductState, SuperPosition};
+    /// use quantr::{Circuit, StandardGate};
+    /// use quantr::states::{Qubit, ProductState, SuperPosition};
     ///
     /// let mut circuit = Circuit::new(2).unwrap();
     /// circuit.add_gate(StandardGate::X, 1).unwrap();
@@ -987,7 +986,7 @@ impl<'a> Circuit<'a> {
     ///
     /// # Example
     /// ```
-    /// use quantr::circuit::{Circuit, StandardGate};
+    /// use quantr::{Circuit, StandardGate};
     ///
     /// let mut circuit = Circuit::new(3).unwrap();
     /// circuit.add_gate(StandardGate::H, 2).unwrap();
@@ -1006,7 +1005,7 @@ impl<'a> Circuit<'a> {
 mod tests {
     use crate::{complex_Im, complex_Re, complex_Re_array, complex_zero, complex};
     use std::f64::consts::{FRAC_1_SQRT_2, PI};
-    use crate::circuit::Measurement::NonObservable;
+    use crate::Measurement::NonObservable;
     use super::*;
     const ERROR_MARGIN: f64 = 0.000001f64; // For comparing floats due to floating point error.
     // Needed for testing

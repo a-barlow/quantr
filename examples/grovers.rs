@@ -8,7 +8,7 @@
 * Author: Andrew Rowan Barlow <a.barlow.dev@gmail.com>
 */
 
-use quantr::circuit::{printer::Printer, Circuit, Measurement, StandardGate};
+use quantr::{Printer, Circuit, Measurement, StandardGate};
 
 fn main() {
     let mut circuit = Circuit::new(3).unwrap();

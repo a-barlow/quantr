@@ -13,8 +13,8 @@
 //! These linear functions are defined by how they act on product states of qubits. Defining the
 //! mappings on a basis defines how the gates act on larger product spaces.
 
-use crate::circuit::states::{ProductState, Qubit, SuperPosition};
-use crate::complex::Complex;
+use crate::states::{ProductState, Qubit, SuperPosition};
+use crate::Complex;
 use crate::{complex, complex_Im, complex_Im_array, complex_Re, complex_Re_array, complex_zero};
 use std::f64::consts::FRAC_1_SQRT_2;
 use std::ops::{Div, Mul};

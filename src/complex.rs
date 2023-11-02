@@ -48,7 +48,7 @@ impl Complex<f64> {
     ///
     /// # Example
     /// ```
-    /// use quantr::complex::Complex;
+    /// use quantr::Complex;
     /// use quantr::complex_Im;
     /// use std::f64::consts::PI;
     ///
@@ -67,7 +67,7 @@ impl Complex<f32> {
     ///
     /// # Example
     /// ```
-    /// use quantr::complex::Complex;
+    /// use quantr::Complex;
     /// use quantr::complex_Im;
     /// use std::f32::consts::PI;
     ///
