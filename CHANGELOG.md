@@ -2,6 +2,13 @@
 
 This file logs the versions of quantr.
 
+## 0.3.0 - UNTITLED
+
+Features:
+- Re-structured access of structs and module paths. Now, every struct
+  is accessed through `quantr::...` except for those that control
+  states, which are accessed through the module `quantr::states::...`.
+
 ## 0.2.5 - Complex exponential, ASCII warnings and gates
 
 Features:
