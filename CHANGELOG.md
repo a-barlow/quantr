@@ -5,9 +5,21 @@ This file logs the versions of quantr.
 ## 0.3.0 - UNTITLED
 
 Features:
+
 - Re-structured access of structs and module paths. Now, every struct
   is accessed through `quantr::...` except for those that control
   states, which are accessed through the module `quantr::states::...`.
+- Changed the input type of two methods in `Circuit`:
+    - `add_gates(Vec<Gate>)` -> `add_gates(&[Gate])`
+    - `add_repeating_gate(Gate, Vec<usize>)` ->
+      `add_repeating_gate(Gate, &[usize])`.
+- `Circuit` methods that add gates now output a mutable reference to the
+  mutated circuit. This allows for a 'chain of method calls' to be made.
+
+Tests:
+
+- All tests and examples have been updated to reflect this major change.
+  Now answers had to be changed, only the interfaces with quantr.
 
 ## 0.2.5 - Complex exponential, ASCII warnings and gates
 

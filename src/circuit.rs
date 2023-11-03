@@ -195,7 +195,6 @@ struct GateInfo<'a> {
     size: GateSize,
 }
 
-
 /// A quantum circuit where gates can be appended and then simulated to measure resulting
 /// superpositions.
 pub struct Circuit<'a> {
@@ -255,7 +254,11 @@ impl<'a> Circuit<'a> {
     /// // -------
     /// // -------
     /// ```
-    pub fn add_gate(&mut self, gate: StandardGate<'a>, position: usize) -> Result<&mut Circuit<'a>, QuantrError> {
+    pub fn add_gate(
+        &mut self,
+        gate: StandardGate<'a>,
+        position: usize,
+    ) -> Result<&mut Circuit<'a>, QuantrError> {
         Self::add_gates_with_positions(self, HashMap::from([(position, gate)]))
     }
 
@@ -341,7 +344,10 @@ impl<'a> Circuit<'a> {
     /// // -- X --
     /// // -- Y --
     /// ```
-    pub fn add_gates(&mut self, gates: &[StandardGate<'a>]) -> Result<&mut Circuit<'a>, QuantrError> {
+    pub fn add_gates(
+        &mut self,
+        gates: &[StandardGate<'a>],
+    ) -> Result<&mut Circuit<'a>, QuantrError> {
         // Ensured we have a gate for every wire.
         if gates.len() != self.num_qubits {
             return Err(QuantrError {

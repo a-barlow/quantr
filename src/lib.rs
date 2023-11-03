@@ -14,10 +14,10 @@
 mod circuit;
 mod complex;
 
-pub use circuit::{Circuit, StandardGate, Measurement};
 pub use circuit::printer::Printer;
 pub use circuit::states;
-pub use complex::Complex; 
+pub use circuit::{Circuit, Measurement, StandardGate};
+pub use complex::Complex;
 
 // For crate use only.
 mod error;

@@ -8,7 +8,7 @@
 * Author: Andrew Rowan Barlow <a.barlow.dev@gmail.com>
 */
 
-use quantr::{Printer, Circuit, Measurement, StandardGate};
+use quantr::{Circuit, Measurement, Printer, StandardGate};
 
 #[rustfmt::skip]
 fn main() {

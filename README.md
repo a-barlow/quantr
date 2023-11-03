@@ -5,8 +5,8 @@
 [![GitHub Workflow Status (with event)](https://img.shields.io/github/actions/workflow/status/a-barlow/quantr/rust.yml?style=flat-square&color=%2349881B)](https://github.com/a-barlow/quantr/actions/workflows/rust.yml)
 [![GitHub Workflow Status (with event)](https://img.shields.io/github/actions/workflow/status/a-barlow/quantr/rust_dev.yml?style=flat-square&label=build%20(dev)&color=%2349881B)](https://github.com/a-barlow/quantr/actions/workflows/rust_dev.yml)
 ![docs.rs](https://img.shields.io/docsrs/quantr?style=flat-square&color=%2349881B)
-![Crates.io](https://img.shields.io/crates/d/quantr?style=flat-square&label=licence&color=%23009250)
-![Crates.io](https://img.shields.io/crates/l/quantr?style=flat-square&color=%23009982)
+![Crates.io](https://img.shields.io/crates/d/quantr?style=flat-square&color=%23009250)
+![Crates.io](https://img.shields.io/crates/l/quantr?style=flat-square&label=licence&color=%23009982)
 
 > This crate is not production ready and so should **not** be considered
 > stable, nor produce correct answers. It is still under heavy
@@ -51,8 +51,7 @@ implementation of Grover's algorithm.
 An example of simulating and printing a two qubit circuit:
 
 ```rust
-use quantr::{Circuit, StandardGate, Printer, 
-            Measurement::Observable};
+use quantr::{Circuit, StandardGate, Printer, Measurement::Observable};
 
 fn main() {
 
