@@ -448,16 +448,12 @@ mod tests {
     #[test]
     fn producing_string_circuit() {
         let mut quantum_circuit = Circuit::new(4).unwrap();
-        quantum_circuit.add_gate(StandardGate::H, 3).unwrap();
-        quantum_circuit
-            .add_repeating_gate(StandardGate::Y, vec![0, 1])
-            .unwrap();
-        quantum_circuit
-            .add_gate(StandardGate::Toffoli(0, 3), 1)
-            .unwrap();
-        quantum_circuit.add_gate(StandardGate::CNot(1), 3).unwrap();
-        quantum_circuit.add_gate(StandardGate::CNot(2), 0).unwrap();
-        quantum_circuit.add_gate(StandardGate::CNot(2), 1).unwrap();
+        quantum_circuit.add_gate(StandardGate::H, 3).unwrap()
+            .add_repeating_gate(StandardGate::Y, &[0, 1]).unwrap()
+            .add_gate(StandardGate::Toffoli(0, 3), 1).unwrap()
+            .add_gate(StandardGate::CNot(1), 3).unwrap()
+            .add_gate(StandardGate::CNot(2), 0).unwrap()
+            .add_gate(StandardGate::CNot(2), 1).unwrap();
 
         let mut circuit_printer: Printer = Printer::new(&quantum_circuit);
 
@@ -471,22 +467,20 @@ mod tests {
         let mut quantum_circuit = Circuit::new(4).unwrap();
         quantum_circuit.add_gate(StandardGate::H, 3).unwrap();
         quantum_circuit
-            .add_gates(vec![
+            .add_gates(&[
                 StandardGate::H,
                 StandardGate::Custom(example_cnot, &[3], "Custom CNot".to_string()),
                 StandardGate::Id,
                 StandardGate::X,
             ])
-            .unwrap();
-        quantum_circuit
-            .add_repeating_gate(StandardGate::Y, vec![0, 1])
-            .unwrap();
-        quantum_circuit
+            .unwrap()
+            .add_repeating_gate(StandardGate::Y, &[0, 1])
+            .unwrap()
             .add_gate(StandardGate::Toffoli(0, 3), 1)
-            .unwrap();
-        quantum_circuit.add_gate(StandardGate::CNot(1), 3).unwrap();
-        quantum_circuit.add_gate(StandardGate::CNot(2), 0).unwrap();
-        quantum_circuit.add_gate(StandardGate::CNot(2), 1).unwrap();
+            .unwrap()
+            .add_gate(StandardGate::CNot(1), 3).unwrap()
+            .add_gate(StandardGate::CNot(2), 0).unwrap()
+            .add_gate(StandardGate::CNot(2), 1).unwrap();
 
         let mut circuit_printer: Printer = Printer::new(&quantum_circuit);
 

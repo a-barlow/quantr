@@ -5,7 +5,7 @@
 [![GitHub Workflow Status (with event)](https://img.shields.io/github/actions/workflow/status/a-barlow/quantr/rust.yml?style=flat-square&color=%2349881B)](https://github.com/a-barlow/quantr/actions/workflows/rust.yml)
 [![GitHub Workflow Status (with event)](https://img.shields.io/github/actions/workflow/status/a-barlow/quantr/rust_dev.yml?style=flat-square&label=build%20(dev)&color=%2349881B)](https://github.com/a-barlow/quantr/actions/workflows/rust_dev.yml)
 ![docs.rs](https://img.shields.io/docsrs/quantr?style=flat-square&color=%2349881B)
-![Crates.io](https://img.shields.io/crates/d/quantr?style=flat-square&color=%23009250)
+![Crates.io](https://img.shields.io/crates/d/quantr?style=flat-square&label=licence&color=%23009250)
 ![Crates.io](https://img.shields.io/crates/l/quantr?style=flat-square&color=%23009982)
 
 > This crate is not production ready and so should **not** be considered
@@ -59,9 +59,8 @@ fn main() {
     let mut quantum_circuit: Circuit = Circuit::new(2).unwrap();
 
     quantum_circuit 
-        .add_gates(vec![StandardGate::H, StandardGate::H])
-        .unwrap();
-    quantum_circuit
+        .add_gates(&[StandardGate::H, StandardGate::H])
+        .unwrap()
         .add_gate(StandardGate::CNot(0), 1)
         .unwrap();
     

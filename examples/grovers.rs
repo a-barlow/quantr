@@ -15,7 +15,7 @@ fn main() {
 
     // Kick state into superposition of equal weights
     circuit
-        .add_repeating_gate(StandardGate::H, vec![0, 1, 2])
+        .add_repeating_gate(StandardGate::H, &[0, 1, 2])
         .unwrap();
 
     // Oracle
@@ -23,22 +23,13 @@ fn main() {
 
     // Amplitude amplification
     circuit
-        .add_repeating_gate(StandardGate::H, vec![0, 1, 2])
-        .unwrap();
-    circuit
-        .add_repeating_gate(StandardGate::X, vec![0, 1, 2])
-        .unwrap();
-
-    circuit.add_gate(StandardGate::H, 2).unwrap();
-    circuit.add_gate(StandardGate::Toffoli(0, 1), 2).unwrap();
-    circuit.add_gate(StandardGate::H, 2).unwrap();
-
-    circuit
-        .add_repeating_gate(StandardGate::X, vec![0, 1, 2])
-        .unwrap();
-    circuit
-        .add_repeating_gate(StandardGate::H, vec![0, 1, 2])
-        .unwrap();
+        .add_repeating_gate(StandardGate::H, &[0, 1, 2]).unwrap()
+        .add_repeating_gate(StandardGate::X, &[0, 1, 2]).unwrap()
+        .add_gate(StandardGate::H, 2).unwrap()
+        .add_gate(StandardGate::Toffoli(0, 1), 2).unwrap()
+        .add_gate(StandardGate::H, 2).unwrap()
+        .add_repeating_gate(StandardGate::X, &[0, 1, 2]).unwrap()
+        .add_repeating_gate(StandardGate::H, &[0, 1, 2]).unwrap();
 
     // Prints the circuit in UTF-8
     let mut printer = Printer::new(&circuit);

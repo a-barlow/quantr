@@ -24,30 +24,20 @@ fn grovers_3qubit() {
 
     // Kick state into superposition of equal weights
     circuit
-        .add_repeating_gate(StandardGate::H, vec![0, 1, 2])
-        .unwrap();
+        .add_repeating_gate(StandardGate::H, &[0, 1, 2]).unwrap();
 
     // Oracle
     circuit.add_gate(StandardGate::CZ(1), 2).unwrap();
 
     // Amplitude amplification
     circuit
-        .add_repeating_gate(StandardGate::H, vec![0, 1, 2])
-        .unwrap();
-    circuit
-        .add_repeating_gate(StandardGate::X, vec![0, 1, 2])
-        .unwrap();
-
-    circuit.add_gate(StandardGate::H, 2).unwrap();
-    circuit.add_gate(StandardGate::Toffoli(0, 1), 2).unwrap();
-    circuit.add_gate(StandardGate::H, 2).unwrap();
-
-    circuit
-        .add_repeating_gate(StandardGate::X, vec![0, 1, 2])
-        .unwrap();
-    circuit
-        .add_repeating_gate(StandardGate::H, vec![0, 1, 2])
-        .unwrap();
+        .add_repeating_gate(StandardGate::H, &[0, 1, 2]).unwrap()
+        .add_repeating_gate(StandardGate::X, &[0, 1, 2]).unwrap()
+        .add_gate(StandardGate::H, 2).unwrap()
+        .add_gate(StandardGate::Toffoli(0, 1), 2).unwrap()
+        .add_gate(StandardGate::H, 2).unwrap()
+        .add_repeating_gate(StandardGate::X, &[0, 1, 2]).unwrap()
+        .add_repeating_gate(StandardGate::H, &[0, 1, 2]).unwrap();
 
     // Simulates the circuit so that the final register can be
     // calculated.
@@ -85,11 +75,10 @@ const CCCCC_NUMBER: usize = 6;
 fn x3sudoko() {
     let mut qc: Circuit = Circuit::new(10).unwrap();
 
-    qc.add_repeating_gate(StandardGate::H, vec![0, 1, 2, 3, 4, 5])
-        .unwrap();
-    qc.add_gate(StandardGate::X, 8).unwrap();
-    qc.add_gate(StandardGate::X, 9).unwrap();
-    qc.add_gate(StandardGate::H, 9).unwrap();
+    qc.add_repeating_gate(StandardGate::H, &[0, 1, 2, 3, 4, 5]).unwrap()
+        .add_gate(StandardGate::X, 8).unwrap()
+        .add_gate(StandardGate::X, 9).unwrap()
+        .add_gate(StandardGate::H, 9).unwrap();
 
     // oracle building
     for i in 0..=2 {
@@ -126,20 +115,18 @@ fn x3sudoko() {
     }
 
     // Amplitude amplification
-    qc.add_repeating_gate(StandardGate::H, vec![0, 1, 2, 3, 4, 5])
-        .unwrap();
-    qc.add_repeating_gate(StandardGate::X, vec![0, 1, 2, 3, 4, 5])
-        .unwrap();
-    qc.add_gate(StandardGate::H, 5).unwrap();
-    qc.add_gate(
-        StandardGate::Custom(cccccnot, &[0, 1, 2, 3, 4], "X".to_string()),
-        5,
-    )
-    .unwrap();
-    qc.add_gate(StandardGate::H, 5).unwrap();
-    qc.add_repeating_gate(StandardGate::X, vec![0, 1, 2, 3, 4, 5])
-        .unwrap();
-    qc.add_repeating_gate(StandardGate::H, vec![0, 1, 2, 3, 4, 5])
+    qc.add_repeating_gate(StandardGate::H, &[0, 1, 2, 3, 4, 5])
+        .unwrap()
+        .add_repeating_gate(StandardGate::X, &[0, 1, 2, 3, 4, 5])
+        .unwrap()
+        .add_gate(StandardGate::H, 5)
+        .unwrap()
+        .add_gate(StandardGate::Custom(cccccnot, &[0, 1, 2, 3, 4], "X".to_string()),5,).unwrap()
+        .add_gate(StandardGate::H, 5)
+        .unwrap()
+        .add_repeating_gate(StandardGate::X, &[0, 1, 2, 3, 4, 5])
+        .unwrap()
+        .add_repeating_gate(StandardGate::H, &[0, 1, 2, 3, 4, 5])
         .unwrap();
     // END
 
