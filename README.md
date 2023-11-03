@@ -59,10 +59,8 @@ fn main() {
     let mut quantum_circuit: Circuit = Circuit::new(2).unwrap();
 
     quantum_circuit 
-        .add_gates(&[StandardGate::H, StandardGate::H])
-        .unwrap()
-        .add_gate(StandardGate::CNot(0), 1)
-        .unwrap();
+        .add_gates(&[StandardGate::H, StandardGate::H]).unwrap()
+        .add_gate(StandardGate::CNot(0), 1).unwrap();
     
     let mut printer = Printer::new(&quantum_circuit);
     printer.print_diagram();

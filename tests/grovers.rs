@@ -18,6 +18,7 @@ use quantr::{Complex, complex_Re};
 use std::f64::consts::FRAC_1_SQRT_2;
 const ERROR_MARGIN: f64 = 0.00000001f64;
 
+#[rustfmt::skip]
 #[test]
 fn grovers_3qubit() {
     let mut circuit = Circuit::new(3).unwrap();
@@ -71,6 +72,7 @@ fn grovers_3qubit() {
 const CCC_NUMBER: usize = 4;
 const CCCCC_NUMBER: usize = 6;
 
+#[rustfmt::skip]
 #[test]
 fn x3sudoko() {
     let mut qc: Circuit = Circuit::new(10).unwrap();
@@ -115,19 +117,13 @@ fn x3sudoko() {
     }
 
     // Amplitude amplification
-    qc.add_repeating_gate(StandardGate::H, &[0, 1, 2, 3, 4, 5])
-        .unwrap()
-        .add_repeating_gate(StandardGate::X, &[0, 1, 2, 3, 4, 5])
-        .unwrap()
-        .add_gate(StandardGate::H, 5)
-        .unwrap()
+    qc.add_repeating_gate(StandardGate::H, &[0, 1, 2, 3, 4, 5]).unwrap()
+        .add_repeating_gate(StandardGate::X, &[0, 1, 2, 3, 4, 5]).unwrap()
+        .add_gate(StandardGate::H, 5).unwrap()
         .add_gate(StandardGate::Custom(cccccnot, &[0, 1, 2, 3, 4], "X".to_string()),5,).unwrap()
-        .add_gate(StandardGate::H, 5)
-        .unwrap()
-        .add_repeating_gate(StandardGate::X, &[0, 1, 2, 3, 4, 5])
-        .unwrap()
-        .add_repeating_gate(StandardGate::H, &[0, 1, 2, 3, 4, 5])
-        .unwrap();
+        .add_gate(StandardGate::H, 5).unwrap()
+        .add_repeating_gate(StandardGate::X, &[0, 1, 2, 3, 4, 5]).unwrap()
+        .add_repeating_gate(StandardGate::H, &[0, 1, 2, 3, 4, 5]).unwrap();
     // END
 
     qc.simulate();

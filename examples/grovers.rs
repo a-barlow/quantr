@@ -10,6 +10,7 @@
 
 use quantr::{Printer, Circuit, Measurement, StandardGate};
 
+#[rustfmt::skip]
 fn main() {
     let mut circuit = Circuit::new(3).unwrap();
 

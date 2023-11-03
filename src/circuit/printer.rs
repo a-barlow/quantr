@@ -423,6 +423,7 @@ impl Printer<'_> {
     }
 }
 
+#[rustfmt::skip]
 #[cfg(test)]
 mod tests {
     use crate::{
@@ -472,12 +473,9 @@ mod tests {
                 StandardGate::Custom(example_cnot, &[3], "Custom CNot".to_string()),
                 StandardGate::Id,
                 StandardGate::X,
-            ])
-            .unwrap()
-            .add_repeating_gate(StandardGate::Y, &[0, 1])
-            .unwrap()
-            .add_gate(StandardGate::Toffoli(0, 3), 1)
-            .unwrap()
+            ]).unwrap()
+            .add_repeating_gate(StandardGate::Y, &[0, 1]).unwrap()
+            .add_gate(StandardGate::Toffoli(0, 3), 1).unwrap()
             .add_gate(StandardGate::CNot(1), 3).unwrap()
             .add_gate(StandardGate::CNot(2), 0).unwrap()
             .add_gate(StandardGate::CNot(2), 1).unwrap();
