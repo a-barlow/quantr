@@ -11,8 +11,8 @@
 // A 3 qubit circuit that implementes Grovers algorithm. The oracle target the states |110> and
 // |111>. This example will also print the circuit, and show the simulaion in real time.
 //
-// This example will print s bin count of measured states from 500 repeated simulations, and the
-// superpoisition itself.
+// This example will print a bin count of measured states from 500 repeated simulations, and the
+// superposition itself.
 
 use quantr::{Circuit, Measurement, Printer, StandardGate};
 

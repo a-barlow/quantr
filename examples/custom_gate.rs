@@ -8,7 +8,7 @@
 * Author: Andrew Rowan Barlow <a.barlow.dev@gmail.com>
 */
 
-// Details an implementation of a CCC-not gate.
+// Shows the use of `StandardGate::Custom` in implementing the CCC-not gate.
 
 use quantr::{
     states::{ProductState, Qubit, SuperPosition},
@@ -18,18 +18,19 @@ use quantr::{
 fn main() {
     let mut qc: Circuit = Circuit::new(4).unwrap();
 
-    // Build a circuit with thre CCC-not gate, placing the control nodes on positions 0, 1, 2 and
+    // Build a circuit using a CCC-not gate, placing the control nodes on positions 0, 1, 2 and
     // the target on 3.
     qc.add_repeating_gate(StandardGate::X, &[0, 1, 2])
         .unwrap()
         .add_gate(StandardGate::Custom(cccnot, &[0, 1, 2], "X".to_string()), 3)
         .unwrap();
 
-    // Let us print the circuit, viewing the custom gate, and then simulating it.
+    // Prints the circuit, viewing the custom gate, and then simulating it.
     let mut circuit_printer: Printer = Printer::new(&qc);
     circuit_printer.print_diagram();
     qc.simulate();
 
+    // Prints the bin count of measured states.
     if let Measurement::Observable(bin_count) = qc.repeat_measurement(50).unwrap() {
         for (states, count) in bin_count.into_iter() {
             println!("|{}> : {}", states.as_string(), count);
@@ -37,6 +38,7 @@ fn main() {
     }
 }
 
+// Implements the CCC-not gate.
 fn cccnot(input_state: ProductState) -> SuperPosition {
     let state: Vec<Qubit> = input_state.state;
     let state_slice: [Qubit; 4] = [state[0], state[1], state[2], state[3]]; // In this format, this
