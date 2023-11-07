@@ -8,6 +8,12 @@
 * Author: Andrew Rowan Barlow <a.barlow.dev@gmail.com>
 */
 
+// A 3 qubit circuit that implementes Grovers algorithm. The oracle target the states |110> and
+// |111>. This example will also print the circuit, and show the simulaion in real time.
+//
+// This example will print s bin count of measured states from 500 repeated simulations, and the
+// superpoisition itself.
+
 use quantr::{Circuit, Measurement, Printer, StandardGate};
 
 #[rustfmt::skip]

@@ -2,8 +2,8 @@
 
 [![Crates.io](https://img.shields.io/crates/v/quantr?style=flat-square&color=%23B94700)](https://crates.io/crates/quantr)
 [![Static Badge](https://img.shields.io/badge/version%20-%201.73.0%20-%20white?style=flat-square&logo=rust&color=%23B94700)](https://releases.rs/)
-[![GitHub Workflow Status (with event)](https://img.shields.io/github/actions/workflow/status/a-barlow/quantr/rust.yml?style=flat-square&color=%2349881B)](https://github.com/a-barlow/quantr/actions/workflows/rust.yml)
-[![GitHub Workflow Status (with event)](https://img.shields.io/github/actions/workflow/status/a-barlow/quantr/rust_dev.yml?style=flat-square&label=build%20(dev)&color=%2349881B)](https://github.com/a-barlow/quantr/actions/workflows/rust_dev.yml)
+[![GitHub Workflow Status (with event)](https://img.shields.io/github/actions/workflow/status/a-barlow/quantr/rust.yml?style=flat-square&label=tests&color=%2349881B)](https://github.com/a-barlow/quantr/actions/workflows/rust.yml)
+[![GitHub Workflow Status (with event)](https://img.shields.io/github/actions/workflow/status/a-barlow/quantr/rust_dev.yml?style=flat-square&label=tests%20(dev)&color=%2349881B)](https://github.com/a-barlow/quantr/actions/workflows/rust_dev.yml)
 ![docs.rs](https://img.shields.io/docsrs/quantr?style=flat-square&color=%2349881B)
 ![Crates.io](https://img.shields.io/crates/d/quantr?style=flat-square&color=%23009250)
 ![Crates.io](https://img.shields.io/crates/l/quantr?style=flat-square&label=licence&color=%23009982)
