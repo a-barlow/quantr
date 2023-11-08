@@ -13,12 +13,10 @@
 // Make available for public use.
 mod circuit;
 mod complex;
+mod error;
 
 pub use circuit::printer::Printer;
 pub use circuit::states;
 pub use circuit::{Circuit, Measurement, StandardGate};
 pub use complex::Complex;
-
-// For crate use only.
-mod error;
-use error::QuantrError;
+pub use error::QuantrError;

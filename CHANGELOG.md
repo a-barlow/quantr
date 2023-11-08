@@ -4,17 +4,43 @@ This file logs the versions of quantr.
 
 ## 0.3.0 - UNTITLED
 
+This major update overhauls the structure of quantr, and the naming of
+many methods. The aim is to increase simplicity in using the library,
+in turn producing more readable and efficient code.
+
+Moreover, some examples have been added showcasing custom functions and
+printing the circuits in a variety of ways. 
+
 Features:
 
-- Re-structured access of structs and module paths. Now, every struct
-  is accessed through `quantr::...` except for those that control
-  states, which are accessed through the module `quantr::states::...`.
+- The `QuantrError` struct has been made public for the user (this was
+  available in versions < 0.2.0). This allows for succint error handling
+  with `?` when creating circuits when the main function is allowed to
+  return `Result<(), QuantrError>`.
+- Re-structured access of structs and module paths. Now, every struct is
+  accessed through `quantr::...` except for those that control states,
+  which are accessed through the module `quantr::states::...`.
 - Changed the input type of two methods in `Circuit`:
     - `add_gates(Vec<Gate>)` -> `add_gates(&[Gate])`
     - `add_repeating_gate(Gate, Vec<usize>)` ->
       `add_repeating_gate(Gate, &[usize])`.
 - `Circuit` methods that add gates now output a mutable reference to the
   mutated circuit. This allows for a 'chain of method calls' to be made.
+
+Examples:
+
+All examples print the circuit to the console, along with data of the
+resulting superpositions from simulating the circuit.
+
+- A custom function implementing a Quantum Fourier Transform in
+  `examples/qft.rs` which is designed to be used in other circuits. This
+  also showcases the idea of running a circuit within a custom function,
+  in a way sub-divding components of the larger circuit into smaller
+  ones.
+- The custom function itself, implementing a CCC-not gate, is shown in
+  `examples/custom_gates.rs`. Within this function, the product states
+  are directly manipulated to produce a CCC-not gate. This example also
+  prints the progress of the simulation.
 
 Tests:
 

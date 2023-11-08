@@ -12,22 +12,22 @@
 
 use quantr::{
     states::{ProductState, Qubit, SuperPosition},
-    Circuit, Measurement, Printer, StandardGate,
+    Circuit, Measurement, Printer, StandardGate, QuantrError,
 };
 
-fn main() {
-    let mut qc: Circuit = Circuit::new(4).unwrap();
+fn main() -> Result<(), QuantrError> {
+    let mut qc: Circuit = Circuit::new(4)?;
 
     // Build a circuit using a CCC-not gate, placing the control nodes on positions 0, 1, 2 and
     // the target on 3.
-    qc.add_repeating_gate(StandardGate::X, &[0, 1, 2])
-        .unwrap()
-        .add_gate(StandardGate::Custom(cccnot, &[0, 1, 2], "X".to_string()), 3)
-        .unwrap();
+    qc.add_repeating_gate(StandardGate::X, &[0, 1, 2])?
+        .add_gate(StandardGate::Custom(cccnot, &[0, 1, 2], "X".to_string()), 3)?;
 
     // Prints the circuit, viewing the custom gate, and then simulating it.
     let mut circuit_printer: Printer = Printer::new(&qc);
     circuit_printer.print_diagram();
+    
+    qc.toggle_simulation_progress(); // prints the simulation toggle_simulation_progress
     qc.simulate();
 
     // Prints the bin count of measured states.
@@ -36,6 +36,8 @@ fn main() {
             println!("|{}> : {}", states.as_string(), count);
         }
     }
+
+    Ok(())
 }
 
 // Implements the CCC-not gate.

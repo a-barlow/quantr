@@ -8,7 +8,7 @@
 * Author: Andrew Rowan Barlow <a.barlow.dev@gmail.com>
 */
 
-use quantr::{complex_Re, Complex};
+use quantr::{complex_Re, Complex, QuantrError};
 use quantr::{
     states::{ProductState, Qubit, SuperPosition},
     Circuit,
@@ -18,27 +18,26 @@ use quantr::{
 use std::f64::consts::FRAC_1_SQRT_2;
 const ERROR_MARGIN: f64 = 0.00000001f64;
 
-#[rustfmt::skip]
 #[test]
-fn grovers_3qubit() {
-    let mut circuit = Circuit::new(3).unwrap();
+fn grovers_3qubit() -> Result<(), QuantrError>{
+    let mut circuit = Circuit::new(3)?;
 
     // Kick state into superposition of equal weights
     circuit
-        .add_repeating_gate(StandardGate::H, &[0, 1, 2]).unwrap();
+        .add_repeating_gate(StandardGate::H, &[0, 1, 2])?;
 
     // Oracle
-    circuit.add_gate(StandardGate::CZ(1), 2).unwrap();
+    circuit.add_gate(StandardGate::CZ(1), 2)?;
 
     // Amplitude amplification
     circuit
-        .add_repeating_gate(StandardGate::H, &[0, 1, 2]).unwrap()
-        .add_repeating_gate(StandardGate::X, &[0, 1, 2]).unwrap()
-        .add_gate(StandardGate::H, 2).unwrap()
-        .add_gate(StandardGate::Toffoli(0, 1), 2).unwrap()
-        .add_gate(StandardGate::H, 2).unwrap()
-        .add_repeating_gate(StandardGate::X, &[0, 1, 2]).unwrap()
-        .add_repeating_gate(StandardGate::H, &[0, 1, 2]).unwrap();
+        .add_repeating_gate(StandardGate::H, &[0, 1, 2])?
+        .add_repeating_gate(StandardGate::X, &[0, 1, 2])?
+        .add_gate(StandardGate::H, 2)?
+        .add_gate(StandardGate::Toffoli(0, 1), 2)?
+        .add_gate(StandardGate::H, 2)?
+        .add_repeating_gate(StandardGate::X, &[0, 1, 2])?
+        .add_repeating_gate(StandardGate::H, &[0, 1, 2])?;
 
     // Simulates the circuit so that the final register can be
     // calculated.
@@ -67,63 +66,59 @@ fn grovers_3qubit() {
             }
         }
     }
+
+    Ok(())
 }
 
 const CCC_NUMBER: usize = 4;
 const CCCCC_NUMBER: usize = 6;
 
-#[rustfmt::skip]
 #[test]
-fn x3sudoko() {
-    let mut qc: Circuit = Circuit::new(10).unwrap();
+fn x3sudoko() -> Result<(), QuantrError> {
+    let mut qc: Circuit = Circuit::new(10)?;
 
-    qc.add_repeating_gate(StandardGate::H, &[0, 1, 2, 3, 4, 5]).unwrap()
-        .add_gate(StandardGate::X, 8).unwrap()
-        .add_gate(StandardGate::X, 9).unwrap()
-        .add_gate(StandardGate::H, 9).unwrap();
+    qc.add_repeating_gate(StandardGate::H, &[0, 1, 2, 3, 4, 5])?
+        .add_gate(StandardGate::X, 8)?
+        .add_gate(StandardGate::X, 9)?
+        .add_gate(StandardGate::H, 9)?;
 
     // oracle building
     for i in 0..=2 {
-        qc.add_gate(StandardGate::Toffoli(i, i + 3), 8).unwrap();
+        qc.add_gate(StandardGate::Toffoli(i, i + 3), 8)?;
     }
-    qc.add_gate(StandardGate::Custom(cccnot, &[0, 1, 2], "X".to_string()), 6)
-        .unwrap();
+    qc.add_gate(StandardGate::Custom(cccnot, &[0, 1, 2], "X".to_string()), 6)?;
     for i in 0..=2 {
-        qc.add_gate(StandardGate::CNot(i), 6).unwrap();
+        qc.add_gate(StandardGate::CNot(i), 6)?;
     }
-    qc.add_gate(StandardGate::Custom(cccnot, &[3, 4, 5], "X".to_string()), 7)
-        .unwrap();
+    qc.add_gate(StandardGate::Custom(cccnot, &[3, 4, 5], "X".to_string()), 7)?;
     for i in 3..=5 {
-        qc.add_gate(StandardGate::CNot(i), 7).unwrap();
+        qc.add_gate(StandardGate::CNot(i), 7)?;
     }
 
     // The phase kickback
-    qc.add_gate(StandardGate::Custom(cccnot, &[6, 7, 8], "X".to_string()), 9)
-        .unwrap();
+    qc.add_gate(StandardGate::Custom(cccnot, &[6, 7, 8], "X".to_string()), 9)?;
 
     // Reset by using the oracle again
     for i in 0..=2 {
-        qc.add_gate(StandardGate::Toffoli(i, i + 3), 8).unwrap();
+        qc.add_gate(StandardGate::Toffoli(i, i + 3), 8)?;
     }
-    qc.add_gate(StandardGate::Custom(cccnot, &[0, 1, 2], "X".to_string()), 6)
-        .unwrap();
+    qc.add_gate(StandardGate::Custom(cccnot, &[0, 1, 2], "X".to_string()), 6)?;
     for i in 0..=2 {
-        qc.add_gate(StandardGate::CNot(i), 6).unwrap();
+        qc.add_gate(StandardGate::CNot(i), 6)?;
     }
-    qc.add_gate(StandardGate::Custom(cccnot, &[3, 4, 5], "X".to_string()), 7)
-        .unwrap();
+    qc.add_gate(StandardGate::Custom(cccnot, &[3, 4, 5], "X".to_string()), 7)?;
     for i in 3..=5 {
-        qc.add_gate(StandardGate::CNot(i), 7).unwrap();
+        qc.add_gate(StandardGate::CNot(i), 7)?;
     }
 
     // Amplitude amplification
-    qc.add_repeating_gate(StandardGate::H, &[0, 1, 2, 3, 4, 5]).unwrap()
-        .add_repeating_gate(StandardGate::X, &[0, 1, 2, 3, 4, 5]).unwrap()
-        .add_gate(StandardGate::H, 5).unwrap()
-        .add_gate(StandardGate::Custom(cccccnot, &[0, 1, 2, 3, 4], "X".to_string()),5,).unwrap()
-        .add_gate(StandardGate::H, 5).unwrap()
-        .add_repeating_gate(StandardGate::X, &[0, 1, 2, 3, 4, 5]).unwrap()
-        .add_repeating_gate(StandardGate::H, &[0, 1, 2, 3, 4, 5]).unwrap();
+    qc.add_repeating_gate(StandardGate::H, &[0, 1, 2, 3, 4, 5])?
+        .add_repeating_gate(StandardGate::X, &[0, 1, 2, 3, 4, 5])?
+        .add_gate(StandardGate::H, 5)?
+        .add_gate(StandardGate::Custom(cccccnot, &[0, 1, 2, 3, 4], "X".to_string()),5,)?
+        .add_gate(StandardGate::H, 5)?
+        .add_repeating_gate(StandardGate::X, &[0, 1, 2, 3, 4, 5])?
+        .add_repeating_gate(StandardGate::H, &[0, 1, 2, 3, 4, 5])?;
     // END
 
     qc.simulate();
@@ -138,6 +133,8 @@ fn x3sudoko() {
             }
         }
     }
+
+    Ok(())
 }
 
 fn cccnot(input_state: ProductState) -> SuperPosition {
