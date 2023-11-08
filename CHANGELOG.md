@@ -6,13 +6,26 @@ This file logs the versions of quantr.
 
 This major update overhauls the structure of quantr, and the naming of
 many methods. The aim is to increase simplicity in using the library,
-in turn producing more readable and efficient code.
+in turn producing more readable and efficient code. The re-naming of
+methods is meant to be more inkeeping with the Rust standard library,
+that is `to` represents a pass by reference, while `into` moves the value
+into the method.
 
 Moreover, some examples have been added showcasing custom functions and
 printing the circuits in a variety of ways. 
 
 Features:
 
+- The `complex_zero!` macro has been replaced with a `Complex<f64>`
+  constant `quantr::COMPLEX_ZERO`. 
+- Changed method names:
+    - `Qubit::join` -> `Qubit::kronecker_prod`
+    - `Qubit::as_state` -> `Qubit::into_state`
+    - `ProductState::join` -> `ProductState::kronecker_prod`
+    - `ProductState::as_string` -> `ProductState::to_string`
+    - `SuperPosition::as_hash_map` -> `SuperPosition::to_hash_map`
+    - `ProductState::to_super_position` -> `ProductState::into_super_position`
+- The field of `ProductState` called `state` -> `qubits`.
 - The `QuantrError` struct has been made public for the user (this was
   available in versions < 0.2.0). This allows for succint error handling
   with `?` when creating circuits when the main function is allowed to

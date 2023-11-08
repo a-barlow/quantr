@@ -12,7 +12,7 @@
 
 use quantr::{
     states::{ProductState, Qubit, SuperPosition},
-    Circuit, Measurement, Printer, StandardGate, QuantrError,
+    Circuit, Measurement, Printer, QuantrError, StandardGate,
 };
 
 fn main() -> Result<(), QuantrError> {
@@ -26,14 +26,14 @@ fn main() -> Result<(), QuantrError> {
     // Prints the circuit, viewing the custom gate, and then simulating it.
     let mut circuit_printer: Printer = Printer::new(&qc);
     circuit_printer.print_diagram();
-    
+
     qc.toggle_simulation_progress(); // prints the simulation toggle_simulation_progress
     qc.simulate();
 
     // Prints the bin count of measured states.
     if let Measurement::Observable(bin_count) = qc.repeat_measurement(50).unwrap() {
         for (states, count) in bin_count.into_iter() {
-            println!("|{}> : {}", states.as_string(), count);
+            println!("|{}> : {}", states.to_string(), count);
         }
     }
 
@@ -42,18 +42,18 @@ fn main() -> Result<(), QuantrError> {
 
 // Implements the CCC-not gate.
 fn cccnot(input_state: ProductState) -> SuperPosition {
-    let state: Vec<Qubit> = input_state.state;
+    let state: Vec<Qubit> = input_state.qubits;
     let state_slice: [Qubit; 4] = [state[0], state[1], state[2], state[3]]; // In this format, this
                                                                             // guarantees that state_slice has length 4 to the rust compiler. Useful for the match
                                                                             // statement.
     match state_slice {
         [Qubit::One, Qubit::One, Qubit::One, Qubit::Zero] => {
-            ProductState::new(&[Qubit::One; 4]).to_super_position()
+            ProductState::new(&[Qubit::One; 4]).into_super_position()
         }
         [Qubit::One, Qubit::One, Qubit::One, Qubit::One] => {
             ProductState::new(&[Qubit::One, Qubit::One, Qubit::One, Qubit::Zero])
-                .to_super_position()
+                .into_super_position()
         }
-        other_state => ProductState::new(&other_state).to_super_position(),
+        other_state => ProductState::new(&other_state).into_super_position(),
     }
 }

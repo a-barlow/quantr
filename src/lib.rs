@@ -18,5 +18,5 @@ mod error;
 pub use circuit::printer::Printer;
 pub use circuit::states;
 pub use circuit::{Circuit, Measurement, StandardGate};
-pub use complex::Complex;
+pub use complex::{Complex, COMPLEX_ZERO};
 pub use error::QuantrError;

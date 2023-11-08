@@ -54,7 +54,7 @@ fn main() {
     if let Measurement::Observable(bin_count) = circuit.repeat_measurement(500).unwrap() {
         println!("[Observable] Bin count of observed states.");
         for (state, count) in bin_count {
-            println!("|{}> observed {} times", state.as_string(), count);
+            println!("|{}> observed {} times", state.to_string(), count);
         }
     }
 
@@ -63,7 +63,7 @@ fn main() {
     {
         println!("\n[Non-Observable] The amplitudes of each state in the final superposition.");
         for (state, amplitude) in output_super_position.into_iter() {
-            println!("|{}> : {}", state.as_string(), amplitude);
+            println!("|{}> : {}", state.to_string(), amplitude);
         }
     }
 }

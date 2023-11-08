@@ -435,7 +435,7 @@ mod tests {
     // the terminal, and then copy the output for the assert_eq! macro.
 
     fn example_cnot(prod: ProductState) -> SuperPosition {
-        let input_register: [Qubit; 2] = [prod.state[0], prod.state[1]];
+        let input_register: [Qubit; 2] = [prod.qubits[0], prod.qubits[1]];
         SuperPosition::new(2)
             .set_amplitudes(match input_register {
                 [Qubit::Zero, Qubit::Zero] => &complex_Re_array!(1f64, 0f64, 0f64, 0f64),

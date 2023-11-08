@@ -1,11 +1,11 @@
 /*
 * Copyright (c) 2023 Andrew Rowan Barlow. Licensed under the EUPL-1.2
 * or later. You may obtain a copy of the licence at
-* https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12. A copy 
-* of the EUPL-1.2 licence in English is given in LICENCE.txt which is 
+* https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12. A copy
+* of the EUPL-1.2 licence in English is given in LICENCE.txt which is
 * found in the root directory of this repository.
 *
-* Author: Andrew Rowan Barlow <a.barlow.dev@gmail.com> 
+* Author: Andrew Rowan Barlow <a.barlow.dev@gmail.com>
 */
 
 //! Construct, simulate and measure quantum circuits.
@@ -126,7 +126,7 @@ pub enum StandardGate<'a> {
     ///
     /// // Defines a C-Not gate
     /// fn example_cnot(prod: ProductState) -> SuperPosition {
-    ///    let input_register: [Qubit; 2] = [prod.state[0], prod.state[1]];
+    ///    let input_register: [Qubit; 2] = [prod.qubits[0], prod.qubits[1]];
     ///    SuperPosition::new(2).set_amplitudes(match input_register {
     ///        [Qubit::Zero, Qubit::Zero] => &complex_Re_array!(1f64, 0f64, 0f64, 0f64),
     ///        [Qubit::Zero, Qubit::One]  => &complex_Re_array!(0f64, 1f64, 0f64, 0f64),
@@ -520,7 +520,7 @@ impl<'a> Circuit<'a> {
     /// println!("State | Amplitude of State");
     /// if let NonObservable(super_pos) = circuit.get_superposition().unwrap() {
     ///     for (state, amplitude) in super_pos.into_iter() {
-    ///         println!("|{}>   : {}", state.as_string(), amplitude);
+    ///         println!("|{}>   : {}", state.to_string(), amplitude);
     ///     }
     /// }
     ///
@@ -560,7 +560,7 @@ impl<'a> Circuit<'a> {
     /// println!("State | Number of Times Observed");
     /// if let Observable(bin_count) = circuit.repeat_measurement(500).unwrap() {
     ///     for (state, observed_count) in bin_count {
-    ///         println!("|{}>   : {}", state.as_string(), observed_count);
+    ///         println!("|{}>   : {}", state.to_string(), observed_count);
     ///     }
     /// }
     ///
@@ -576,7 +576,7 @@ impl<'a> Circuit<'a> {
             Some(super_position) => {
                 // Peform bin count of states
                 let mut probabilities: HashMap<ProductState, f64> = Default::default();
-                for (key, value) in super_position.as_hash_map() {
+                for (key, value) in super_position.to_hash_map() {
                     probabilities.insert(key, value.abs_square());
                 }
 
@@ -677,7 +677,7 @@ impl<'a> Circuit<'a> {
     /// let mut circuit = Circuit::new(2).unwrap();
     /// circuit.add_gate(StandardGate::X, 1).unwrap();
     ///
-    /// let register: SuperPosition = ProductState::new(&[Qubit::One, Qubit::Zero]).to_super_position();
+    /// let register: SuperPosition = ProductState::new(&[Qubit::One, Qubit::Zero]).into_super_position();
     ///
     /// circuit.simulate_with_register(register);
     ///
@@ -831,13 +831,13 @@ impl<'a> Circuit<'a> {
     // register.
     fn single_gate_on_wire(single_gate: &GateInfo, prod_state: &ProductState) -> SuperPosition {
         if let StandardGate::Rx(angle) = single_gate.name {
-            standard_gate_ops::rx(prod_state.state[single_gate.position], angle)
+            standard_gate_ops::rx(prod_state.qubits[single_gate.position], angle)
         } else if let StandardGate::Ry(angle) = single_gate.name {
-            standard_gate_ops::ry(prod_state.state[single_gate.position], angle)
+            standard_gate_ops::ry(prod_state.qubits[single_gate.position], angle)
         } else if let StandardGate::Rz(angle) = single_gate.name {
-            standard_gate_ops::rz(prod_state.state[single_gate.position], angle)
+            standard_gate_ops::rz(prod_state.qubits[single_gate.position], angle)
         } else if let StandardGate::Phase(angle) = single_gate.name {
-            standard_gate_ops::global_phase(prod_state.state[single_gate.position], angle)
+            standard_gate_ops::global_phase(prod_state.qubits[single_gate.position], angle)
         } else {
             let operator: fn(Qubit) -> SuperPosition = match single_gate.name {
                 StandardGate::Id => standard_gate_ops::identity,
@@ -855,7 +855,7 @@ impl<'a> Circuit<'a> {
                 StandardGate::MY90 => standard_gate_ops::my90,
                 _ => panic!("Non single gate was passed to single gate operation function."),
             };
-            operator(prod_state.state[single_gate.position])
+            operator(prod_state.qubits[single_gate.position])
         }
     }
 
@@ -870,7 +870,7 @@ impl<'a> Circuit<'a> {
             standard_gate_ops::cr(
                 prod_state
                     .get(control)
-                    .join(prod_state.get(double_gate.position)),
+                    .kronecker_prod(prod_state.get(double_gate.position)),
                 angle,
             )
         } else if let StandardGate::CRk(k, control) = double_gate.name {
@@ -878,7 +878,7 @@ impl<'a> Circuit<'a> {
             standard_gate_ops::crk(
                 prod_state
                     .get(control)
-                    .join(prod_state.get(double_gate.position)),
+                    .kronecker_prod(prod_state.get(double_gate.position)),
                 k,
             )
         } else {
@@ -907,7 +907,7 @@ impl<'a> Circuit<'a> {
             operator(
                 prod_state
                     .get(control_node)
-                    .join(prod_state.get(double_gate.position)),
+                    .kronecker_prod(prod_state.get(double_gate.position)),
             )
         }
     }
@@ -930,8 +930,8 @@ impl<'a> Circuit<'a> {
         operator(
             prod_state
                 .get(control_node_one)
-                .join(prod_state.get(control_node_two))
-                .join(prod_state.get(triple_gate.position)), // make qubit joiner for product states
+                .kronecker_prod(prod_state.get(control_node_two))
+                .kronecker_prod(prod_state.get(triple_gate.position)), // make qubit joiner for product states
         )
     }
 
@@ -946,17 +946,18 @@ impl<'a> Circuit<'a> {
         };
 
         let result_super: SuperPosition = if !controls.is_empty() {
-            let mut concat_prodstate: ProductState = prod_state.get(controls[0]).as_state();
+            let mut concat_prodstate: ProductState = prod_state.get(controls[0]).into_state();
 
             for c in &controls[1..] {
                 //converts product to larger product
-                concat_prodstate = concat_prodstate.join(prod_state.get(*c));
+                concat_prodstate = concat_prodstate.kronecker_prod(prod_state.get(*c));
             }
-            concat_prodstate = concat_prodstate.join(prod_state.get(custom_gate.position));
+            concat_prodstate =
+                concat_prodstate.kronecker_prod(prod_state.get(custom_gate.position));
 
             operator(concat_prodstate)
         } else {
-            operator(prod_state.state[custom_gate.position].as_state())
+            operator(prod_state.qubits[custom_gate.position].into_state())
         };
 
         positions.extend(controls.iter().rev());
@@ -977,7 +978,7 @@ impl<'a> Circuit<'a> {
             }
             // Insert these image states back into a product space
             let swapped_state: ProductState =
-                prod_state.insert_qubits(state.state.as_slice(), gate_positions);
+                prod_state.insert_qubits(state.qubits.as_slice(), gate_positions);
             if mapped_states.contains_key(&swapped_state) {
                 let existing_amp: Complex<f64> = *mapped_states.get(&swapped_state).unwrap();
                 mapped_states.insert(swapped_state, existing_amp.add(state_amp.mul(amp)));
@@ -1011,7 +1012,7 @@ impl<'a> Circuit<'a> {
 #[rustfmt::skip]
 #[cfg(test)]
 mod tests {
-    use crate::{complex_Im, complex_Re, complex_Re_array, complex_zero, complex};
+    use crate::{complex_Im, complex_Re, complex_Re_array, COMPLEX_ZERO, complex};
     use std::f64::consts::{FRAC_1_SQRT_2, PI};
     use crate::Measurement::NonObservable;
     use super::*;
@@ -1019,8 +1020,8 @@ mod tests {
     // Needed for testing
     fn compare_complex_lists_and_register(correct_list: &[Complex<f64>], register: &SuperPosition) {
         for (i, &comp_num) in register.amplitudes.iter().enumerate() { // Make sure that it turns up complex
-            assert!(equal_within_error(comp_num.real, correct_list[i].real));
-            assert!(equal_within_error(comp_num.imaginary, correct_list[i].imaginary));
+            assert!(equal_within_error(comp_num.re, correct_list[i].re));
+            assert!(equal_within_error(comp_num.im, correct_list[i].im));
         }
     }
 
@@ -1035,7 +1036,7 @@ mod tests {
     }
 
     fn example_cnot(prod: ProductState) -> SuperPosition {
-        let input_register: [Qubit; 2] = [prod.state[0], prod.state[1]];
+        let input_register: [Qubit; 2] = [prod.qubits[0], prod.qubits[1]];
         SuperPosition::new(2).set_amplitudes(match input_register {
             [Qubit::Zero, Qubit::Zero] => &complex_Re_array!(1f64, 0f64, 0f64, 0f64),
             [Qubit::Zero, Qubit::One]  => &complex_Re_array!(0f64, 1f64, 0f64, 0f64),
@@ -1157,10 +1158,10 @@ mod tests {
             .simulate();
         
         let correct_register: [Complex<f64>; 8] = [
-            complex_Re!(FRAC_1_SQRT_2), complex_zero!(),
-            complex_zero!(), complex_Re!(FRAC_1_SQRT_2),
-            complex_zero!(), complex_zero!(),
-            complex_zero!(), complex_zero!()];
+            complex_Re!(FRAC_1_SQRT_2), COMPLEX_ZERO,
+            COMPLEX_ZERO, complex_Re!(FRAC_1_SQRT_2),
+            COMPLEX_ZERO, COMPLEX_ZERO,
+            COMPLEX_ZERO, COMPLEX_ZERO];
 
         compare_circuit(quantum_circuit, &correct_register);
     }
@@ -1175,10 +1176,10 @@ mod tests {
             .simulate();
 
         let correct_register = [
-            complex_zero!(), complex_zero!(), complex_zero!(), complex_zero!(),
-            complex_zero!(), complex_zero!(), complex_zero!(), complex_zero!(),
-            complex_Im!(-FRAC_1_SQRT_2), complex_zero!(), complex_zero!(), complex_zero!(),
-            complex_zero!(), complex_Im!(FRAC_1_SQRT_2), complex_zero!(), complex_zero!()
+            COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO,
+            COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO,
+            complex_Im!(-FRAC_1_SQRT_2), COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO,
+            COMPLEX_ZERO, complex_Im!(FRAC_1_SQRT_2), COMPLEX_ZERO, COMPLEX_ZERO
         ];
         compare_circuit(quantum_circuit, &correct_register);
     }
@@ -1219,10 +1220,10 @@ mod tests {
             .simulate();
 
         let correct_register = [
-            complex_zero!(), complex_zero!(), complex_zero!(), complex_zero!(),
-            complex_zero!(), complex_Im!(FRAC_1_SQRT_2), complex_zero!(),complex_Im!(FRAC_1_SQRT_2),
-            complex_zero!(), complex_zero!(), complex_zero!(), complex_zero!(),
-            complex_zero!(), complex_zero!(), complex_zero!(), complex_zero!()
+            COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO,
+            COMPLEX_ZERO, complex_Im!(FRAC_1_SQRT_2), COMPLEX_ZERO,complex_Im!(FRAC_1_SQRT_2),
+            COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO,
+            COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO
         ];
         compare_circuit(circuit, &correct_register);
     }
@@ -1232,10 +1233,10 @@ mod tests {
         let mut circuit = Circuit::new(3).unwrap();
         circuit.add_gates_with_positions(HashMap::from([(0, StandardGate::X), (2, StandardGate::H)])).unwrap().simulate();
         let correct_register: [Complex<f64>; 8] = [
-            complex_zero!(), complex_zero!(),
-            complex_zero!(), complex_zero!(),
+            COMPLEX_ZERO, COMPLEX_ZERO,
+            COMPLEX_ZERO, COMPLEX_ZERO,
             complex_Re!(FRAC_1_SQRT_2), complex_Re!(FRAC_1_SQRT_2),
-            complex_zero!(), complex_zero!()];
+            COMPLEX_ZERO, COMPLEX_ZERO];
         compare_circuit(circuit, &correct_register);
     }
 
@@ -1266,10 +1267,10 @@ mod tests {
                 .simulate();
 
         let correct_register = [
-            complex_zero!(), complex_zero!(), complex_zero!(), complex_zero!(),
-            complex_zero!(), complex_zero!(), complex_zero!(), complex_zero!(),
-            complex_zero!(), complex_Re!(FRAC_1_SQRT_2), complex_zero!(), complex_Re!(FRAC_1_SQRT_2),
-            complex_zero!(), complex_zero!(), complex_zero!(), complex_zero!()
+            COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO,
+            COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO,
+            COMPLEX_ZERO, complex_Re!(FRAC_1_SQRT_2), COMPLEX_ZERO, complex_Re!(FRAC_1_SQRT_2),
+            COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO
         ];
         
         compare_circuit(circuit, &correct_register);
@@ -1286,10 +1287,10 @@ mod tests {
             .simulate();
 
         let correct_register = [
-            complex_zero!(), complex_zero!(), complex_zero!(), complex_zero!(),
-            complex_zero!(), complex_zero!(), complex_zero!(), complex_zero!(),
-            complex_zero!(), complex_zero!(), complex_zero!(), complex_zero!(),
-            complex_Re!(1f64), complex_zero!(), complex_zero!(), complex_zero!()
+            COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO,
+            COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO,
+            COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO,
+            complex_Re!(1f64), COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO
         ];
         
         compare_circuit(circuit, &correct_register);
@@ -1306,10 +1307,10 @@ mod tests {
             .simulate();
 
         let correct_register = [
-            complex_zero!(), complex_zero!(), complex_zero!(), complex_zero!(),
-            complex_zero!(), complex_zero!(), complex_Re!(-1f64), complex_zero!(),
-            complex_zero!(), complex_zero!(), complex_zero!(), complex_zero!(),
-            complex_zero!(), complex_zero!(), complex_zero!(), complex_zero!()
+            COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO,
+            COMPLEX_ZERO, COMPLEX_ZERO, complex_Re!(-1f64), COMPLEX_ZERO,
+            COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO,
+            COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO
         ];
         
         compare_circuit(circuit, &correct_register);
@@ -1324,8 +1325,8 @@ mod tests {
             .simulate();
 
         let correct_register: [Complex<f64>; 4] = [
-            complex_Re!(FRAC_1_SQRT_2), complex_zero!(),
-            complex_Re!(FRAC_1_SQRT_2), complex_zero!()
+            complex_Re!(FRAC_1_SQRT_2), COMPLEX_ZERO,
+            complex_Re!(FRAC_1_SQRT_2), COMPLEX_ZERO
         ];
         
         compare_circuit(circuit, &correct_register);
@@ -1341,8 +1342,8 @@ mod tests {
             .simulate();
 
         let correct_register: [Complex<f64>; 4] = [
-            complex_Re!(FRAC_1_SQRT_2), complex_zero!(),
-            complex_zero!(), complex_Re!(FRAC_1_SQRT_2)
+            complex_Re!(FRAC_1_SQRT_2), COMPLEX_ZERO,
+            COMPLEX_ZERO, complex_Re!(FRAC_1_SQRT_2)
         ];
 
         compare_circuit(circuit, &correct_register);
@@ -1359,10 +1360,10 @@ mod tests {
             .simulate();
 
         let correct_register = [
-            complex_zero!(), complex_Im!(-FRAC_1_SQRT_2), complex_zero!(), complex_zero!(),
-            complex_Im!(FRAC_1_SQRT_2), complex_zero!(), complex_zero!(), complex_zero!(),
-            complex_zero!(), complex_zero!(), complex_zero!(), complex_zero!(),
-            complex_zero!(), complex_zero!(), complex_zero!(), complex_zero!()
+            COMPLEX_ZERO, complex_Im!(-FRAC_1_SQRT_2), COMPLEX_ZERO, COMPLEX_ZERO,
+            complex_Im!(FRAC_1_SQRT_2), COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO,
+            COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO,
+            COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO
         ];
 
         compare_circuit(circuit, &correct_register);
@@ -1484,8 +1485,8 @@ mod tests {
             .simulate();
 
         let correct_register = [
-            complex_zero!(), complex_zero!(), complex_zero!(), complex_zero!(),
-            complex_zero!(), complex_zero!(), complex_zero!(), complex_Im!(-1f64)
+            COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO,
+            COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO, complex_Im!(-1f64)
         ];
        
         compare_circuit(circuit, &correct_register);
@@ -1500,8 +1501,8 @@ mod tests {
             .simulate();
 
         let correct_register = [
-            complex_zero!(), complex_zero!(), complex_zero!(), complex_zero!(),
-            complex_zero!(), complex_zero!(), complex_zero!(), complex_Im!(1f64)
+            COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO,
+            COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO, complex_Im!(1f64)
         ];
         
         compare_circuit(circuit, &correct_register);
@@ -1510,13 +1511,13 @@ mod tests {
     #[test]
     fn custom_register() {
         let mut circuit = Circuit::new(3).unwrap();
-        let register: SuperPosition = ProductState::new(&[Qubit::One, Qubit::Zero, Qubit::One]).to_super_position();
+        let register: SuperPosition = ProductState::new(&[Qubit::One, Qubit::Zero, Qubit::One]).into_super_position();
         circuit.add_gate(StandardGate::X, 1).unwrap()
             .simulate_with_register(register).unwrap();
 
         let correct_register = [
-            complex_zero!(), complex_zero!(), complex_zero!(), complex_zero!(),
-            complex_zero!(), complex_zero!(), complex_zero!(), complex_Re!(1f64)
+            COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO,
+            COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO, complex_Re!(1f64)
         ];
         
         compare_circuit(circuit, &correct_register);
@@ -1526,7 +1527,7 @@ mod tests {
     #[should_panic]
     fn custom_register_wrong_dimension() {
         let mut circuit = Circuit::new(3).unwrap();
-        let register: SuperPosition = ProductState::new(&[Qubit::One, Qubit::Zero]).to_super_position();
+        let register: SuperPosition = ProductState::new(&[Qubit::One, Qubit::Zero]).into_super_position();
         circuit.add_gate(StandardGate::X, 1).unwrap()
             .simulate_with_register(register).unwrap();
     }

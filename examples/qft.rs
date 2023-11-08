@@ -34,7 +34,7 @@ fn main() -> Result<(), QuantrError> {
 
     if let Measurement::Observable(bin_count) = qc.repeat_measurement(100).unwrap() {
         for (state, count) in bin_count {
-            println!("|{}> : {}", state.as_string(), count);
+            println!("|{}> : {}", state.to_string(), count);
         }
     }
 
@@ -43,7 +43,7 @@ fn main() -> Result<(), QuantrError> {
 
 // A QFT implementation that can be used for other circuits.
 fn qft(input_state: ProductState) -> SuperPosition {
-    let qubit_num = input_state.state.len();
+    let qubit_num = input_state.qubits.len();
     let mut mini_circuit: Circuit = Circuit::new(qubit_num).unwrap();
 
     for pos in 0..qubit_num {
