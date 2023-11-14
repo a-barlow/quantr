@@ -15,17 +15,17 @@
 
 use quantr::{
     states::{ProductState, SuperPosition},
-    Circuit, Measurement, Printer, QuantrError, StandardGate,
+    Circuit, Measurement, Printer, QuantrError, Gate,
 };
 
 fn main() -> Result<(), QuantrError> {
     let mut qc: Circuit = Circuit::new(5)?;
 
     // Apply qft
-    qc.add_repeating_gate(StandardGate::H, &[0, 1, 2])?
-        .add_gate(StandardGate::Custom(qft, &[0, 1], "QFT".to_string()), 2)? // QFT on bits 0, 1 and 2
-        .add_gate(StandardGate::CNot(1), 3)?
-        .add_gate(StandardGate::CNot(2), 4)?;
+    qc.add_repeating_gate(Gate::H, &[0, 1, 2])?
+        .add_gate(Gate::Custom(qft, &[0, 1], "QFT".to_string()), 2)? // QFT on bits 0, 1 and 2
+        .add_gate(Gate::CNot(1), 3)?
+        .add_gate(Gate::CNot(2), 4)?;
 
     let mut printer = Printer::new(&qc);
     printer.print_diagram();
@@ -47,10 +47,10 @@ fn qft(input_state: ProductState) -> SuperPosition {
     let mut mini_circuit: Circuit = Circuit::new(qubit_num).unwrap();
 
     for pos in 0..qubit_num {
-        mini_circuit.add_gate(StandardGate::H, pos).unwrap();
+        mini_circuit.add_gate(Gate::H, pos).unwrap();
         for k in 1..(qubit_num - pos) {
             mini_circuit
-                .add_gate(StandardGate::CRk(k as i32, k), pos)
+                .add_gate(Gate::CRk(k as i32, k), pos)
                 .unwrap();
         }
     }

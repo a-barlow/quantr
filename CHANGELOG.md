@@ -16,6 +16,7 @@ printing the circuits in a variety of ways.
 
 Features:
 
+- Renamed the enum `StandardGate` to `Gate`.
 - The `complex_zero!` macro has been replaced with a `Complex<f64>`
   constant `quantr::COMPLEX_ZERO`. 
 - Changed method names:
@@ -59,6 +60,8 @@ Tests:
 
 - All tests and examples have been updated to reflect this major change.
   Now answers had to be changed, only the interfaces with quantr.
+- Boundary test to catch if a control node is greater than the size of
+  the circuit.
 
 ## 0.2.5 - Complex exponential, ASCII warnings and gates
 

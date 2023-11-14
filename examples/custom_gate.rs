@@ -8,11 +8,11 @@
 * Author: Andrew Rowan Barlow <a.barlow.dev@gmail.com>
 */
 
-// Shows the use of `StandardGate::Custom` in implementing the CCC-not gate.
+// Shows the use of `Gate::Custom` in implementing the CCC-not gate.
 
 use quantr::{
     states::{ProductState, Qubit, SuperPosition},
-    Circuit, Measurement, Printer, QuantrError, StandardGate,
+    Circuit, Measurement, Printer, QuantrError, Gate,
 };
 
 fn main() -> Result<(), QuantrError> {
@@ -20,8 +20,8 @@ fn main() -> Result<(), QuantrError> {
 
     // Build a circuit using a CCC-not gate, placing the control nodes on positions 0, 1, 2 and
     // the target on 3.
-    qc.add_repeating_gate(StandardGate::X, &[0, 1, 2])?
-        .add_gate(StandardGate::Custom(cccnot, &[0, 1, 2], "X".to_string()), 3)?;
+    qc.add_repeating_gate(Gate::X, &[0, 1, 2])?
+        .add_gate(Gate::Custom(cccnot, &[0, 1, 2], "X".to_string()), 3)?;
 
     // Prints the circuit, viewing the custom gate, and then simulating it.
     let mut circuit_printer: Printer = Printer::new(&qc);

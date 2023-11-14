@@ -61,8 +61,7 @@ pub enum Measurement<T> {
 /// yet undecided what will be included as a standard gate. This will
 /// lessen the impact of breaking changes in the future.
 #[derive(Clone, PartialEq, Debug)]
-#[non_exhaustive]
-pub enum StandardGate<'a> {
+pub enum Gate<'a> {
     /// Identity.
     Id,
     /// Hadamard.
@@ -120,7 +119,7 @@ pub enum StandardGate<'a> {
     ///
     /// # Example
     /// ```
-    /// use quantr::{Circuit, StandardGate};
+    /// use quantr::{Circuit, Gate};
     /// use quantr::states::{SuperPosition, ProductState, Qubit};
     /// use quantr::{Complex, complex_Re_array};
     ///
@@ -136,44 +135,44 @@ pub enum StandardGate<'a> {
     /// }
     ///
     /// let mut quantum_circuit = Circuit::new(3).unwrap();
-    /// quantum_circuit.add_gate(StandardGate::Custom(example_cnot, &[2], String::from("X")), 1).unwrap();
+    /// quantum_circuit.add_gate(Gate::Custom(example_cnot, &[2], String::from("X")), 1).unwrap();
     ///
     /// // This is equivalent to
-    /// quantum_circuit.add_gate(StandardGate::CNot(2), 1).unwrap();
+    /// quantum_circuit.add_gate(Gate::CNot(2), 1).unwrap();
     ///
     /// ```
     Custom(fn(ProductState) -> SuperPosition, &'a [usize], String),
 }
 
-impl<'a> StandardGate<'a> {
+impl<'a> Gate<'a> {
     // Retrieves the list of nodes within a gate.
     fn get_nodes(&self) -> Option<Vec<usize>> {
         match self {
-            StandardGate::Id
-            | StandardGate::H
-            | StandardGate::S
-            | StandardGate::Sdag
-            | StandardGate::T
-            | StandardGate::Tdag
-            | StandardGate::X
-            | StandardGate::Y
-            | StandardGate::Z
-            | StandardGate::Rx(_)
-            | StandardGate::Ry(_)
-            | StandardGate::Rz(_)
-            | StandardGate::Phase(_)
-            | StandardGate::X90
-            | StandardGate::Y90
-            | StandardGate::MX90
-            | StandardGate::MY90 => None,
-            StandardGate::CNot(c)
-            | StandardGate::Swap(c)
-            | StandardGate::CZ(c)
-            | StandardGate::CY(c)
-            | StandardGate::CR(_, c)
-            | StandardGate::CRk(_, c) => Some(vec![*c]),
-            StandardGate::Toffoli(c1, c2) => Some(vec![*c1, *c2]),
-            StandardGate::Custom(_, nodes, _) => Some(nodes.to_vec()),
+            Gate::Id
+            | Gate::H
+            | Gate::S
+            | Gate::Sdag
+            | Gate::T
+            | Gate::Tdag
+            | Gate::X
+            | Gate::Y
+            | Gate::Z
+            | Gate::Rx(_)
+            | Gate::Ry(_)
+            | Gate::Rz(_)
+            | Gate::Phase(_)
+            | Gate::X90
+            | Gate::Y90
+            | Gate::MX90
+            | Gate::MY90 => None,
+            Gate::CNot(c)
+            | Gate::Swap(c)
+            | Gate::CZ(c)
+            | Gate::CY(c)
+            | Gate::CR(_, c)
+            | Gate::CRk(_, c) => Some(vec![*c]),
+            Gate::Toffoli(c1, c2) => Some(vec![*c1, *c2]),
+            Gate::Custom(_, nodes, _) => Some(nodes.to_vec()),
         }
     }
 }
@@ -190,7 +189,7 @@ pub(crate) enum GateSize {
 /// Bundles the gate and position together.
 #[derive(Debug)]
 struct GateInfo<'a> {
-    name: StandardGate<'a>,
+    name: Gate<'a>,
     position: usize,
     size: GateSize,
 }
@@ -198,7 +197,7 @@ struct GateInfo<'a> {
 /// A quantum circuit where gates can be appended and then simulated to measure resulting
 /// superpositions.
 pub struct Circuit<'a> {
-    pub circuit_gates: Vec<StandardGate<'a>>,
+    pub circuit_gates: Vec<Gate<'a>>,
     pub num_qubits: usize,
     output_state: Option<SuperPosition>,
     config_progress: bool,
@@ -228,7 +227,7 @@ impl<'a> Circuit<'a> {
             });
         }
 
-        let circuit_gates: Vec<StandardGate> = Vec::new();
+        let circuit_gates: Vec<Gate> = Vec::new();
         Ok(Circuit {
             circuit_gates,
             num_qubits,
@@ -244,10 +243,10 @@ impl<'a> Circuit<'a> {
     ///
     /// # Example
     /// ```
-    /// use quantr::{Circuit, StandardGate};
+    /// use quantr::{Circuit, Gate};
     ///
     /// let mut quantum_circuit: Circuit = Circuit::new(3).unwrap();
-    /// quantum_circuit.add_gate(StandardGate::X, 0).unwrap();
+    /// quantum_circuit.add_gate(Gate::X, 0).unwrap();
     ///
     /// // Produces the circuit:
     /// // -- X --
@@ -256,7 +255,7 @@ impl<'a> Circuit<'a> {
     /// ```
     pub fn add_gate(
         &mut self,
-        gate: StandardGate<'a>,
+        gate: Gate<'a>,
         position: usize,
     ) -> Result<&mut Circuit<'a>, QuantrError> {
         Self::add_gates_with_positions(self, HashMap::from([(position, gate)]))
@@ -265,19 +264,19 @@ impl<'a> Circuit<'a> {
     /// Add a column of gates based on their position on the wire.
     ///
     /// A HashMap is used to place gates onto their desired position; where the key is the position
-    /// and the value is the [StandardGate]. This is similar to [Circuit::add_gate], however not
+    /// and the value is the [Gate]. This is similar to [Circuit::add_gate], however not
     /// all wires have to be accounted for.
     ///
     /// # Example
     /// ```
-    /// use quantr::{Circuit, StandardGate};
+    /// use quantr::{Circuit, Gate};
     /// use std::collections::HashMap;
     ///
     /// let mut quantum_circuit: Circuit = Circuit::new(3).unwrap();
     /// // Adds gates on wires 0 and 2, implicitly leaving wire 1 bare.
     /// quantum_circuit.add_gates_with_positions(
     ///     HashMap::from(
-    ///         [(0, StandardGate::X), (2, StandardGate::H)]
+    ///         [(0, Gate::X), (2, Gate::H)]
     ///     )
     /// ).unwrap();
     ///
@@ -288,7 +287,7 @@ impl<'a> Circuit<'a> {
     /// ```
     pub fn add_gates_with_positions(
         &mut self,
-        gates_with_positions: HashMap<usize, StandardGate<'a>>,
+        gates_with_positions: HashMap<usize, Gate<'a>>,
     ) -> Result<&mut Circuit<'a>, QuantrError> {
         // If any keys are out of bounds, return an error.
         if let Some(out_of_bounds_key) =
@@ -304,18 +303,18 @@ impl<'a> Circuit<'a> {
 
         // Add gates from `gates_with_positions` based on their positions. For the lines that don't
         // have a gate, the identity is added.
-        let mut gates_to_add: Vec<StandardGate> = Default::default();
+        let mut gates_to_add: Vec<Gate> = Default::default();
         for row_num in 0..self.num_qubits {
             gates_to_add.push(
                 gates_with_positions
                     .get(&row_num)
-                    .unwrap_or(&StandardGate::Id)
+                    .unwrap_or(&Gate::Id)
                     .clone(),
             );
         }
 
         // No overlapping gates
-        Self::has_overlapping_controls_and_target(&gates_to_add)?;
+        Self::has_overlapping_controls_and_target(&gates_to_add, self.num_qubits.clone())?;
 
         // Push any multi-controlled gates to isolated columns
         Self::push_multi_gates(&mut gates_to_add);
@@ -332,10 +331,10 @@ impl<'a> Circuit<'a> {
     ///
     /// # Example   
     /// ```
-    /// use quantr::{Circuit, StandardGate};
+    /// use quantr::{Circuit, Gate};
     ///
     /// let mut quantum_circuit: Circuit = Circuit::new(3).unwrap();
-    /// let gates_to_add = [StandardGate::H, StandardGate::X, StandardGate::Y];
+    /// let gates_to_add = [Gate::H, Gate::X, Gate::Y];
     ///
     /// quantum_circuit.add_gates(&gates_to_add).unwrap();
     ///
@@ -346,7 +345,7 @@ impl<'a> Circuit<'a> {
     /// ```
     pub fn add_gates(
         &mut self,
-        gates: &[StandardGate<'a>],
+        gates: &[Gate<'a>],
     ) -> Result<&mut Circuit<'a>, QuantrError> {
         // Ensured we have a gate for every wire.
         if gates.len() != self.num_qubits {
@@ -356,10 +355,10 @@ impl<'a> Circuit<'a> {
         }
 
         // Make sure there are no control nodes that overlap with it's other nodes.
-        Self::has_overlapping_controls_and_target(&gates)?;
+        Self::has_overlapping_controls_and_target(&gates, self.num_qubits.clone())?;
 
         // Push n-gates to another line (double, triple, etc.)
-        let mut gates_vec: Vec<StandardGate<'a>> = gates.to_vec();
+        let mut gates_vec: Vec<Gate<'a>> = gates.to_vec();
         Self::push_multi_gates(&mut gates_vec);
         self.circuit_gates.extend(gates_vec);
 
@@ -368,20 +367,20 @@ impl<'a> Circuit<'a> {
 
     // Pushes multi-controlled gates into their own column. Potentially expensive operation to
     // insert new elements at smaller positions into a long vector.
-    fn push_multi_gates(gates: &mut Vec<StandardGate<'a>>) {
-        let mut extended_vec: Vec<StandardGate> = Default::default();
+    fn push_multi_gates(gates: &mut Vec<Gate<'a>>) {
+        let mut extended_vec: Vec<Gate> = Default::default();
         let mut multi_gate_positions: Vec<usize> = Default::default();
 
         // if its a column with only a multi-control gate, leave it
         let mut found_multi: bool = false;
         let mut found_second: bool = false;
         for gate in gates.iter() {
-            if let StandardGate::Custom(_, _, name) = gate {
+            if let Gate::Custom(_, _, name) = gate {
                 if !name.is_ascii() {
                     println!("\x1b[93m[Quantr Warning] The custom function name, {}, does not only use ASCII chars. This could lead to problems in printing the circuit diagram. This warning will be promoted to an Error in the next major release.\x1b[0m", name);
                 }
             }
-            if gate != &StandardGate::Id {
+            if gate != &Gate::Id {
                 if found_multi {
                     found_second = true;
                     break;
@@ -395,7 +394,7 @@ impl<'a> Circuit<'a> {
             for (pos, gate) in gates.iter().enumerate() {
                 match Self::classify_gate_size(gate) {
                     GateSize::Double | GateSize::Triple | GateSize::Custom => {
-                        let mut temp_vec = vec![StandardGate::Id; gates.len()];
+                        let mut temp_vec = vec![Gate::Id; gates.len()];
                         temp_vec[pos] = gate.clone();
                         extended_vec.extend(temp_vec);
                         multi_gate_positions.push(pos);
@@ -405,36 +404,31 @@ impl<'a> Circuit<'a> {
             }
 
             for i in multi_gate_positions {
-                gates[i] = StandardGate::Id;
+                gates[i] = Gate::Id;
             }
             gates.extend(extended_vec);
         }
     }
 
     // need to implement all other gates, in addition to checking that it's within circuit size!
-    fn has_overlapping_controls_and_target(gates: &[StandardGate]) -> Result<(), QuantrError> {
+    fn has_overlapping_controls_and_target(gates: &[Gate], circuit_size: usize) -> Result<(), QuantrError> {
         for (pos, gate) in gates.iter().enumerate() {
-            match *gate {
-                StandardGate::CZ(c)
-                | StandardGate::CY(c)
-                | StandardGate::CNot(c)
-                | StandardGate::Swap(c) => {
-                    if c == pos {
-                        return Err(QuantrError { message: format!("The gate, {:?}, has it's control node placed on it's target position, {}. These must differ.", gate, pos) });
+            match gate.get_nodes() {
+                Some(nodes) => { // check for overlapping control nodes.
+                    if Self::contains_repeating_values(&nodes) {
+                        return Err(QuantrError { message: format!("The gate, {:?}, has overlapping control nodes.", gate) });
                     }
-                }
-                StandardGate::Toffoli(c1, c2) => {
-                    if c1 == c2 || c1 == pos || c2 == pos {
-                        return Err(QuantrError { message: format!("The gate, {:?}, has either overlapping control nodes: ({}, {}), or target: {}. All of these must differ.", gate, c1, c2, pos) });
+                    if nodes.contains(&pos) {
+                        return Err(QuantrError { message: format!("The gate, {:?}, has its position overlapping with a control node at position {}.", gate, pos) });
                     }
-                }
-                StandardGate::Custom(_, controls, _) => {
-                    if controls.contains(&pos) || Self::contains_repeating_values(controls) {
-                        return Err(QuantrError { message: format!("The custom gate, {:?}, has either overlapping control nodes: {:?}, or target node: {}. All of these must differ.", gate, controls, pos) });
+                    for &node in nodes.iter() {
+                        if node >= circuit_size {
+                            return Err(QuantrError { message: format!("The control node at position {:?}, is greater than the umnber of qubits {}.", node, circuit_size) });
+                        }
                     }
-                }
-                _ => {}
-            }
+                },
+                None => {}
+            } 
         }
 
         Ok(())
@@ -460,10 +454,10 @@ impl<'a> Circuit<'a> {
     ///
     /// # Example
     /// ```
-    /// use quantr::{Circuit, StandardGate};
+    /// use quantr::{Circuit, Gate};
     ///
     /// let mut quantum_circuit: Circuit = Circuit::new(3).unwrap();
-    /// quantum_circuit.add_repeating_gate(StandardGate::H, &[1, 2]).unwrap();
+    /// quantum_circuit.add_repeating_gate(Gate::H, &[1, 2]).unwrap();
     ///
     /// // Produces the circuit:
     /// // -------
@@ -472,7 +466,7 @@ impl<'a> Circuit<'a> {
     /// ```
     pub fn add_repeating_gate(
         &mut self,
-        gate: StandardGate<'a>,
+        gate: Gate<'a>,
         positions: &[usize],
     ) -> Result<&mut Circuit<'a>, QuantrError> {
         // Incase the user has attempted to place the gate twice on the same wire.
@@ -486,15 +480,15 @@ impl<'a> Circuit<'a> {
 
         // Generates a list of identity gates, that are subsequently replaced by non-trivial gates
         // specified by the user.
-        let list_of_identities: Vec<StandardGate> = vec![StandardGate::Id; self.num_qubits];
-        let gates: Vec<StandardGate> = list_of_identities
+        let list_of_identities: Vec<Gate> = vec![Gate::Id; self.num_qubits];
+        let gates: Vec<Gate> = list_of_identities
             .iter()
             .enumerate()
             .map(|(pos, _)| {
                 if positions.contains(&pos) {
                     gate.clone()
                 } else {
-                    StandardGate::Id
+                    Gate::Id
                 }
             })
             .collect();
@@ -509,12 +503,12 @@ impl<'a> Circuit<'a> {
     ///
     /// # Example
     /// ```
-    /// use quantr::{states::SuperPosition, Circuit, Measurement::NonObservable, StandardGate};
+    /// use quantr::{states::SuperPosition, Circuit, Measurement::NonObservable, Gate};
     ///
     /// let mut circuit = Circuit::new(3).unwrap();
     ///
-    /// circuit.add_gate(StandardGate::H, 2).unwrap();
-    /// circuit.add_gate(StandardGate::Y, 2).unwrap();
+    /// circuit.add_gate(Gate::H, 2).unwrap();
+    /// circuit.add_gate(Gate::Y, 2).unwrap();
     /// circuit.simulate();
     ///
     /// println!("State | Amplitude of State");
@@ -549,11 +543,11 @@ impl<'a> Circuit<'a> {
     ///
     /// # Example
     /// ```
-    /// use quantr::{states::SuperPosition, Circuit, Measurement::Observable, StandardGate};
+    /// use quantr::{states::SuperPosition, Circuit, Measurement::Observable, Gate};
     ///
     /// let mut circuit = Circuit::new(3).unwrap();
     ///
-    /// circuit.add_gate(StandardGate::H, 2).unwrap();
+    /// circuit.add_gate(Gate::H, 2).unwrap();
     /// circuit.simulate();
     ///
     /// // Measures 500 superpositions.
@@ -614,10 +608,10 @@ impl<'a> Circuit<'a> {
     ///
     /// # Example
     /// ```
-    /// use quantr::{Circuit, StandardGate};
+    /// use quantr::{Circuit, Gate};
     ///
     /// let mut circuit = Circuit::new(3).unwrap();
-    /// circuit.add_gate(StandardGate::H, 2).unwrap();
+    /// circuit.add_gate(Gate::H, 2).unwrap();
     ///
     /// circuit.simulate();
     ///
@@ -645,7 +639,7 @@ impl<'a> Circuit<'a> {
                 Self::print_circuit_log(gate, &gate_pos, &qubit_counter, &number_gates);
             }
 
-            if *gate == StandardGate::Id {
+            if *gate == Gate::Id {
                 qubit_counter += 1;
                 continue;
             }
@@ -671,11 +665,11 @@ impl<'a> Circuit<'a> {
     ///
     /// # Example
     /// ```
-    /// use quantr::{Circuit, StandardGate};
+    /// use quantr::{Circuit, Gate};
     /// use quantr::states::{Qubit, ProductState, SuperPosition};
     ///
     /// let mut circuit = Circuit::new(2).unwrap();
-    /// circuit.add_gate(StandardGate::X, 1).unwrap();
+    /// circuit.add_gate(Gate::X, 1).unwrap();
     ///
     /// let register: SuperPosition = ProductState::new(&[Qubit::One, Qubit::Zero]).into_super_position();
     ///
@@ -710,7 +704,7 @@ impl<'a> Circuit<'a> {
                 Self::print_circuit_log(gate, &gate_pos, &qubit_counter, &number_gates);
             }
 
-            if *gate == StandardGate::Id {
+            if *gate == Gate::Id {
                 qubit_counter += 1;
                 continue;
             }
@@ -732,12 +726,12 @@ impl<'a> Circuit<'a> {
 
     // If the user toggles the log on, then prints the simulation of each circuit.
     fn print_circuit_log(
-        gate: &StandardGate,
+        gate: &Gate,
         gate_pos: &usize,
         qubit_counter: &usize,
         number_gates: &usize,
     ) {
-        if gate != &StandardGate::Id {
+        if gate != &Gate::Id {
             println!(
                 "Applying {:?} on wire {} # {}/{} ",
                 gate,
@@ -755,33 +749,33 @@ impl<'a> Circuit<'a> {
     // Helps in constructing a bundle. This ultimately makes the match statements more concise.
     // Maybe best to see if this can be hardcoded in before hand; that is the bundles are added to
     // the circuit instead?
-    pub(crate) fn classify_gate_size(gate: &StandardGate) -> GateSize {
+    pub(crate) fn classify_gate_size(gate: &Gate) -> GateSize {
         match gate {
-            StandardGate::Id
-            | StandardGate::H
-            | StandardGate::S
-            | StandardGate::Sdag
-            | StandardGate::T
-            | StandardGate::Tdag
-            | StandardGate::X
-            | StandardGate::Y
-            | StandardGate::Z
-            | StandardGate::Rx(_)
-            | StandardGate::Ry(_)
-            | StandardGate::Rz(_)
-            | StandardGate::Phase(_)
-            | StandardGate::X90
-            | StandardGate::Y90
-            | StandardGate::MX90
-            | StandardGate::MY90 => GateSize::Single,
-            StandardGate::CNot(_)
-            | StandardGate::Swap(_)
-            | StandardGate::CZ(_)
-            | StandardGate::CY(_)
-            | StandardGate::CR(_, _)
-            | StandardGate::CRk(_, _) => GateSize::Double,
-            StandardGate::Toffoli(_, _) => GateSize::Triple,
-            StandardGate::Custom(_, _, _) => GateSize::Custom,
+            Gate::Id
+            | Gate::H
+            | Gate::S
+            | Gate::Sdag
+            | Gate::T
+            | Gate::Tdag
+            | Gate::X
+            | Gate::Y
+            | Gate::Z
+            | Gate::Rx(_)
+            | Gate::Ry(_)
+            | Gate::Rz(_)
+            | Gate::Phase(_)
+            | Gate::X90
+            | Gate::Y90
+            | Gate::MX90
+            | Gate::MY90 => GateSize::Single,
+            Gate::CNot(_)
+            | Gate::Swap(_)
+            | Gate::CZ(_)
+            | Gate::CY(_)
+            | Gate::CR(_, _)
+            | Gate::CRk(_, _) => GateSize::Double,
+            Gate::Toffoli(_, _) => GateSize::Triple,
+            Gate::Custom(_, _, _) => GateSize::Custom,
         }
     }
 
@@ -830,29 +824,29 @@ impl<'a> Circuit<'a> {
     // The following functions compartmentalise the algorithms for applying a gate to the
     // register.
     fn single_gate_on_wire(single_gate: &GateInfo, prod_state: &ProductState) -> SuperPosition {
-        if let StandardGate::Rx(angle) = single_gate.name {
+        if let Gate::Rx(angle) = single_gate.name {
             standard_gate_ops::rx(prod_state.qubits[single_gate.position], angle)
-        } else if let StandardGate::Ry(angle) = single_gate.name {
+        } else if let Gate::Ry(angle) = single_gate.name {
             standard_gate_ops::ry(prod_state.qubits[single_gate.position], angle)
-        } else if let StandardGate::Rz(angle) = single_gate.name {
+        } else if let Gate::Rz(angle) = single_gate.name {
             standard_gate_ops::rz(prod_state.qubits[single_gate.position], angle)
-        } else if let StandardGate::Phase(angle) = single_gate.name {
+        } else if let Gate::Phase(angle) = single_gate.name {
             standard_gate_ops::global_phase(prod_state.qubits[single_gate.position], angle)
         } else {
             let operator: fn(Qubit) -> SuperPosition = match single_gate.name {
-                StandardGate::Id => standard_gate_ops::identity,
-                StandardGate::H => standard_gate_ops::hadamard,
-                StandardGate::S => standard_gate_ops::phase,
-                StandardGate::Sdag => standard_gate_ops::phasedag,
-                StandardGate::T => standard_gate_ops::tgate,
-                StandardGate::Tdag => standard_gate_ops::tgatedag,
-                StandardGate::X => standard_gate_ops::pauli_x,
-                StandardGate::Y => standard_gate_ops::pauli_y,
-                StandardGate::Z => standard_gate_ops::pauli_z,
-                StandardGate::X90 => standard_gate_ops::x90,
-                StandardGate::Y90 => standard_gate_ops::y90,
-                StandardGate::MX90 => standard_gate_ops::mx90,
-                StandardGate::MY90 => standard_gate_ops::my90,
+                Gate::Id => standard_gate_ops::identity,
+                Gate::H => standard_gate_ops::hadamard,
+                Gate::S => standard_gate_ops::phase,
+                Gate::Sdag => standard_gate_ops::phasedag,
+                Gate::T => standard_gate_ops::tgate,
+                Gate::Tdag => standard_gate_ops::tgatedag,
+                Gate::X => standard_gate_ops::pauli_x,
+                Gate::Y => standard_gate_ops::pauli_y,
+                Gate::Z => standard_gate_ops::pauli_z,
+                Gate::X90 => standard_gate_ops::x90,
+                Gate::Y90 => standard_gate_ops::y90,
+                Gate::MX90 => standard_gate_ops::mx90,
+                Gate::MY90 => standard_gate_ops::my90,
                 _ => panic!("Non single gate was passed to single gate operation function."),
             };
             operator(prod_state.qubits[single_gate.position])
@@ -865,7 +859,7 @@ impl<'a> Circuit<'a> {
         positions: &mut Vec<usize>,
     ) -> SuperPosition {
         // operator: fn(ProductState) -> SuperPosition
-        if let StandardGate::CR(angle, control) = double_gate.name {
+        if let Gate::CR(angle, control) = double_gate.name {
             positions.push(control);
             standard_gate_ops::cr(
                 prod_state
@@ -873,7 +867,7 @@ impl<'a> Circuit<'a> {
                     .kronecker_prod(prod_state.get(double_gate.position)),
                 angle,
             )
-        } else if let StandardGate::CRk(k, control) = double_gate.name {
+        } else if let Gate::CRk(k, control) = double_gate.name {
             positions.push(control);
             standard_gate_ops::crk(
                 prod_state
@@ -884,19 +878,19 @@ impl<'a> Circuit<'a> {
         } else {
             let control_node: usize;
             let operator = match double_gate.name {
-                StandardGate::CNot(control) => {
+                Gate::CNot(control) => {
                     control_node = control;
                     standard_gate_ops::cnot
                 }
-                StandardGate::CZ(control) => {
+                Gate::CZ(control) => {
                     control_node = control;
                     standard_gate_ops::cz
                 }
-                StandardGate::CY(control) => {
+                Gate::CY(control) => {
                     control_node = control;
                     standard_gate_ops::cy
                 }
-                StandardGate::Swap(control) => {
+                Gate::Swap(control) => {
                     control_node = control;
                     standard_gate_ops::swap
                 }
@@ -919,7 +913,7 @@ impl<'a> Circuit<'a> {
     ) -> SuperPosition {
         // operator: fn(ProductState) -> SuperPosition
         let (operator, control_node_one, control_node_two) = match triple_gate.name {
-            StandardGate::Toffoli(control1, control2) => {
+            Gate::Toffoli(control1, control2) => {
                 (standard_gate_ops::toffoli, control1, control2)
             }
             _ => panic!("Non triple gate was passed to triple gate operation function"),
@@ -941,7 +935,7 @@ impl<'a> Circuit<'a> {
         positions: &mut Vec<usize>,
     ) -> SuperPosition {
         let (operator, controls) = match custom_gate.name {
-            StandardGate::Custom(func, control_map, _) => (func, control_map),
+            Gate::Custom(func, control_map, _) => (func, control_map),
             _ => panic!("Non custom gate was passed to custom gate operation function."),
         };
 
@@ -995,10 +989,10 @@ impl<'a> Circuit<'a> {
     ///
     /// # Example
     /// ```
-    /// use quantr::{Circuit, StandardGate};
+    /// use quantr::{Circuit, Gate};
     ///
     /// let mut circuit = Circuit::new(3).unwrap();
-    /// circuit.add_gate(StandardGate::H, 2).unwrap();
+    /// circuit.add_gate(Gate::H, 2).unwrap();
     ///
     /// circuit.toggle_simulation_progress();
     ///
@@ -1052,16 +1046,16 @@ mod tests {
     fn catches_overlapping_nodes_custom_gate() {
         let mut quantum_circuit = Circuit::new(3).unwrap();
         quantum_circuit
-            .add_gates(&[StandardGate::Id, StandardGate::Custom(example_cnot, &[1], "X".to_string()), StandardGate::Id])
+            .add_gates(&[Gate::Id, Gate::Custom(example_cnot, &[1], "X".to_string()), Gate::Id])
             .unwrap();
     }
     
     #[test]
-    #[should_panic(expected = "\u{1b}[91m[Quantr Error] The gate, CNot(0), has it's control node placed on it's target position, 0. These must differ.\u{1b}[0m ")]
+    #[should_panic]
     fn catches_overlapping_control_nodes() {
         let mut quantum_circuit = Circuit::new(3).unwrap();
         quantum_circuit
-            .add_gates(&[StandardGate::CNot(0), StandardGate::Id, StandardGate::Id])
+            .add_gates(&[Gate::CNot(0), Gate::Id, Gate::Id])
             .unwrap();
     }
 
@@ -1069,16 +1063,16 @@ mod tests {
     fn pushes_multi_gates() {
         let mut quantum_circuit = Circuit::new(3).unwrap();
         quantum_circuit
-            .add_gates(&[StandardGate::CNot(2), StandardGate::CNot(0), StandardGate::H]).unwrap()
-            .add_gates(&[StandardGate::Toffoli(1, 2), StandardGate::H, StandardGate::CNot(0)]).unwrap();
+            .add_gates(&[Gate::CNot(2), Gate::CNot(0), Gate::H]).unwrap()
+            .add_gates(&[Gate::Toffoli(1, 2), Gate::H, Gate::CNot(0)]).unwrap();
     
-        let correct_circuit_layout: Vec<StandardGate> = vec![
-            StandardGate::Id, StandardGate::Id, StandardGate::H,
-            StandardGate::CNot(2), StandardGate::Id, StandardGate::Id,
-            StandardGate::Id, StandardGate::CNot(0), StandardGate::Id,
-            StandardGate::Id, StandardGate::H, StandardGate::Id,
-            StandardGate::Toffoli(1,2), StandardGate::Id, StandardGate::Id,
-            StandardGate::Id, StandardGate::Id, StandardGate::CNot(0)];
+        let correct_circuit_layout: Vec<Gate> = vec![
+            Gate::Id, Gate::Id, Gate::H,
+            Gate::CNot(2), Gate::Id, Gate::Id,
+            Gate::Id, Gate::CNot(0), Gate::Id,
+            Gate::Id, Gate::H, Gate::Id,
+            Gate::Toffoli(1, 2), Gate::Id, Gate::Id,
+            Gate::Id, Gate::Id, Gate::CNot(0)];
 
         assert_eq!(correct_circuit_layout, quantum_circuit.circuit_gates);
     }
@@ -1087,35 +1081,46 @@ mod tests {
     fn pushes_multi_gates_using_vec() {
         let mut quantum_circuit = Circuit::new(3).unwrap();
         quantum_circuit.add_gates_with_positions(HashMap::from([
-            (2, StandardGate::H),
-            (0, StandardGate::CNot(2)),
-            (1, StandardGate::CNot(0))
+            (2, Gate::H),
+            (0, Gate::CNot(2)),
+            (1, Gate::CNot(0))
         ])).unwrap()
         .add_gates_with_positions(HashMap::from([
-            (2, StandardGate::CNot(0)),
-            (0, StandardGate::Toffoli(1, 2)),
-            (1, StandardGate::H)
+            (2, Gate::CNot(0)),
+            (0, Gate::Toffoli(1, 2)),
+            (1, Gate::H)
         ])).unwrap();
     
-        let correct_circuit_layout: Vec<StandardGate> = vec![
-            StandardGate::Id, StandardGate::Id, StandardGate::H,
-            StandardGate::CNot(2), StandardGate::Id, StandardGate::Id,
-            StandardGate::Id, StandardGate::CNot(0), StandardGate::Id,
-            StandardGate::Id, StandardGate::H, StandardGate::Id,
-            StandardGate::Toffoli(1,2), StandardGate::Id, StandardGate::Id,
-            StandardGate::Id, StandardGate::Id, StandardGate::CNot(0)];
+        let correct_circuit_layout: Vec<Gate> = vec![
+            Gate::Id, Gate::Id, Gate::H,
+            Gate::CNot(2), Gate::Id, Gate::Id,
+            Gate::Id, Gate::CNot(0), Gate::Id,
+            Gate::Id, Gate::H, Gate::Id,
+            Gate::Toffoli(1, 2), Gate::Id, Gate::Id,
+            Gate::Id, Gate::Id, Gate::CNot(0)];
 
         assert_eq!(correct_circuit_layout, quantum_circuit.circuit_gates);
     }
 
     #[test]
-    #[should_panic(expected = "\u{1b}[91m[Quantr Error] The gate, CNot(0), has it's control node placed on it's target position, 0. These must differ.\u{1b}[0m ")]
+    #[should_panic]
     fn catches_overlapping_control_nodes_using_vec() {
         let mut quantum_circuit = Circuit::new(3).unwrap();
         quantum_circuit.add_gates_with_positions(HashMap::from([
-            (2, StandardGate::H),
-            (0, StandardGate::CNot(0)),
-            (1, StandardGate::CNot(0))
+            (2, Gate::H),
+            (0, Gate::CNot(0)),
+            (1, Gate::CNot(0))
+        ])).unwrap();
+    }
+
+    #[test]
+    #[should_panic]
+    fn control_node_greater_than_circuit_size() {
+        let mut quantum_circuit = Circuit::new(3).unwrap();
+        quantum_circuit.add_gates_with_positions(HashMap::from([
+            (2, Gate::H),
+            (0, Gate::CNot(2)),
+            (1, Gate::CNot(3))
         ])).unwrap();
     }
 
@@ -1126,8 +1131,8 @@ mod tests {
     #[test]
     fn swap_and_conjugate_gates() {
         let mut circuit = Circuit::new(2).unwrap();
-        circuit.add_gates(&[StandardGate::H, StandardGate::H]).unwrap()
-            .add_gates(&[StandardGate::S, StandardGate::Sdag]).unwrap()
+        circuit.add_gates(&[Gate::H, Gate::H]).unwrap()
+            .add_gates(&[Gate::S, Gate::Sdag]).unwrap()
             .simulate();
 
         let correct_register: [Complex<f64>; 4] = [
@@ -1139,8 +1144,8 @@ mod tests {
     #[test]
     fn t_and_conjugate_gates() {
         let mut circuit = Circuit::new(2).unwrap();
-        circuit.add_gates(&[StandardGate::H, StandardGate::H]).unwrap()
-               .add_gates(&[StandardGate::T, StandardGate::Tdag]).unwrap()
+        circuit.add_gates(&[Gate::H, Gate::H]).unwrap()
+               .add_gates(&[Gate::T, Gate::Tdag]).unwrap()
                .simulate();
 
         let correct_register: [Complex<f64>; 4] = [
@@ -1153,8 +1158,8 @@ mod tests {
     #[test]
     fn custom_gates() {
         let mut quantum_circuit = Circuit::new(3).unwrap();
-        quantum_circuit.add_gate(StandardGate::H, 2).unwrap()
-            .add_gate(StandardGate::Custom(example_cnot, &[2], String::from("cNot")), 1).unwrap()
+        quantum_circuit.add_gate(Gate::H, 2).unwrap()
+            .add_gate(Gate::Custom(example_cnot, &[2], String::from("cNot")), 1).unwrap()
             .simulate();
         
         let correct_register: [Complex<f64>; 8] = [
@@ -1169,10 +1174,10 @@ mod tests {
     #[test]
     fn toffoli_gates() {
         let mut quantum_circuit = Circuit::new(4).unwrap();
-        quantum_circuit.add_gate(StandardGate::X, 0).unwrap()
-            .add_gate(StandardGate::H, 3).unwrap()
-            .add_gate(StandardGate::Y, 3).unwrap()
-            .add_gate(StandardGate::Toffoli(3, 0), 1).unwrap()
+        quantum_circuit.add_gate(Gate::X, 0).unwrap()
+            .add_gate(Gate::H, 3).unwrap()
+            .add_gate(Gate::Y, 3).unwrap()
+            .add_gate(Gate::Toffoli(3, 0), 1).unwrap()
             .simulate();
 
         let correct_register = [
@@ -1188,27 +1193,27 @@ mod tests {
     fn add_gates_to_circuit_with_vec() {
         let mut quantum_circuit = Circuit::new(2).unwrap();
         quantum_circuit
-            .add_gates(&[StandardGate::Id, StandardGate::X]).unwrap();
+            .add_gates(&[Gate::Id, Gate::X]).unwrap();
 
-        assert!(vec!(StandardGate::Id, StandardGate::X).iter().all(|item| quantum_circuit.circuit_gates.contains(item)));
+        assert!(vec!(Gate::Id, Gate::X).iter().all(|item| quantum_circuit.circuit_gates.contains(item)));
     }
 
     #[test]
     fn add_repeating_gates_to_circuits() {
         let mut circuit = Circuit::new(5).unwrap();
         circuit
-            .add_repeating_gate(StandardGate::H,&[0, 1, 2, 3, 4]).unwrap();
+            .add_repeating_gate(Gate::H, &[0, 1, 2, 3, 4]).unwrap();
 
-        assert!(vec![StandardGate::H; 5].iter().all(|item| circuit.circuit_gates.contains(item)));
+        assert!(vec![Gate::H; 5].iter().all(|item| circuit.circuit_gates.contains(item)));
     }
 
     #[test]
     fn add_gates_to_circuit_with_positions() {
         let mut quantum_circuit = Circuit::new(3).unwrap();
         quantum_circuit
-            .add_gates_with_positions(HashMap::from([(0, StandardGate::X), (2, StandardGate::H)])).unwrap();
+            .add_gates_with_positions(HashMap::from([(0, Gate::X), (2, Gate::H)])).unwrap();
         
-        assert!(vec!(StandardGate::X, StandardGate::Id, StandardGate::H)
+        assert!(vec!(Gate::X, Gate::Id, Gate::H)
                 .iter().all(|item| quantum_circuit.circuit_gates.contains(item)));
     }
 
@@ -1216,7 +1221,7 @@ mod tests {
     fn runs_three_pauli_gates_with_hadamard() {
         let mut circuit: Circuit = Circuit::new(4).unwrap();
         circuit
-            .add_gates(&[StandardGate::Z, StandardGate::Y, StandardGate::H, StandardGate::X]).unwrap()
+            .add_gates(&[Gate::Z, Gate::Y, Gate::H, Gate::X]).unwrap()
             .simulate();
 
         let correct_register = [
@@ -1231,7 +1236,7 @@ mod tests {
     #[test]
     fn hash_map_with_two_gates() {
         let mut circuit = Circuit::new(3).unwrap();
-        circuit.add_gates_with_positions(HashMap::from([(0, StandardGate::X), (2, StandardGate::H)])).unwrap().simulate();
+        circuit.add_gates_with_positions(HashMap::from([(0, Gate::X), (2, Gate::H)])).unwrap().simulate();
         let correct_register: [Complex<f64>; 8] = [
             COMPLEX_ZERO, COMPLEX_ZERO,
             COMPLEX_ZERO, COMPLEX_ZERO,
@@ -1244,13 +1249,13 @@ mod tests {
     #[should_panic]
     fn catches_repeating_positions() {
         let mut circuit = Circuit::new(4).unwrap();
-        circuit.add_repeating_gate(StandardGate::X, &[0, 1, 1, 3]).unwrap();
+        circuit.add_repeating_gate(Gate::X, &[0, 1, 1, 3]).unwrap();
     }
 
     #[test]
     fn two_hadamard_gates_work() {
         let mut circuit = Circuit::new(2).unwrap();
-        circuit.add_gates(&[StandardGate::H, StandardGate::H]).unwrap().simulate();
+        circuit.add_gates(&[Gate::H, Gate::H]).unwrap().simulate();
 
         let correct_register: [Complex<f64>; 4] = [
             complex_Re!(0.5f64), complex_Re!(0.5f64),
@@ -1262,8 +1267,8 @@ mod tests {
     fn add_two_rows_single_gates() {
         let mut circuit = Circuit::new(4).unwrap();
 
-        circuit.add_gates_with_positions(HashMap::from([(0, StandardGate::X)])).unwrap()
-                .add_gates_with_positions(HashMap::from([(3, StandardGate::X), (2, StandardGate::H)])).unwrap()
+        circuit.add_gates_with_positions(HashMap::from([(0, Gate::X)])).unwrap()
+                .add_gates_with_positions(HashMap::from([(3, Gate::X), (2, Gate::H)])).unwrap()
                 .simulate();
 
         let correct_register = [
@@ -1280,10 +1285,10 @@ mod tests {
     fn cy_and_swap_gates_work() {
         let mut circuit = Circuit::new(4).unwrap();
 
-        circuit.add_repeating_gate(StandardGate::X, &[1,2]).unwrap()
-            .add_gate(StandardGate::CY(2), 0).unwrap()
-            .add_gate(StandardGate::Swap(3), 2).unwrap()
-            .add_gate(StandardGate::CY(0), 3).unwrap()
+        circuit.add_repeating_gate(Gate::X, &[1,2]).unwrap()
+            .add_gate(Gate::CY(2), 0).unwrap()
+            .add_gate(Gate::Swap(3), 2).unwrap()
+            .add_gate(Gate::CY(0), 3).unwrap()
             .simulate();
 
         let correct_register = [
@@ -1301,9 +1306,9 @@ mod tests {
     fn cz_and_swap_gates_work() {
         let mut circuit = Circuit::new(3).unwrap();
 
-        circuit.add_repeating_gate(StandardGate::X, &[0,2]).unwrap()
-            .add_gate(StandardGate::Swap(1), 2).unwrap()
-            .add_gate(StandardGate::CZ(1), 0).unwrap()
+        circuit.add_repeating_gate(Gate::X, &[0,2]).unwrap()
+            .add_gate(Gate::Swap(1), 2).unwrap()
+            .add_gate(Gate::CZ(1), 0).unwrap()
             .simulate();
 
         let correct_register = [
@@ -1320,8 +1325,8 @@ mod tests {
     fn cnot_gate_simply_use_works() {
         let mut circuit = Circuit::new(2).unwrap();
 
-        circuit.add_gate(StandardGate::H, 0).unwrap()
-            .add_gate(StandardGate::CNot(1), 0).unwrap()
+        circuit.add_gate(Gate::H, 0).unwrap()
+            .add_gate(Gate::CNot(1), 0).unwrap()
             .simulate();
 
         let correct_register: [Complex<f64>; 4] = [
@@ -1337,8 +1342,8 @@ mod tests {
     fn cnot_gate_simply_flipped() {
         let mut circuit = Circuit::new(2).unwrap();
 
-        circuit.add_gate(StandardGate::H, 0).unwrap()
-            .add_gate(StandardGate::CNot(0), 1).unwrap()
+        circuit.add_gate(Gate::H, 0).unwrap()
+            .add_gate(Gate::CNot(0), 1).unwrap()
             .simulate();
 
         let correct_register: [Complex<f64>; 4] = [
@@ -1354,9 +1359,9 @@ mod tests {
     fn cnot_gate_extended_control_works_asymmetric() {
         let mut circuit = Circuit::new(4).unwrap();
 
-        circuit.add_gate(StandardGate::H, 1).unwrap()
-            .add_gate(StandardGate::CNot(1), 3).unwrap()
-            .add_gate(StandardGate::Y, 1).unwrap()
+        circuit.add_gate(Gate::H, 1).unwrap()
+            .add_gate(Gate::CNot(1), 3).unwrap()
+            .add_gate(Gate::Y, 1).unwrap()
             .simulate();
 
         let correct_register = [
@@ -1374,7 +1379,7 @@ mod tests {
     fn custom_non_ascii_name() {
         let mut circuit = Circuit::new(3).unwrap();
 
-        circuit.add_gate(StandardGate::Custom(example_cnot, &[0], "NonAscii†".to_string()), 1).unwrap();
+        circuit.add_gate(Gate::Custom(example_cnot, &[0], "NonAscii†".to_string()), 1).unwrap();
         // in future, this should panic. For now, this is a warning message.
     }
 
@@ -1382,8 +1387,8 @@ mod tests {
     fn rx_gate() {
         let mut circuit = Circuit::new(2).unwrap();
 
-        circuit.add_gates(&[StandardGate::H, StandardGate::H]).unwrap()
-            .add_gate(StandardGate::Rx(PI), 0).unwrap()
+        circuit.add_gates(&[Gate::H, Gate::H]).unwrap()
+            .add_gate(Gate::Rx(PI), 0).unwrap()
             .simulate();
 
         let correct_register: [Complex<f64>; 4] = [
@@ -1398,8 +1403,8 @@ mod tests {
     fn ry_gate() {
         let mut circuit = Circuit::new(2).unwrap();
 
-        circuit.add_gates(&[StandardGate::H, StandardGate::H]).unwrap()
-            .add_gate(StandardGate::Ry(PI), 0).unwrap()
+        circuit.add_gates(&[Gate::H, Gate::H]).unwrap()
+            .add_gate(Gate::Ry(PI), 0).unwrap()
             .simulate();
 
         let correct_register: [Complex<f64>; 4] = [
@@ -1414,8 +1419,8 @@ mod tests {
     fn rz_gate() {
         let mut circuit = Circuit::new(2).unwrap();
 
-        circuit.add_gates(&[StandardGate::H, StandardGate::H]).unwrap()
-            .add_gate(StandardGate::Rz(PI), 0).unwrap()
+        circuit.add_gates(&[Gate::H, Gate::H]).unwrap()
+            .add_gate(Gate::Rz(PI), 0).unwrap()
             .simulate();
 
         let correct_register: [Complex<f64>; 4] = [
@@ -1430,8 +1435,8 @@ mod tests {
     fn global_gate() {
         let mut circuit = Circuit::new(2).unwrap();
 
-        circuit.add_gates(&[StandardGate::H, StandardGate::H]).unwrap()
-            .add_gate(StandardGate::Phase(PI), 0).unwrap()
+        circuit.add_gates(&[Gate::H, Gate::H]).unwrap()
+            .add_gate(Gate::Phase(PI), 0).unwrap()
             .simulate();
 
         let correct_register: [Complex<f64>; 4] = [
@@ -1446,9 +1451,9 @@ mod tests {
     fn x90_and_mx90_gate() {
         let mut circuit = Circuit::new(2).unwrap();
 
-        circuit.add_gates(&[StandardGate::H, StandardGate::H]).unwrap()
-            .add_gate(StandardGate::MX90, 0).unwrap()
-            .add_gate(StandardGate::X90, 1).unwrap()
+        circuit.add_gates(&[Gate::H, Gate::H]).unwrap()
+            .add_gate(Gate::MX90, 0).unwrap()
+            .add_gate(Gate::X90, 1).unwrap()
             .simulate();
 
         let correct_register: [Complex<f64>; 4] = [
@@ -1463,9 +1468,9 @@ mod tests {
     fn y90_and_my90_gate() {
         let mut circuit = Circuit::new(2).unwrap();
 
-        circuit.add_gates(&[StandardGate::H, StandardGate::H]).unwrap()
-            .add_gate(StandardGate::MY90, 0).unwrap()
-            .add_gate(StandardGate::Y90, 1).unwrap()
+        circuit.add_gates(&[Gate::H, Gate::H]).unwrap()
+            .add_gate(Gate::MY90, 0).unwrap()
+            .add_gate(Gate::Y90, 1).unwrap()
             .simulate();
 
         let correct_register: [Complex<f64>; 4] = [
@@ -1480,8 +1485,8 @@ mod tests {
     fn cr_gate() {
         let mut circuit = Circuit::new(3).unwrap();
 
-        circuit.add_gates(&[StandardGate::X, StandardGate::X, StandardGate::X]).unwrap()
-            .add_gate(StandardGate::CR(-PI*0.5f64, 2), 1).unwrap()
+        circuit.add_gates(&[Gate::X, Gate::X, Gate::X]).unwrap()
+            .add_gate(Gate::CR(-PI*0.5f64, 2), 1).unwrap()
             .simulate();
 
         let correct_register = [
@@ -1496,8 +1501,8 @@ mod tests {
     fn crk_gate() {
         let mut circuit = Circuit::new(3).unwrap();
 
-        circuit.add_gates(&[StandardGate::X, StandardGate::X, StandardGate::X]).unwrap()
-            .add_gate(StandardGate::CRk(2i32, 2), 1).unwrap()
+        circuit.add_gates(&[Gate::X, Gate::X, Gate::X]).unwrap()
+            .add_gate(Gate::CRk(2i32, 2), 1).unwrap()
             .simulate();
 
         let correct_register = [
@@ -1512,7 +1517,7 @@ mod tests {
     fn custom_register() {
         let mut circuit = Circuit::new(3).unwrap();
         let register: SuperPosition = ProductState::new(&[Qubit::One, Qubit::Zero, Qubit::One]).into_super_position();
-        circuit.add_gate(StandardGate::X, 1).unwrap()
+        circuit.add_gate(Gate::X, 1).unwrap()
             .simulate_with_register(register).unwrap();
 
         let correct_register = [
@@ -1528,7 +1533,7 @@ mod tests {
     fn custom_register_wrong_dimension() {
         let mut circuit = Circuit::new(3).unwrap();
         let register: SuperPosition = ProductState::new(&[Qubit::One, Qubit::Zero]).into_super_position();
-        circuit.add_gate(StandardGate::X, 1).unwrap()
+        circuit.add_gate(Gate::X, 1).unwrap()
             .simulate_with_register(register).unwrap();
     }
 }

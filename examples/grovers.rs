@@ -14,29 +14,27 @@
 // This example will print a bin count of measured states from 500 repeated simulations, and the
 // superposition itself.
 
-use quantr::{Circuit, Measurement, Printer, StandardGate};
+use quantr::{Circuit, Measurement, Printer, QuantrError, Gate};
 
 #[rustfmt::skip]
-fn main() {
-    let mut circuit = Circuit::new(3).unwrap();
+fn main() -> Result<(), QuantrError>{
+    let mut circuit = Circuit::new(3)?;
 
     // Kick state into superposition of equal weights
-    circuit
-        .add_repeating_gate(StandardGate::H, &[0, 1, 2])
-        .unwrap();
+    circuit.add_repeating_gate(Gate::H, &[0, 1, 2])?;
 
     // Oracle
-    circuit.add_gate(StandardGate::CZ(1), 0).unwrap();
+    circuit.add_gate(Gate::CZ(1), 0)?;
 
     // Amplitude amplification
     circuit
-        .add_repeating_gate(StandardGate::H, &[0, 1, 2]).unwrap()
-        .add_repeating_gate(StandardGate::X, &[0, 1, 2]).unwrap()
-        .add_gate(StandardGate::H, 2).unwrap()
-        .add_gate(StandardGate::Toffoli(0, 1), 2).unwrap()
-        .add_gate(StandardGate::H, 2).unwrap()
-        .add_repeating_gate(StandardGate::X, &[0, 1, 2]).unwrap()
-        .add_repeating_gate(StandardGate::H, &[0, 1, 2]).unwrap();
+        .add_repeating_gate(Gate::H, &[0, 1, 2])?
+        .add_repeating_gate(Gate::X, &[0, 1, 2])?
+        .add_gate(Gate::H, 2)?
+        .add_gate(Gate::Toffoli(0, 1), 2)?
+        .add_gate(Gate::H, 2)?
+        .add_repeating_gate(Gate::X, &[0, 1, 2])?
+        .add_repeating_gate(Gate::H, &[0, 1, 2])?;
 
     // Prints the circuit in UTF-8
     let mut printer = Printer::new(&circuit);
@@ -66,4 +64,6 @@ fn main() {
             println!("|{}> : {}", state.to_string(), amplitude);
         }
     }
+
+    Ok(())
 }
