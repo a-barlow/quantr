@@ -12,7 +12,7 @@
 
 use quantr::{
     states::{ProductState, Qubit, SuperPosition},
-    Circuit, Measurement, Printer, QuantrError, Gate,
+    Circuit, Gate, Measurement, Printer, QuantrError,
 };
 
 fn main() -> Result<(), QuantrError> {
@@ -32,6 +32,7 @@ fn main() -> Result<(), QuantrError> {
 
     // Prints the bin count of measured states.
     if let Measurement::Observable(bin_count) = qc.repeat_measurement(50).unwrap() {
+        println!("\nStates observed over 50 measurements:");
         for (states, count) in bin_count.into_iter() {
             println!("|{}> : {}", states.to_string(), count);
         }

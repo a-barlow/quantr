@@ -16,6 +16,7 @@ printing the circuits in a variety of ways.
 
 Features:
 
+- Removed `Printer::flush` as it cannot be used due to borrowing rules.
 - Renamed the enum `StandardGate` to `Gate`.
 - The `complex_zero!` macro has been replaced with a `Complex<f64>`
   constant `quantr::COMPLEX_ZERO`. 
@@ -25,7 +26,8 @@ Features:
     - `ProductState::join` -> `ProductState::kronecker_prod`
     - `ProductState::as_string` -> `ProductState::to_string`
     - `SuperPosition::as_hash_map` -> `SuperPosition::to_hash_map`
-    - `ProductState::to_super_position` -> `ProductState::into_super_position`
+    - `ProductState::to_super_position` ->
+      `ProductState::into_super_position`
 - The field of `ProductState` called `state` -> `qubits`.
 - The `QuantrError` struct has been made public for the user (this was
   available in versions < 0.2.0). This allows for succint error handling

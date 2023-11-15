@@ -12,11 +12,9 @@
 //!
 //! The user has the option to print the string to the terminal or a text file, where the text file
 //! has the advantage of not wrapping the circuit within the terminal. The [Printer] will also
-//! cache a copy of the diagram so subsequent prints will require no building of the diagram. This
-//! cache can be removed with [Printer::flush] to force the [Printer] to construct the circuit
-//! diagram again.
+//! cache a copy of the diagram so subsequent prints will require no building of the diagram.
 
-use super::{Circuit, GateSize, Gate};
+use super::{Circuit, Gate, GateSize};
 use std::fs::File;
 use std::io::Write;
 use std::path::Path;
@@ -159,18 +157,6 @@ impl Printer<'_> {
         self.get_or_make_diagram()
     }
 
-    /// Will be depreceated as it cannot be used due to lifetime borrowing, and the quantum circuit
-    /// needs to be mutable.
-    ///
-    /// Removes the cache of the circuit diagram.
-    ///
-    /// Future calls to print the diagram will have to build the diagram from scratch. Can be used
-    /// if the circuit has been updated, and the printer needs to rebuild the diagram.
-    #[deprecated]
-    pub fn flush(&mut self) {
-        self.diagram = None;
-    }
-
     // Constructs the diagram, or returns the diagram previously built.
     fn get_or_make_diagram(&mut self) -> String {
         match &self.diagram {
@@ -250,6 +236,7 @@ impl Printer<'_> {
 
     fn get_gate_name(gate: &Gate) -> String {
         match gate {
+            Gate::Id => "".to_string(),
             Gate::X => "X".to_string(),
             Gate::H => "H".to_string(),
             Gate::S => "S".to_string(),
@@ -274,7 +261,6 @@ impl Printer<'_> {
             Gate::CNot(_) => "X".to_string(),
             Gate::Toffoli(_, _) => "X".to_string(),
             Gate::Custom(_, _, name) => name.to_string(),
-            _ => String::from("#"),
         }
     }
 

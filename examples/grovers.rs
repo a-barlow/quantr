@@ -14,7 +14,7 @@
 // This example will print a bin count of measured states from 500 repeated simulations, and the
 // superposition itself.
 
-use quantr::{Circuit, Measurement, Printer, QuantrError, Gate};
+use quantr::{Circuit, Gate, Measurement, Printer, QuantrError};
 
 #[rustfmt::skip]
 fn main() -> Result<(), QuantrError>{

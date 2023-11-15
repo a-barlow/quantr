@@ -112,6 +112,8 @@ pub enum Gate<'a> {
     Toffoli(usize, usize),
     /// Defines a custom gate.
     ///
+    /// Note that the custom function isn't checked for unitarity.
+    ///
     /// The arguments define the mapping of the gate; the position of the qubit states
     /// that the gate acts on; and a name that will be displayed in the printed diagram
     /// respectively. The name of the custom gate should be in ASCII for it to render properly
@@ -317,7 +319,7 @@ impl<'a> Circuit<'a> {
         Self::has_overlapping_controls_and_target(&gates_to_add, self.num_qubits.clone())?;
 
         // Push any multi-controlled gates to isolated columns
-        Self::push_multi_gates(&mut gates_to_add);
+        Self::push_multi_gates(&mut gates_to_add)?;
 
         self.circuit_gates.extend(gates_to_add);
         Ok(self)
@@ -343,10 +345,7 @@ impl<'a> Circuit<'a> {
     /// // -- X --
     /// // -- Y --
     /// ```
-    pub fn add_gates(
-        &mut self,
-        gates: &[Gate<'a>],
-    ) -> Result<&mut Circuit<'a>, QuantrError> {
+    pub fn add_gates(&mut self, gates: &[Gate<'a>]) -> Result<&mut Circuit<'a>, QuantrError> {
         // Ensured we have a gate for every wire.
         if gates.len() != self.num_qubits {
             return Err(QuantrError {
@@ -359,15 +358,14 @@ impl<'a> Circuit<'a> {
 
         // Push n-gates to another line (double, triple, etc.)
         let mut gates_vec: Vec<Gate<'a>> = gates.to_vec();
-        Self::push_multi_gates(&mut gates_vec);
+        Self::push_multi_gates(&mut gates_vec)?;
         self.circuit_gates.extend(gates_vec);
-
         Ok(self)
     }
 
     // Pushes multi-controlled gates into their own column. Potentially expensive operation to
     // insert new elements at smaller positions into a long vector.
-    fn push_multi_gates(gates: &mut Vec<Gate<'a>>) {
+    fn push_multi_gates(gates: &mut Vec<Gate<'a>>) -> Result<(), QuantrError> {
         let mut extended_vec: Vec<Gate> = Default::default();
         let mut multi_gate_positions: Vec<usize> = Default::default();
 
@@ -377,7 +375,7 @@ impl<'a> Circuit<'a> {
         for gate in gates.iter() {
             if let Gate::Custom(_, _, name) = gate {
                 if !name.is_ascii() {
-                    println!("\x1b[93m[Quantr Warning] The custom function name, {}, does not only use ASCII chars. This could lead to problems in printing the circuit diagram. This warning will be promoted to an Error in the next major release.\x1b[0m", name);
+                    return Err(QuantrError { message: format!("The custom function name, {}, does not only use ASCII chars. This could lead to problems in printing the circuit diagram. This warning will be promoted to an Error in the next major release.", name) } );
                 }
             }
             if gate != &Gate::Id {
@@ -408,27 +406,38 @@ impl<'a> Circuit<'a> {
             }
             gates.extend(extended_vec);
         }
+
+        Ok(())
     }
 
     // need to implement all other gates, in addition to checking that it's within circuit size!
-    fn has_overlapping_controls_and_target(gates: &[Gate], circuit_size: usize) -> Result<(), QuantrError> {
+    fn has_overlapping_controls_and_target(
+        gates: &[Gate],
+        circuit_size: usize,
+    ) -> Result<(), QuantrError> {
         for (pos, gate) in gates.iter().enumerate() {
             match gate.get_nodes() {
-                Some(nodes) => { // check for overlapping control nodes.
+                Some(nodes) => {
+                    // check for overlapping control nodes.
                     if Self::contains_repeating_values(&nodes) {
-                        return Err(QuantrError { message: format!("The gate, {:?}, has overlapping control nodes.", gate) });
+                        return Err(QuantrError {
+                            message: format!(
+                                "The gate, {:?}, has overlapping control nodes.",
+                                gate
+                            ),
+                        });
                     }
                     if nodes.contains(&pos) {
-                        return Err(QuantrError { message: format!("The gate, {:?}, has its position overlapping with a control node at position {}.", gate, pos) });
+                        return Err(QuantrError { message: format!("The gate, {:?}, has a control node that equals the gate's position {}.", gate, pos) });
                     }
                     for &node in nodes.iter() {
                         if node >= circuit_size {
                             return Err(QuantrError { message: format!("The control node at position {:?}, is greater than the umnber of qubits {}.", node, circuit_size) });
                         }
                     }
-                },
+                }
                 None => {}
-            } 
+            }
         }
 
         Ok(())
@@ -913,9 +922,7 @@ impl<'a> Circuit<'a> {
     ) -> SuperPosition {
         // operator: fn(ProductState) -> SuperPosition
         let (operator, control_node_one, control_node_two) = match triple_gate.name {
-            Gate::Toffoli(control1, control2) => {
-                (standard_gate_ops::toffoli, control1, control2)
-            }
+            Gate::Toffoli(control1, control2) => (standard_gate_ops::toffoli, control1, control2),
             _ => panic!("Non triple gate was passed to triple gate operation function"),
         };
 
@@ -1376,11 +1383,11 @@ mod tests {
     }
     
     #[test]
+    #[should_panic]
     fn custom_non_ascii_name() {
         let mut circuit = Circuit::new(3).unwrap();
 
         circuit.add_gate(Gate::Custom(example_cnot, &[0], "NonAscii†".to_string()), 1).unwrap();
-        // in future, this should panic. For now, this is a warning message.
     }
 
     #[test]

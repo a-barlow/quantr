@@ -11,9 +11,8 @@
 use quantr::{complex_Re, Complex, QuantrError};
 use quantr::{
     states::{ProductState, Qubit, SuperPosition},
-    Circuit,
+    Circuit, Gate,
     Measurement::{NonObservable, Observable},
-    Gate,
 };
 use std::f64::consts::FRAC_1_SQRT_2;
 const ERROR_MARGIN: f64 = 0.00000001f64;
@@ -114,10 +113,7 @@ fn x3sudoko() -> Result<(), QuantrError> {
     qc.add_repeating_gate(Gate::H, &[0, 1, 2, 3, 4, 5])?
         .add_repeating_gate(Gate::X, &[0, 1, 2, 3, 4, 5])?
         .add_gate(Gate::H, 5)?
-        .add_gate(
-            Gate::Custom(cccccnot, &[0, 1, 2, 3, 4], "X".to_string()),
-            5,
-        )?
+        .add_gate(Gate::Custom(cccccnot, &[0, 1, 2, 3, 4], "X".to_string()), 5)?
         .add_gate(Gate::H, 5)?
         .add_repeating_gate(Gate::X, &[0, 1, 2, 3, 4, 5])?
         .add_repeating_gate(Gate::H, &[0, 1, 2, 3, 4, 5])?;
