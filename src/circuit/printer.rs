@@ -12,11 +12,9 @@
 //!
 //! The user has the option to print the string to the terminal or a text file, where the text file
 //! has the advantage of not wrapping the circuit within the terminal. The [Printer] will also
-//! cache a copy of the diagram so subsequent prints will require no building of the diagram. This
-//! cache can be removed with [Printer::flush] to force the [Printer] to construct the circuit
-//! diagram again.
+//! cache a copy of the diagram so subsequent prints will require no building of the diagram.
 
-use super::{Circuit, GateSize, StandardGate};
+use super::{Circuit, Gate, GateSize};
 use std::fs::File;
 use std::io::Write;
 use std::path::Path;
@@ -48,7 +46,7 @@ struct GatePrinterInfo<'a> {
     gate_size: GateSize,
     gate_name: String,
     gate_name_length: usize,
-    gate: &'a StandardGate<'a>,
+    gate: &'a Gate<'a>,
 }
 
 #[derive(Debug)]
@@ -72,10 +70,10 @@ impl Printer<'_> {
     ///
     /// # Example
     /// ```
-    /// use quantr::circuit::{Circuit, StandardGate, printer::Printer};
+    /// use quantr::{Circuit, Gate, Printer};
     ///
     /// let mut qc: Circuit = Circuit::new(2).unwrap();
-    /// qc.add_gate(StandardGate::CNot(0), 1).unwrap();
+    /// qc.add_gate(Gate::CNot(0), 1).unwrap();
     ///
     /// let mut printer: Printer = Printer::new(&qc);
     /// printer.print_diagram();
@@ -101,10 +99,10 @@ impl Printer<'_> {
     ///
     /// # Example
     /// ```
-    /// use quantr::circuit::{Circuit, StandardGate, printer::Printer};
+    /// use quantr::{Circuit, Gate, Printer};
     ///
     /// let mut qc: Circuit = Circuit::new(2).unwrap();
-    /// qc.add_gate(StandardGate::CNot(0), 1).unwrap();
+    /// qc.add_gate(Gate::CNot(0), 1).unwrap();
     ///
     /// let mut printer: Printer = Printer::new(&qc);
     /// // printer.save_diagram("diagram.txt").unwrap();
@@ -123,10 +121,10 @@ impl Printer<'_> {
     ///
     /// # Example
     /// ```
-    /// use quantr::circuit::{Circuit, StandardGate, printer::Printer};
+    /// use quantr::{Circuit, Gate, Printer};
     ///
     /// let mut qc: Circuit = Circuit::new(2).unwrap();
-    /// qc.add_gate(StandardGate::CNot(0), 1).unwrap();
+    /// qc.add_gate(Gate::CNot(0), 1).unwrap();
     ///
     /// let mut printer: Printer = Printer::new(&qc);
     /// // printer.print_and_save_diagram("diagram.txt").unwrap();
@@ -147,28 +145,16 @@ impl Printer<'_> {
     ///
     /// # Example
     /// ```
-    /// use quantr::circuit::{Circuit, StandardGate, printer::Printer};
+    /// use quantr::{Circuit, Gate, Printer};
     ///
     /// let mut qc: Circuit = Circuit::new(2).unwrap();
-    /// qc.add_gate(StandardGate::CNot(0), 1).unwrap();
+    /// qc.add_gate(Gate::CNot(0), 1).unwrap();
     ///
     /// let mut printer: Printer = Printer::new(&qc);
     /// println!("{}", printer.get_diagram()); // equivalent to Printer::print_diagram
     /// ```
     pub fn get_diagram(&mut self) -> String {
         self.get_or_make_diagram()
-    }
-
-    /// Will be depreceated as it cannot be used due to lifetime borrowing, and the quantum circuit
-    /// needs to be mutable.
-    ///
-    /// Removes the cache of the circuit diagram.
-    ///
-    /// Future calls to print the diagram will have to build the diagram from scratch. Can be used
-    /// if the circuit has been updated, and the printer needs to rebuild the diagram.
-    #[deprecated]
-    pub fn flush(&mut self) {
-        self.diagram = None;
     }
 
     // Constructs the diagram, or returns the diagram previously built.
@@ -221,13 +207,13 @@ impl Printer<'_> {
         final_diagram
     }
 
-    fn get_column_of_gates(&self, column_num: usize) -> &[StandardGate] {
+    fn get_column_of_gates(&self, column_num: usize) -> &[Gate] {
         &self.circuit.circuit_gates
             [column_num * self.circuit.num_qubits..(column_num + 1) * self.circuit.num_qubits]
     }
 
     fn into_printer_gate_info<'a>(
-        gates_column: &'a [StandardGate<'a>],
+        gates_column: &'a [Gate<'a>],
     ) -> (Vec<GatePrinterInfo<'a>>, usize) {
         let mut gates_infos: Vec<GatePrinterInfo> = Default::default();
         let mut longest_name_length: usize = 1usize;
@@ -248,33 +234,33 @@ impl Printer<'_> {
         (gates_infos, longest_name_length)
     }
 
-    fn get_gate_name(gate: &StandardGate) -> String {
+    fn get_gate_name(gate: &Gate) -> String {
         match gate {
-            StandardGate::X => "X".to_string(),
-            StandardGate::H => "H".to_string(),
-            StandardGate::S => "S".to_string(),
-            StandardGate::Sdag => "S*".to_string(),
-            StandardGate::T => "T".to_string(),
-            StandardGate::Tdag => "T*".to_string(),
-            StandardGate::Y => "Y".to_string(),
-            StandardGate::Z => "Z".to_string(),
-            StandardGate::Rx(_) => "Rx".to_string(),
-            StandardGate::Ry(_) => "Ry".to_string(),
-            StandardGate::Rz(_) => "Rz".to_string(),
-            StandardGate::Phase(_) => "P".to_string(),
-            StandardGate::X90 => "X90".to_string(),
-            StandardGate::Y90 => "Y90".to_string(),
-            StandardGate::MX90 => "X90*".to_string(),
-            StandardGate::MY90 => "Y90*".to_string(),
-            StandardGate::CR(_, _) => "CR".to_string(),
-            StandardGate::CRk(_, _) => "CRk".to_string(),
-            StandardGate::Swap(_) => "Sw".to_string(),
-            StandardGate::CZ(_) => "Z".to_string(),
-            StandardGate::CY(_) => "Y".to_string(),
-            StandardGate::CNot(_) => "X".to_string(),
-            StandardGate::Toffoli(_, _) => "X".to_string(),
-            StandardGate::Custom(_, _, name) => name.to_string(),
-            _ => String::from("#"),
+            Gate::Id => "".to_string(),
+            Gate::X => "X".to_string(),
+            Gate::H => "H".to_string(),
+            Gate::S => "S".to_string(),
+            Gate::Sdag => "S*".to_string(),
+            Gate::T => "T".to_string(),
+            Gate::Tdag => "T*".to_string(),
+            Gate::Y => "Y".to_string(),
+            Gate::Z => "Z".to_string(),
+            Gate::Rx(_) => "Rx".to_string(),
+            Gate::Ry(_) => "Ry".to_string(),
+            Gate::Rz(_) => "Rz".to_string(),
+            Gate::Phase(_) => "P".to_string(),
+            Gate::X90 => "X90".to_string(),
+            Gate::Y90 => "Y90".to_string(),
+            Gate::MX90 => "X90*".to_string(),
+            Gate::MY90 => "Y90*".to_string(),
+            Gate::CR(_, _) => "CR".to_string(),
+            Gate::CRk(_, _) => "CRk".to_string(),
+            Gate::Swap(_) => "Sw".to_string(),
+            Gate::CZ(_) => "Z".to_string(),
+            Gate::CY(_) => "Y".to_string(),
+            Gate::CNot(_) => "X".to_string(),
+            Gate::Toffoli(_, _) => "X".to_string(),
+            Gate::Custom(_, _, name) => name.to_string(),
         }
     }
 
@@ -296,7 +282,7 @@ impl Printer<'_> {
         for (pos, gate_info) in diagram_scheme.gate_info_column.iter().enumerate() {
             let padding: usize = diagram_scheme.longest_name_length - gate_info.gate_name_length;
             let cache: RowSchematic = match gate_info.gate {
-                StandardGate::Id => RowSchematic {
+                Gate::Id => RowSchematic {
                     top: " ".repeat(diagram_scheme.longest_name_length + 4),
                     name: "─".repeat(diagram_scheme.longest_name_length + 4),
                     bottom: " ".repeat(diagram_scheme.longest_name_length + 4),
@@ -423,18 +409,19 @@ impl Printer<'_> {
     }
 }
 
+#[rustfmt::skip]
 #[cfg(test)]
 mod tests {
-    use crate::circuit::{
-        printer::Printer, Circuit, ProductState, Qubit, StandardGate, SuperPosition,
+    use crate::{
+        Printer, Circuit, Gate, states::{Qubit, ProductState, SuperPosition},
     };
-    use crate::complex::Complex;
+    use crate::Complex;
     use crate::complex_Re_array;
     // These are primarily tested by making sure they print correctly to
     // the terminal, and then copy the output for the assert_eq! macro.
 
     fn example_cnot(prod: ProductState) -> SuperPosition {
-        let input_register: [Qubit; 2] = [prod.state[0], prod.state[1]];
+        let input_register: [Qubit; 2] = [prod.qubits[0], prod.qubits[1]];
         SuperPosition::new(2)
             .set_amplitudes(match input_register {
                 [Qubit::Zero, Qubit::Zero] => &complex_Re_array!(1f64, 0f64, 0f64, 0f64),
@@ -448,16 +435,12 @@ mod tests {
     #[test]
     fn producing_string_circuit() {
         let mut quantum_circuit = Circuit::new(4).unwrap();
-        quantum_circuit.add_gate(StandardGate::H, 3).unwrap();
-        quantum_circuit
-            .add_repeating_gate(StandardGate::Y, vec![0, 1])
-            .unwrap();
-        quantum_circuit
-            .add_gate(StandardGate::Toffoli(0, 3), 1)
-            .unwrap();
-        quantum_circuit.add_gate(StandardGate::CNot(1), 3).unwrap();
-        quantum_circuit.add_gate(StandardGate::CNot(2), 0).unwrap();
-        quantum_circuit.add_gate(StandardGate::CNot(2), 1).unwrap();
+        quantum_circuit.add_gate(Gate::H, 3).unwrap()
+            .add_repeating_gate(Gate::Y, &[0, 1]).unwrap()
+            .add_gate(Gate::Toffoli(0, 3), 1).unwrap()
+            .add_gate(Gate::CNot(1), 3).unwrap()
+            .add_gate(Gate::CNot(2), 0).unwrap()
+            .add_gate(Gate::CNot(2), 1).unwrap();
 
         let mut circuit_printer: Printer = Printer::new(&quantum_circuit);
 
@@ -469,24 +452,19 @@ mod tests {
     #[test]
     fn producing_string_circuit_custom() {
         let mut quantum_circuit = Circuit::new(4).unwrap();
-        quantum_circuit.add_gate(StandardGate::H, 3).unwrap();
+        quantum_circuit.add_gate(Gate::H, 3).unwrap();
         quantum_circuit
-            .add_gates(vec![
-                StandardGate::H,
-                StandardGate::Custom(example_cnot, &[3], "Custom CNot".to_string()),
-                StandardGate::Id,
-                StandardGate::X,
-            ])
-            .unwrap();
-        quantum_circuit
-            .add_repeating_gate(StandardGate::Y, vec![0, 1])
-            .unwrap();
-        quantum_circuit
-            .add_gate(StandardGate::Toffoli(0, 3), 1)
-            .unwrap();
-        quantum_circuit.add_gate(StandardGate::CNot(1), 3).unwrap();
-        quantum_circuit.add_gate(StandardGate::CNot(2), 0).unwrap();
-        quantum_circuit.add_gate(StandardGate::CNot(2), 1).unwrap();
+            .add_gates(&[
+                Gate::H,
+                Gate::Custom(example_cnot, &[3], "Custom CNot".to_string()),
+                Gate::Id,
+                Gate::X,
+            ]).unwrap()
+            .add_repeating_gate(Gate::Y, &[0, 1]).unwrap()
+            .add_gate(Gate::Toffoli(0, 3), 1).unwrap()
+            .add_gate(Gate::CNot(1), 3).unwrap()
+            .add_gate(Gate::CNot(2), 0).unwrap()
+            .add_gate(Gate::CNot(2), 1).unwrap();
 
         let mut circuit_printer: Printer = Printer::new(&quantum_circuit);
 

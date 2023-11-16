@@ -159,6 +159,25 @@ This completes the construction and measurement of a three qubit
 Grover's circuit. Other functions (which include examples in their
 documentation) can add gates in other ways.
 
+To improve on the readability of this code by removing the numerous
+`unwrap()` calls, the main function declaration can be edited like so:
+
+```rust,ignore 
+use quantr::QuantrError;
+
+fn main() -> Result<(), QuantrError> {...; Ok(()) }
+```
+
+with a `Ok(())` returned on the last line; signifying that the program
+has exited without errors. Then, effectively all unwrap methods called
+after appending gates can be replaced with a `?`. However, an argument
+for leaving the unwraps explicit is that if a function has appended a
+gate resulting in an error, such as adding a gate outwidth the circuit's
+size, then at runtime the program will panic and return a compiler
+message explicitly directing the user to the line in question. Even
+though the many unwraps may be unpleasant, it can be benificial for
+debugging while creating the circuit.
+
 The following is the completed code. This can also be found in
 `examples/grovers.rs`, and ran with `cargo run --example grovers` from
 the root directory.
@@ -220,7 +239,7 @@ fn main() {
     {
         println!("\n[Non-Observable] The amplitudes of each state in the final superposition.");
         for (state, amplitude) in output_super_position.into_iter() {
-            println!("|{}> : {}", state.as_string(), amplitude);
+            println!("|{}> : {}", state.to_string(), amplitude);
         }
     }
 }

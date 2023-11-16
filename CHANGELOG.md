@@ -2,6 +2,78 @@
 
 This file logs the versions of quantr.
 
+## 0.3.0 - UNTITLED
+
+This major update overhauls the structure of quantr, and the naming of
+many methods. The aim is to increase simplicity in using the library,
+in turn producing more readable and efficient code. The re-naming of
+methods is meant to be more inkeeping with the Rust standard library,
+that is `to` represents a pass by reference, while `into` moves the value
+into the method.
+
+Moreover, some examples have been added showcasing custom functions and
+printing the circuits in a variety of ways. 
+
+Breaking Changes:
+
+- Renamed the fields of `Complex` from `real` and `imaginary` to `re`
+  and `im` respectively. 
+- Removed `Circuit::simulate_with_register`. This is replaced with
+  `Circuit::change_register` which can be called before simulation, to
+  change the default register of |00..0> that is applied during
+  simulating.
+- Removed `Printer::flush` as it cannot be used due to borrowing rules.
+- Renamed the enum `StandardGate` to `Gate`.
+- The `complex_zero!` macro has been replaced with a `Complex<f64>`
+  constant `quantr::COMPLEX_ZERO`. 
+- Changed method names:
+    - `Qubit::join` -> `Qubit::kronecker_prod`
+    - `Qubit::as_state` -> `Qubit::into_state`
+    - `ProductState::join` -> `ProductState::kronecker_prod`
+    - `ProductState::as_string` -> `ProductState::to_string`
+    - `SuperPosition::as_hash_map` -> `SuperPosition::to_hash_map`
+    - `ProductState::to_super_position` ->
+      `ProductState::into_super_position`
+- The field of `ProductState` called `state` -> `qubits`.
+- Re-structured access of structs and module paths. Now, every struct is
+  accessed through `quantr::...` except for those that control states,
+  which are accessed through the module `quantr::states::...`.
+- Changed the input type of two methods in `Circuit`:
+    - `add_gates(Vec<Gate>)` -> `add_gates(&[Gate])`
+    - `add_repeating_gate(Gate, Vec<usize>)` ->
+      `add_repeating_gate(Gate, &[usize])`.
+- `Circuit` methods that add gates now output a mutable reference to the
+  mutated circuit. This allows for a 'chain of method calls' to be made.
+
+Features:
+
+- The `QuantrError` struct has been made public for the user (this was
+  available in versions < 0.2.0). This allows for succinct error handling
+  with `?` when creating circuits when the main function is allowed to
+  return `Result<(), QuantrError>`.
+
+Examples:
+
+All examples print the circuit to the console, along with data of the
+resulting superpositions from simulating the circuit.
+
+- A custom function implementing a Quantum Fourier Transform in
+  `examples/qft.rs` which is designed to be used in other circuits. This
+  also showcases the idea of running a circuit within a custom function,
+  in a way sub-divding components of the larger circuit into smaller
+  ones.
+- The custom function itself, implementing a CCC-not gate, is shown in
+  `examples/custom_gates.rs`. Within this function, the product states
+  are directly manipulated to produce a CCC-not gate. This example also
+  prints the progress of the simulation.
+
+Tests:
+
+- All tests and examples have been updated to reflect this major change.
+  Now answers had to be changed, only the interfaces with quantr.
+- Boundary test to catch if a control node is greater than the size of
+  the circuit.
+
 ## 0.2.5 - Complex exponential, ASCII warnings and gates
 
 Features:

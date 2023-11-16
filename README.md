@@ -1,11 +1,12 @@
 # 🚧 quantr 🚧 
 
-[![Static
-Badge](https://img.shields.io/badge/Version%20-%201.73.0%20-%20%20(185%2C71%2C0)?style=fat&logo=rust&color=%23B94700)](https://releases.rs/)
-[![cargo
-test](https://github.com/a-barlow/quantr/workflows/cargo%20test/badge.svg)](https://github.com/a-barlow/quantr/actions/workflows/rust.yml)
-[![cargo test
-(dev)](https://github.com/a-barlow/quantr/workflows/cargo%20test%20%28dev%29/badge.svg)](https://github.com/a-barlow/quantr/actions/workflows/rust_dev.yml)
+[![Crates.io](https://img.shields.io/crates/v/quantr?style=flat-square&color=%23B94700)](https://crates.io/crates/quantr)
+[![Static Badge](https://img.shields.io/badge/version%20-%201.73.0%20-%20white?style=flat-square&logo=rust&color=%23B94700)](https://releases.rs/)
+[![GitHub Workflow Status (with event)](https://img.shields.io/github/actions/workflow/status/a-barlow/quantr/rust.yml?style=flat-square&label=tests&color=%2349881B)](https://github.com/a-barlow/quantr/actions/workflows/rust.yml)
+[![GitHub Workflow Status (with event)](https://img.shields.io/github/actions/workflow/status/a-barlow/quantr/rust_dev.yml?style=flat-square&label=tests%20(dev)&color=%2349881B)](https://github.com/a-barlow/quantr/actions/workflows/rust_dev.yml)
+![docs.rs](https://img.shields.io/docsrs/quantr?style=flat-square&color=%2349881B)
+![Crates.io](https://img.shields.io/crates/d/quantr?style=flat-square&color=%23009250)
+![Crates.io](https://img.shields.io/crates/l/quantr?style=flat-square&label=licence&color=%23009982)
 
 > This crate is not production ready and so should **not** be considered
 > stable, nor produce correct answers. It is still under heavy
@@ -50,19 +51,15 @@ implementation of Grover's algorithm.
 An example of simulating and printing a two qubit circuit:
 
 ```rust
-use quantr::circuit::{Circuit, StandardGate, printer::Printer, 
-            Measurement::Observable};
+use quantr::{Circuit, Gate, Printer, Measurement::Observable};
 
 fn main() {
 
     let mut quantum_circuit: Circuit = Circuit::new(2).unwrap();
-
+    
     quantum_circuit 
-        .add_gates(vec![StandardGate::H, StandardGate::H])
-        .unwrap();
-    quantum_circuit
-        .add_gate(StandardGate::CNot(0), 1)
-        .unwrap();
+        .add_gates(&[Gate::H, Gate::H]).unwrap()
+        .add_gate(Gate::CNot(0), 1).unwrap();
     
     let mut printer = Printer::new(&quantum_circuit);
     printer.print_diagram();
@@ -83,7 +80,7 @@ fn main() {
     if let Observable(bin_count) = quantum_circuit.repeat_measurement(500).unwrap() {
         println!("[Observable] Bin count of observed states.");
         for (state, count) in bin_count {
-            println!("|{}> observed {} times", state.as_string(), count);
+            println!("|{}> observed {} times", state.to_string(), count);
         }
     }
 
