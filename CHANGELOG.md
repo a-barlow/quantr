@@ -16,6 +16,10 @@ printing the circuits in a variety of ways.
 
 Features:
 
+- Removed `Circuit::simulate_with_register`. This is replaced with
+  `Circuit::change_register` which can be called before simualtion, to
+  change the default register of |00..0> that is applied during
+  simulating.
 - Removed `Printer::flush` as it cannot be used due to borrowing rules.
 - Renamed the enum `StandardGate` to `Gate`.
 - The `complex_zero!` macro has been replaced with a `Complex<f64>`

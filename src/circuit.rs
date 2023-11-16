@@ -19,9 +19,9 @@
 //! be printed to the terminal by calling [Circuit::toggle_simulation_progress] before simulating
 //! the circuit.
 //!
-//! A bin count of states that are observed over a series of measurements can be performed with
-//! [Circuit::repeat_measurement], where a new register is attached before each measurment. Or, the
-//! explicit superpositon can be retreived using [Circuit::get_superposition].
+//! A bin count of states that are observed over a period of measurements can be performed with
+//! [Circuit::repeat_measurement], where a new register is attached before each measurement. Or, the
+//! explicit superposition can be retrieved using [Circuit::get_superposition].
 
 use crate::Complex;
 use core::panic;
@@ -202,6 +202,7 @@ pub struct Circuit<'a> {
     pub circuit_gates: Vec<Gate<'a>>,
     pub num_qubits: usize,
     output_state: Option<SuperPosition>,
+    register: Option<SuperPosition>,
     config_progress: bool,
 }
 
@@ -234,6 +235,7 @@ impl<'a> Circuit<'a> {
             circuit_gates,
             num_qubits,
             output_state: None,
+            register: None,
             config_progress: false,
         })
     }
@@ -610,6 +612,44 @@ impl<'a> Circuit<'a> {
         }
     }
 
+    /// Changes the register which is applied to circuit when [Circuit::simulate] is ran.
+    ///
+    /// The default register is the |00..0> state. This method can be used before simulating the
+    /// circuit to change the register. This is primarily helpful in defining custom functions, for
+    /// example see [examples/qft.rs].
+    ///
+    /// # Example
+    /// ```
+    /// use quantr::{Circuit, Gate};
+    /// use quantr::states::{Qubit, ProductState, SuperPosition};
+    ///
+    /// let mut circuit = Circuit::new(2).unwrap();
+    /// circuit.add_gate(Gate::X, 1).unwrap();
+    ///
+    /// let register: SuperPosition = ProductState::new(&[Qubit::One, Qubit::Zero]).into_super_position();
+    ///
+    /// circuit.change_register(register).unwrap();
+    /// circuit.simulate();
+    ///
+    /// // Simulates the circuit:
+    /// // |1> -------
+    /// // |0> -- X --
+    /// ````
+    pub fn change_register(
+        &mut self,
+        super_pos: SuperPosition,
+    ) -> Result<&mut Circuit<'a>, QuantrError> {
+        if super_pos.product_dim != self.num_qubits {
+            return Err(QuantrError {
+                message: format!("The custom register has a product state dimension of {}, while the number of qubits is {}. These must equal each other.", super_pos.product_dim, self.num_qubits)
+            });
+        }
+
+        self.register = Some(super_pos);
+
+        Ok(self)
+    }
+
     /// Attaches the register, |0...0>, to the circuit resulting in a superposition that can be measured.
     ///
     /// See [Circuit::get_superposition] and [Circuit::repeat_measurement] for details on obtaining
@@ -631,8 +671,10 @@ impl<'a> Circuit<'a> {
     /// ````
     pub fn simulate(&mut self) {
         // Form the initial state if the product space, that is |0...0>
-        let mut register: SuperPosition = SuperPosition::new(self.num_qubits);
-
+        let mut register: SuperPosition = match &self.register {
+            Some(custom_register) => custom_register.clone(),
+            None => SuperPosition::new(self.num_qubits),
+        };
         let mut qubit_counter: usize = 0;
         let number_gates: usize = self.circuit_gates.len();
 
@@ -665,72 +707,6 @@ impl<'a> Circuit<'a> {
         }
 
         self.output_state = Some(register);
-    }
-
-    /// Attaches a custom register to the circuit resulting in a superposition that can be measured.
-    ///
-    /// See [Circuit::get_superposition] and [Circuit::repeat_measurement] for details on obtaining
-    /// observables from the resulting superposition.
-    ///
-    /// # Example
-    /// ```
-    /// use quantr::{Circuit, Gate};
-    /// use quantr::states::{Qubit, ProductState, SuperPosition};
-    ///
-    /// let mut circuit = Circuit::new(2).unwrap();
-    /// circuit.add_gate(Gate::X, 1).unwrap();
-    ///
-    /// let register: SuperPosition = ProductState::new(&[Qubit::One, Qubit::Zero]).into_super_position();
-    ///
-    /// circuit.simulate_with_register(register);
-    ///
-    /// // Simulates the circuit:
-    /// // |1> -------
-    /// // |0> -- X --
-    /// ````
-    pub fn simulate_with_register(
-        &mut self,
-        mut register: SuperPosition,
-    ) -> Result<(), QuantrError> {
-        if register.product_dim != self.num_qubits {
-            return Err(QuantrError {
-                message: format!("The custom register has a product state dimension of {}, while the number of qubits is {}. These must equal each other.", register.product_dim, self.num_qubits)
-            });
-        }
-
-        let mut qubit_counter: usize = 0;
-        let number_gates: usize = self.circuit_gates.len();
-
-        if self.config_progress {
-            println!("Starting circuit simulation...")
-        }
-
-        // Loop through each gate of circuit from starting at top row to bottom, then moving onto the next.
-        for gate in &self.circuit_gates {
-            let gate_pos: usize = qubit_counter % self.num_qubits;
-
-            if self.config_progress {
-                Self::print_circuit_log(gate, &gate_pos, &qubit_counter, &number_gates);
-            }
-
-            if *gate == Gate::Id {
-                qubit_counter += 1;
-                continue;
-            }
-
-            let gate_class: GateSize = Self::classify_gate_size(gate);
-            let gate_to_apply: GateInfo = GateInfo {
-                name: gate.clone(),
-                position: gate_pos,
-                size: gate_class,
-            };
-            register = Circuit::apply_gate(&gate_to_apply, &register);
-
-            qubit_counter += 1;
-        }
-
-        self.output_state = Some(register);
-        Ok(())
     }
 
     // If the user toggles the log on, then prints the simulation of each circuit.
@@ -1525,7 +1501,8 @@ mod tests {
         let mut circuit = Circuit::new(3).unwrap();
         let register: SuperPosition = ProductState::new(&[Qubit::One, Qubit::Zero, Qubit::One]).into_super_position();
         circuit.add_gate(Gate::X, 1).unwrap()
-            .simulate_with_register(register).unwrap();
+            .change_register(register).unwrap()
+            .simulate();
 
         let correct_register = [
             COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO,
@@ -1541,6 +1518,7 @@ mod tests {
         let mut circuit = Circuit::new(3).unwrap();
         let register: SuperPosition = ProductState::new(&[Qubit::One, Qubit::Zero]).into_super_position();
         circuit.add_gate(Gate::X, 1).unwrap()
-            .simulate_with_register(register).unwrap();
+            .change_register(register).unwrap()
+            .simulate();
     }
 }

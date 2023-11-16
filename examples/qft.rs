@@ -58,8 +58,9 @@ fn qft(input_state: ProductState) -> SuperPosition {
     }
 
     mini_circuit
-        .simulate_with_register(input_state.into_super_position())
-        .unwrap();
+        .change_register(input_state.into_super_position())
+        .unwrap()
+        .simulate();
 
     if let Measurement::NonObservable(super_pos) = mini_circuit.get_superposition().unwrap() {
         super_pos.clone()
