@@ -14,10 +14,12 @@ into the method.
 Moreover, some examples have been added showcasing custom functions and
 printing the circuits in a variety of ways. 
 
-Features:
+Breaking Changes:
 
+- Renamed the fields of `Complex` from `real` and `imaginary` to `re`
+  and `im` respectively. 
 - Removed `Circuit::simulate_with_register`. This is replaced with
-  `Circuit::change_register` which can be called before simualtion, to
+  `Circuit::change_register` which can be called before simulation, to
   change the default register of |00..0> that is applied during
   simulating.
 - Removed `Printer::flush` as it cannot be used due to borrowing rules.
@@ -33,10 +35,6 @@ Features:
     - `ProductState::to_super_position` ->
       `ProductState::into_super_position`
 - The field of `ProductState` called `state` -> `qubits`.
-- The `QuantrError` struct has been made public for the user (this was
-  available in versions < 0.2.0). This allows for succint error handling
-  with `?` when creating circuits when the main function is allowed to
-  return `Result<(), QuantrError>`.
 - Re-structured access of structs and module paths. Now, every struct is
   accessed through `quantr::...` except for those that control states,
   which are accessed through the module `quantr::states::...`.
@@ -46,6 +44,13 @@ Features:
       `add_repeating_gate(Gate, &[usize])`.
 - `Circuit` methods that add gates now output a mutable reference to the
   mutated circuit. This allows for a 'chain of method calls' to be made.
+
+Features:
+
+- The `QuantrError` struct has been made public for the user (this was
+  available in versions < 0.2.0). This allows for succinct error handling
+  with `?` when creating circuits when the main function is allowed to
+  return `Result<(), QuantrError>`.
 
 Examples:
 
