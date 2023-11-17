@@ -13,9 +13,9 @@
 //! These linear functions are defined by how they act on product states of qubits. Defining the
 //! mappings on a basis defines how the gates act on larger product spaces.
 
-use crate::circuit::states::{ProductState, Qubit, SuperPosition};
-use crate::complex::Complex;
-use crate::{complex, complex_Im, complex_Im_array, complex_Re, complex_Re_array, complex_zero};
+use crate::states::{ProductState, Qubit, SuperPosition};
+use crate::Complex;
+use crate::{complex, complex_Im, complex_Im_array, complex_Re, complex_Re_array, COMPLEX_ZERO};
 use std::f64::consts::FRAC_1_SQRT_2;
 use std::ops::{Div, Mul};
 
@@ -36,8 +36,8 @@ use std::ops::{Div, Mul};
 #[rustfmt::skip]
 pub fn identity(register: Qubit) -> SuperPosition {
     SuperPosition::new(1).set_amplitudes_unchecked(match register {
-        Qubit::Zero => &[complex_Re!(1f64), complex_zero!()],
-        Qubit::One => &[complex_zero!(), complex_Re!(1f64)],
+        Qubit::Zero => &[complex_Re!(1f64), COMPLEX_ZERO],
+        Qubit::One => &[COMPLEX_ZERO, complex_Re!(1f64)],
     }).unwrap()
 }
 
@@ -78,10 +78,10 @@ pub fn ry(register: Qubit, angle: f64) -> SuperPosition {
 
 #[rustfmt::skip]
 pub fn rz(register: Qubit, angle: f64) -> SuperPosition {
-    let neg_exp: Complex<f64> = Complex::<f64>::expi(-angle*0.5f64);
-    let pos_exp: Complex<f64> = Complex::<f64>::expi(angle*0.5f64);
-    let zero_map: [Complex<f64>; 2] = [neg_exp, complex_zero!()];
-    let one_map: [Complex<f64>; 2] = [complex_zero!(), pos_exp];
+    let neg_exp: Complex<f64> = Complex::<f64>::exp_im(-angle*0.5f64);
+    let pos_exp: Complex<f64> = Complex::<f64>::exp_im(angle*0.5f64);
+    let zero_map: [Complex<f64>; 2] = [neg_exp, COMPLEX_ZERO];
+    let one_map: [Complex<f64>; 2] = [COMPLEX_ZERO, pos_exp];
 
     SuperPosition::new(1).set_amplitudes_unchecked(match register {
         Qubit::Zero => &zero_map,
@@ -91,9 +91,9 @@ pub fn rz(register: Qubit, angle: f64) -> SuperPosition {
 
 #[rustfmt::skip]
 pub fn global_phase(register: Qubit, angle: f64) -> SuperPosition {
-    let exp: Complex<f64> = Complex::<f64>::expi(angle*0.5f64);
-    let zero_map: [Complex<f64>; 2] = [exp, complex_zero!()];
-    let one_map: [Complex<f64>; 2] = [complex_zero!(), exp];
+    let exp: Complex<f64> = Complex::<f64>::exp_im(angle*0.5f64);
+    let zero_map: [Complex<f64>; 2] = [exp, COMPLEX_ZERO];
+    let one_map: [Complex<f64>; 2] = [COMPLEX_ZERO, exp];
 
     SuperPosition::new(1).set_amplitudes_unchecked(match register {
         Qubit::Zero => &zero_map,
@@ -104,88 +104,88 @@ pub fn global_phase(register: Qubit, angle: f64) -> SuperPosition {
 #[rustfmt::skip]
 pub fn x90(register: Qubit) -> SuperPosition {
     SuperPosition::new(1).set_amplitudes_unchecked(match register {
-        Qubit::Zero => &[complex_zero!(), complex_Im!(-1f64)],
-        Qubit::One => &[complex_Im!(-1f64), complex_zero!()],
+        Qubit::Zero => &[COMPLEX_ZERO, complex_Im!(-1f64)],
+        Qubit::One => &[complex_Im!(-1f64), COMPLEX_ZERO],
     }).unwrap()
 }
 
 #[rustfmt::skip]
 pub fn y90(register: Qubit) -> SuperPosition {
     SuperPosition::new(1).set_amplitudes_unchecked(match register {
-        Qubit::Zero => &[complex_zero!(), complex_Re!(-1f64)],
-        Qubit::One => &[complex_Re!(1f64), complex_zero!()],
+        Qubit::Zero => &[COMPLEX_ZERO, complex_Re!(-1f64)],
+        Qubit::One => &[complex_Re!(1f64), COMPLEX_ZERO],
     }).unwrap()
 }
 
 #[rustfmt::skip]
 pub fn mx90(register: Qubit) -> SuperPosition {
     SuperPosition::new(1).set_amplitudes_unchecked(match register {
-        Qubit::Zero => &[complex_zero!(), complex_Im!(1f64)],
-        Qubit::One => &[complex_Im!(1f64), complex_zero!()],
+        Qubit::Zero => &[COMPLEX_ZERO, complex_Im!(1f64)],
+        Qubit::One => &[complex_Im!(1f64), COMPLEX_ZERO],
     }).unwrap()
 }
 
 #[rustfmt::skip]
 pub fn my90(register: Qubit) -> SuperPosition {
     SuperPosition::new(1).set_amplitudes_unchecked(match register {
-        Qubit::Zero => &[complex_zero!(), complex_Re!(1f64)],
-        Qubit::One => &[complex_Re!(-1f64), complex_zero!()],
+        Qubit::Zero => &[COMPLEX_ZERO, complex_Re!(1f64)],
+        Qubit::One => &[complex_Re!(-1f64), COMPLEX_ZERO],
     }).unwrap()
 }
 
 #[rustfmt::skip]
 pub fn tgate(register: Qubit) -> SuperPosition {
     SuperPosition::new(1).set_amplitudes_unchecked(match register {
-        Qubit::Zero => &[complex_Re!(1f64), complex_zero!()],
-        Qubit::One => &[complex_zero!(), complex!(FRAC_1_SQRT_2, FRAC_1_SQRT_2)],
+        Qubit::Zero => &[complex_Re!(1f64), COMPLEX_ZERO],
+        Qubit::One => &[COMPLEX_ZERO, complex!(FRAC_1_SQRT_2, FRAC_1_SQRT_2)],
     }).unwrap()
 }
 
 #[rustfmt::skip]
 pub fn tgatedag(register: Qubit) -> SuperPosition {
     SuperPosition::new(1).set_amplitudes_unchecked(match register {
-        Qubit::Zero => &[complex_Re!(1f64), complex_zero!()],
-        Qubit::One => &[complex_zero!(), complex!(FRAC_1_SQRT_2, -FRAC_1_SQRT_2)],
+        Qubit::Zero => &[complex_Re!(1f64), COMPLEX_ZERO],
+        Qubit::One => &[COMPLEX_ZERO, complex!(FRAC_1_SQRT_2, -FRAC_1_SQRT_2)],
     }).unwrap()
 }
 
 #[rustfmt::skip]
 pub fn phase(register: Qubit) -> SuperPosition {
     SuperPosition::new(1).set_amplitudes_unchecked(match register {
-        Qubit::Zero => &[complex_Re!(1f64), complex_zero!()],
-        Qubit::One => &[complex_zero!(), complex_Im!(1f64)],
+        Qubit::Zero => &[complex_Re!(1f64), COMPLEX_ZERO],
+        Qubit::One => &[COMPLEX_ZERO, complex_Im!(1f64)],
     }).unwrap()
 }
 
 #[rustfmt::skip]
 pub fn phasedag(register: Qubit) -> SuperPosition {
     SuperPosition::new(1).set_amplitudes_unchecked(match register {
-        Qubit::Zero => &[complex_Re!(1f64), complex_zero!()],
-        Qubit::One => &[complex_zero!(), complex_Im!(-1f64)],
+        Qubit::Zero => &[complex_Re!(1f64), COMPLEX_ZERO],
+        Qubit::One => &[COMPLEX_ZERO, complex_Im!(-1f64)],
     }).unwrap()
 }
 
 #[rustfmt::skip]
 pub fn pauli_x(register: Qubit) -> SuperPosition {
     SuperPosition::new(1).set_amplitudes_unchecked(match register {
-        Qubit::Zero => &[complex_zero!(), complex_Re!(1f64)],
-        Qubit::One => &[complex_Re!(1f64), complex_zero!()],
+        Qubit::Zero => &[COMPLEX_ZERO, complex_Re!(1f64)],
+        Qubit::One => &[complex_Re!(1f64), COMPLEX_ZERO],
     }).unwrap()
 }
 
 #[rustfmt::skip]
 pub fn pauli_y(register: Qubit) -> SuperPosition {
     SuperPosition::new(1).set_amplitudes_unchecked(match register {
-        Qubit::Zero => &[complex_zero!(), complex_Im!(1f64)],
-        Qubit::One => &[complex_Im!(-1f64), complex_zero!()],
+        Qubit::Zero => &[COMPLEX_ZERO, complex_Im!(1f64)],
+        Qubit::One => &[complex_Im!(-1f64), COMPLEX_ZERO],
     }).unwrap()
 }
 
 #[rustfmt::skip]
 pub fn pauli_z(register: Qubit) -> SuperPosition {
     SuperPosition::new(1).set_amplitudes_unchecked(match register {
-        Qubit::Zero => &[complex_Re!(1f64), complex_zero!()],
-        Qubit::One => &[complex_zero!(), complex_Re!(-1f64)],
+        Qubit::Zero => &[complex_Re!(1f64), COMPLEX_ZERO],
+        Qubit::One => &[COMPLEX_ZERO, complex_Re!(-1f64)],
     }).unwrap()
 }
 
@@ -195,7 +195,7 @@ pub fn pauli_z(register: Qubit) -> SuperPosition {
 
 #[rustfmt::skip]
 pub fn cnot(register: ProductState) -> SuperPosition {
-    let input_register: [Qubit; 2] = [register.state[0], register.state[1]];
+    let input_register: [Qubit; 2] = [register.qubits[0], register.qubits[1]];
     SuperPosition::new(2).set_amplitudes_unchecked(match input_register {
         [Qubit::Zero, Qubit::Zero] => &complex_Re_array!(1f64, 0f64, 0f64, 0f64),
         [Qubit::Zero, Qubit::One]  => &complex_Re_array!(0f64, 1f64, 0f64, 0f64),
@@ -206,7 +206,7 @@ pub fn cnot(register: ProductState) -> SuperPosition {
 
 #[rustfmt::skip]
 pub fn cy(register: ProductState) -> SuperPosition {
-    let input_register: [Qubit; 2] = [register.state[0], register.state[1]];
+    let input_register: [Qubit; 2] = [register.qubits[0], register.qubits[1]];
     SuperPosition::new(2).set_amplitudes_unchecked(match input_register {
         [Qubit::Zero, Qubit::Zero] => &complex_Re_array!(1f64, 0f64, 0f64, 0f64),
         [Qubit::Zero, Qubit::One]  => &complex_Re_array!(0f64, 1f64, 0f64, 0f64),
@@ -217,7 +217,7 @@ pub fn cy(register: ProductState) -> SuperPosition {
 
 #[rustfmt::skip]
 pub fn cz(register: ProductState) -> SuperPosition {
-    let input_register: [Qubit; 2] = [register.state[0], register.state[1]];
+    let input_register: [Qubit; 2] = [register.qubits[0], register.qubits[1]];
     SuperPosition::new(2).set_amplitudes_unchecked(match input_register {
         [Qubit::Zero, Qubit::Zero] => &complex_Re_array!(1f64, 0f64, 0f64, 0f64),
         [Qubit::Zero, Qubit::One]  => &complex_Re_array!(0f64, 1f64, 0f64, 0f64),
@@ -228,7 +228,7 @@ pub fn cz(register: ProductState) -> SuperPosition {
 
 #[rustfmt::skip]
 pub fn swap(register: ProductState) -> SuperPosition {
-    let input_register: [Qubit; 2] = [register.state[0], register.state[1]];
+    let input_register: [Qubit; 2] = [register.qubits[0], register.qubits[1]];
     SuperPosition::new(2).set_amplitudes_unchecked(match input_register {
         [Qubit::Zero, Qubit::Zero] => &complex_Re_array!(1f64, 0f64, 0f64, 0f64),
         [Qubit::Zero, Qubit::One]  => &complex_Re_array!(0f64, 0f64, 1f64, 0f64),
@@ -239,8 +239,8 @@ pub fn swap(register: ProductState) -> SuperPosition {
 
 #[rustfmt::skip]
 pub fn cr(register: ProductState, angle: f64) -> SuperPosition {
-    let input_register: [Qubit; 2] = [register.state[0], register.state[1]];
-    let exp_array: [Complex<f64>; 4] = [complex_zero!(), complex_zero!(), complex_zero!(), Complex::<f64>::expi(angle)];
+    let input_register: [Qubit; 2] = [register.qubits[0], register.qubits[1]];
+    let exp_array: [Complex<f64>; 4] = [COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO, Complex::<f64>::exp_im(angle)];
     SuperPosition::new(2).set_amplitudes_unchecked(match input_register {
         [Qubit::Zero, Qubit::Zero] => &complex_Re_array!(1f64, 0f64, 0f64, 0f64),
         [Qubit::Zero, Qubit::One]  => &complex_Re_array!(0f64, 1f64, 0f64, 0f64),
@@ -251,9 +251,9 @@ pub fn cr(register: ProductState, angle: f64) -> SuperPosition {
 
 #[rustfmt::skip]
 pub fn crk(register: ProductState, k: i32) -> SuperPosition {
-    let input_register: [Qubit; 2] = [register.state[0], register.state[1]];
+    let input_register: [Qubit; 2] = [register.qubits[0], register.qubits[1]];
     let exp_array: [Complex<f64>; 4] = 
-        [complex_zero!(), complex_zero!(), complex_zero!(), Complex::<f64>::expi((2f64*std::f64::consts::PI).div(2f64.powi(k)))];
+        [COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO, Complex::<f64>::exp_im((2f64*std::f64::consts::PI).div(2f64.powi(k)))];
     SuperPosition::new(2).set_amplitudes_unchecked(match input_register {
         [Qubit::Zero, Qubit::Zero] => &complex_Re_array!(1f64, 0f64, 0f64, 0f64),
         [Qubit::Zero, Qubit::One]  => &complex_Re_array!(0f64, 1f64, 0f64, 0f64),
@@ -268,7 +268,7 @@ pub fn crk(register: ProductState, k: i32) -> SuperPosition {
 
 #[rustfmt::skip]
 pub fn toffoli(register: ProductState) -> SuperPosition {
-    let input_register: [Qubit; 3] = [register.state[0], register.state[1], register.state[2]];
+    let input_register: [Qubit; 3] = [register.qubits[0], register.qubits[1], register.qubits[2]];
     SuperPosition::new(3)
         .set_amplitudes_unchecked(match input_register {
             [Qubit::Zero, Qubit::Zero, Qubit::Zero] => {&complex_Re_array!(1f64, 0f64, 0f64, 0f64, 0f64, 0f64, 0f64, 0f64) }

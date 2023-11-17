@@ -15,7 +15,7 @@ use std::fmt;
 
 /// Relays error messages resulting from quantr.
 pub struct QuantrError {
-    pub message: String,
+    pub(crate) message: String,
 }
 
 impl fmt::Display for QuantrError {
