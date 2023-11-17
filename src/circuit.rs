@@ -37,14 +37,14 @@ mod standard_gate_ops;
 pub mod states;
 
 // The tolerance for declaring non-zero amplitudes.
-const ZERO_MARGIN: f64 = 0.01;
+const ZERO_MARGIN: f64 = 0.0000001;
 
 // Maximum qubits for any circuit.
 const CIRCUIT_MAX_QUBITS: usize = 50;
 
 /// Distinguishes observable and non-observable quantities.
 ///
-/// For example, this will distinguish the retreival of a superposition (that cannot be measured
+/// For example, this will distinguish the retrieval of a superposition (that cannot be measured
 /// directly), and the state resulting from the collapse of a superposition upon measurement. See
 /// [Circuit::get_superposition] and [Circuit::repeat_measurement] for examples.
 pub enum Measurement<T> {
@@ -56,16 +56,26 @@ pub enum Measurement<T> {
 ///
 /// Matrix representations of these gates can be found at
 /// <https://www.quantum-inspire.com/kbase/cqasm-qubit-gate-operations/>.
-///
-/// Currently, this enum has the `#[non_exhaustive]` as it's
-/// yet undecided what will be included as a standard gate. This will
-/// lessen the impact of breaking changes in the future.
 #[derive(Clone, PartialEq, Debug)]
 pub enum Gate<'a> {
     /// Identity.
     Id,
     /// Hadamard.
     H,
+    /// Pauli-X.
+    X,
+    /// Pauli-Y.
+    Y,
+    /// Pauli-Z.
+    Z,
+    /// Phase, rotation of +π/2 around the z-axis.
+    S,
+    /// Phase dagger, rotation of -π/2 around the z-axis.
+    Sdag,
+    /// T.
+    T,
+    /// T dagger.
+    Tdag,
     /// Rotation around x-axis, with angle.
     Rx(f64),
     /// Rotation around y-axis, with angle.
@@ -82,23 +92,10 @@ pub enum Gate<'a> {
     MY90,
     /// Global phase, `exp(i*theta/2) * Identity`, with angle.
     Phase(f64),
-    /// Phase, rotation of +π/2 around the z-axis.
-    S,
-    /// Phase dagger, rotation of -π/2 around the z-axis.
-    Sdag,
-    /// T.
-    T,
-    /// T dagger.
-    Tdag,
-    /// Pauli-X.
-    X,
-    /// Pauli-Y.
-    Y,
-    /// Pauli-Z.
-    Z,
     /// Controlled phase shift, with rotation and position of control node respectively.
     CR(f64, usize),
-    /// Controlled phase shift for Quantum Fourier Transforms, with rotation and position of control node respectively.
+    /// Controlled phase shift for Quantum Fourier Transforms, with rotation and position
+    /// of control node respectively.
     CRk(i32, usize),
     /// Controlled Pauli-Z, with position of control node.
     CZ(usize),
@@ -112,12 +109,11 @@ pub enum Gate<'a> {
     Toffoli(usize, usize),
     /// Defines a custom gate.
     ///
-    /// Note that the custom function isn't checked for unitarity.
+    /// *Note*, that the custom function isn't checked for unitarity.
     ///
-    /// The arguments define the mapping of the gate; the position of the qubit states
-    /// that the gate acts on; and a name that will be displayed in the printed diagram
-    /// respectively. The name of the custom gate should be in ASCII for it to render properly
-    /// when printing the circuit diagram.
+    /// The arguments define the mapping of the gate; the position of the control node and a name that
+    /// will be displayed in the printed diagram respectively. The name of the custom gate
+    /// should be in ASCII for it to render properly when printing the circuit diagram.
     ///
     /// # Example
     /// ```
@@ -209,8 +205,8 @@ pub struct Circuit<'a> {
 impl<'a> Circuit<'a> {
     /// Initialises a new circuit.
     ///
-    /// The target qubits used in defining custom functions must out live the slice of target
-    /// qubits given to the custom function.
+    /// The lifetime is due to the slices of control qubits for [Gate::Custom]. That is, the slice
+    /// argument must outlive the circuit.
     ///
     /// # Example
     /// ```
@@ -222,7 +218,10 @@ impl<'a> Circuit<'a> {
     pub fn new(num_qubits: usize) -> Result<Circuit<'a>, QuantrError> {
         if num_qubits > CIRCUIT_MAX_QUBITS {
             return Err(QuantrError {
-                message: String::from("The initialised circuit must have 50 or less qubits."),
+                message: format!(
+                    "The initialised circuit must have {} or less qubits.",
+                    CIRCUIT_MAX_QUBITS
+                ),
             });
         } else if num_qubits == 0 {
             return Err(QuantrError {
@@ -242,8 +241,8 @@ impl<'a> Circuit<'a> {
 
     /// Adds a single gate to the circuit.
     ///
-    /// If wanting to add multiple gates, or a single gate repeatedly, across multiple wires, see
-    /// [Circuit::add_repeating_gate] and [Circuit::add_gates_with_positions] respectively.
+    /// If wanting to add multiple gates, or a single gate repeatedly across multiple wires, see
+    /// [Circuit::add_gates_with_positions] and [Circuit::add_repeating_gate] respectively.
     ///
     /// # Example
     /// ```
@@ -265,10 +264,10 @@ impl<'a> Circuit<'a> {
         Self::add_gates_with_positions(self, HashMap::from([(position, gate)]))
     }
 
-    /// Add a column of gates based on their position on the wire.
+    /// Add a column of gates specifying the position for each gate.
     ///
-    /// A HashMap is used to place gates onto their desired position; where the key is the position
-    /// and the value is the [Gate]. This is similar to [Circuit::add_gate], however not
+    /// A `HashMap<usize, Gate>` is used to place gates onto their desired position.
+    /// This is similar to [Circuit::add_gate], however not
     /// all wires have to be accounted for.
     ///
     /// # Example
@@ -445,7 +444,7 @@ impl<'a> Circuit<'a> {
         Ok(())
     }
 
-    // Find if there are any repating values in array, O(n)
+    // Find if there are any repeating values in array, O(n)
     // The initialisation of the circuit guarantees the max circuit size.
     fn contains_repeating_values(array: &[usize]) -> bool {
         let mut counter: [bool; CIRCUIT_MAX_QUBITS] = [false; CIRCUIT_MAX_QUBITS];
@@ -460,8 +459,8 @@ impl<'a> Circuit<'a> {
 
     /// Place a single gate repeatedly onto multiple wires.
     ///
-    /// The top of the wire is in the 0th position. For adding multiple gates that are different,
-    /// please refer to [Circuit::add_gates] and [Circuit::add_gates_with_positions].
+    /// For adding multiple different gates, refer to [Circuit::add_gates]
+    /// and [Circuit::add_gates_with_positions].
     ///
     /// # Example
     /// ```
@@ -544,11 +543,11 @@ impl<'a> Circuit<'a> {
         }
     }
 
-    /// Returns a HashMap that holds the number of times the corresponding state was observed over
-    /// `n` measurments of the superposition.
+    /// Returns a `HashMap` that containes the number of times the corresponding state was observed over
+    /// `n` measurements of the superpositions.
     ///
-    /// Peform repeated measurements where a register is attached to the circuit, the reuslting
-    /// superposition measured, and then the reduced state recorded. If the HashMap does not
+    /// Explicitly, this performs repeated measurements where a register is attached to the circuit,
+    /// the resulting superposition measured, and then the reduced state recorded. If the HashMap does not
     /// include a product state, then it was not observed over the `n` measurements. This method
     /// requires that the circuit has already been simulated by calling [Circuit::simulate].
     ///
@@ -612,11 +611,11 @@ impl<'a> Circuit<'a> {
         }
     }
 
-    /// Changes the register which is applied to circuit when [Circuit::simulate] is ran.
+    /// Changes the register which is applied to the circuit when [Circuit::simulate] is called.
     ///
     /// The default register is the |00..0> state. This method can be used before simulating the
     /// circuit to change the register. This is primarily helpful in defining custom functions, for
-    /// example see [examples/qft.rs].
+    /// example see `examples/qft.rs`.
     ///
     /// # Example
     /// ```
@@ -626,7 +625,10 @@ impl<'a> Circuit<'a> {
     /// let mut circuit = Circuit::new(2).unwrap();
     /// circuit.add_gate(Gate::X, 1).unwrap();
     ///
-    /// let register: SuperPosition = ProductState::new(&[Qubit::One, Qubit::Zero]).into_super_position();
+    /// let register: SuperPosition =
+    ///     ProductState::new(&[Qubit::One, Qubit::Zero])
+    ///         .unwrap()
+    ///         .into_super_position();
     ///
     /// circuit.change_register(register).unwrap();
     /// circuit.simulate();
@@ -767,7 +769,7 @@ impl<'a> Circuit<'a> {
     // The main algorithm and impetus for this project.
     //
     // This takes linear mappings defined on how they act on the basis of their product space, to
-    // then apply on an arbitary register. This algorithm is used instead of matrices, or sparse
+    // then apply on an arbitrary register. This algorithm is used instead of matrices, or sparse
     // matrices, in an effort to reduce memory. Cannot guarantee if this method is the fastest.
     fn apply_gate(gate: &GateInfo, register: &SuperPosition) -> SuperPosition {
         // the sum of states that are required to be added to the register
@@ -792,7 +794,7 @@ impl<'a> Circuit<'a> {
                 }
             };
 
-            acting_positions.reverse(); // to fit the gate defintions to our convention
+            acting_positions.reverse(); // to fit the gate definitions to our convention
             Self::insert_gate_image_into_product_state(
                 super_pos,
                 acting_positions.as_slice(),
@@ -967,8 +969,8 @@ impl<'a> Circuit<'a> {
 
     /// Toggles if the circuit should print the progress of simulating each gate.
     ///
-    /// It will only show the application of non-identity gates. The toggle is set to `false`
-    /// for a new quantum circuit.
+    /// It will only show the application of non-identity gates. The toggle is set to `false` by
+    /// default for a new quantum circuit.
     ///
     /// # Example
     /// ```
@@ -1499,7 +1501,7 @@ mod tests {
     #[test]
     fn custom_register() {
         let mut circuit = Circuit::new(3).unwrap();
-        let register: SuperPosition = ProductState::new(&[Qubit::One, Qubit::Zero, Qubit::One]).into_super_position();
+        let register: SuperPosition = ProductState::new_unchecked(&[Qubit::One, Qubit::Zero, Qubit::One]).into_super_position();
         circuit.add_gate(Gate::X, 1).unwrap()
             .change_register(register).unwrap()
             .simulate();
@@ -1516,7 +1518,7 @@ mod tests {
     #[should_panic]
     fn custom_register_wrong_dimension() {
         let mut circuit = Circuit::new(3).unwrap();
-        let register: SuperPosition = ProductState::new(&[Qubit::One, Qubit::Zero]).into_super_position();
+        let register: SuperPosition = ProductState::new_unchecked(&[Qubit::One, Qubit::Zero]).into_super_position();
         circuit.add_gate(Gate::X, 1).unwrap()
             .change_register(register).unwrap()
             .simulate();

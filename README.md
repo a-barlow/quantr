@@ -108,7 +108,7 @@ computational basis is defined as:
 |b⟩ ────  ⟺ |a,b,c,⋯⟩ ≡ |a⟩⊗|b⟩⊗|c⟩⊗⋯ 
 |c⟩ ────
  ⋮    ⋮
-``` 
+```
 
 When defining a custom function that depends on the position of control
 nodes to define gates (such as the CNot and Toffoli gates), it must be

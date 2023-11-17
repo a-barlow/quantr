@@ -48,13 +48,16 @@ fn cccnot(input_state: ProductState) -> SuperPosition {
                                                                             // guarantees that state_slice has length 4 to the rust compiler. Useful for the match
                                                                             // statement.
     match state_slice {
-        [Qubit::One, Qubit::One, Qubit::One, Qubit::Zero] => {
-            ProductState::new(&[Qubit::One; 4]).into_super_position()
-        }
+        [Qubit::One, Qubit::One, Qubit::One, Qubit::Zero] => ProductState::new(&[Qubit::One; 4])
+            .unwrap()
+            .into_super_position(),
         [Qubit::One, Qubit::One, Qubit::One, Qubit::One] => {
             ProductState::new(&[Qubit::One, Qubit::One, Qubit::One, Qubit::Zero])
+                .unwrap()
                 .into_super_position()
         }
-        other_state => ProductState::new(&other_state).into_super_position(),
+        other_state => ProductState::new(&other_state)
+            .unwrap()
+            .into_super_position(),
     }
 }
