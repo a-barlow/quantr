@@ -2,7 +2,7 @@
 
 This file logs the versions of quantr.
 
-## 0.3.0 - UNTITLED
+## 0.3.0 - Interface refresh 
 
 This major update overhauls the structure of quantr, and the naming of
 many methods. The aim is to increase simplicity in using the library,
