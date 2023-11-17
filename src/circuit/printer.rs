@@ -93,7 +93,7 @@ impl Printer<'_> {
         println!("{}", self.get_or_make_diagram());
     }
 
-    /// Saves the circuit diagram to a text file in UTF-8 chars.
+    /// Saves the circuit diagram in UTF-8 chars to a text file.
     ///
     /// If the file already exists, it will overwrite it.
     ///
@@ -106,7 +106,7 @@ impl Printer<'_> {
     ///
     /// let mut printer: Printer = Printer::new(&qc);
     /// // printer.save_diagram("diagram.txt").unwrap();
-    /// // Saves in directory of Cargo project.
+    /// // Saves in directory of Cargo package.
     /// // (Commented so it doesn't create file during `cargo test`.)
     /// ```
     pub fn save_diagram(&mut self, file_path: &str) -> std::io::Result<()> {

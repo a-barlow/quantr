@@ -16,6 +16,9 @@ printing the circuits in a variety of ways.
 
 Breaking Changes:
 
+- The function `ProductState::new` now returns `Result<ProductState,
+  QuantrError>`. An error is returned if an empty slice is given as an
+  argument.
 - Renamed the fields of `Complex` from `real` and `imaginary` to `re`
   and `im` respectively. 
 - Removed `Circuit::simulate_with_register`. This is replaced with
@@ -73,6 +76,7 @@ Tests:
   Now answers had to be changed, only the interfaces with quantr.
 - Boundary test to catch if a control node is greater than the size of
   the circuit.
+- The qft example has been added as an external test.
 
 ## 0.2.5 - Complex exponential, ASCII warnings and gates
 

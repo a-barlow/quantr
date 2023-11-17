@@ -18,6 +18,7 @@ use std::fmt;
 use std::fmt::{Debug, Formatter};
 use std::ops::{Add, Mul, Sub};
 
+/// A constant for 0+0i.
 pub const COMPLEX_ZERO: Complex<f64> = Complex::<f64> { re: 0f64, im: 0f64 };
 
 /// A square root trait, that is only implemented for `f32` and `f64` as Sqrt is not a closed
@@ -176,7 +177,7 @@ macro_rules! complex {
 }
 
 /// Usage: `complex_Re_array!(input: [f64; n]) -> [Complex<f64>; n]`
-/// Returns an array of complex number with zero imaginary part, and reals set by `input`.
+/// Returns an array of complex numbers with zero imaginary part, and the real part set by `input`.
 #[macro_export]
 macro_rules! complex_Re_array {
     ( $( $x:expr ),*  ) => {
@@ -192,7 +193,7 @@ macro_rules! complex_Re_array {
 }
 
 /// Usage: `complex_Im_array!(input: [f64; n]) -> [Complex<f64>; n]`
-/// Returns an array of complex number with zero real part, and imaginary set by `input`.
+/// Returns an array of complex number with zero real part, and imaginaries set by `input`.
 #[macro_export]
 macro_rules! complex_Im_array {
     ( $( $x:expr ),*  ) => {
