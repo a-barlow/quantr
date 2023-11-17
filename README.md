@@ -1,4 +1,4 @@
-# 🚧 quantr 🚧 
+# quantr
 
 [![Crates.io](https://img.shields.io/crates/v/quantr?style=flat-square&color=%23B94700)](https://crates.io/crates/quantr)
 [![Static Badge](https://img.shields.io/badge/version%20-%201.74.0%20-%20white?style=flat-square&logo=rust&color=%23B94700)](https://releases.rs/)
