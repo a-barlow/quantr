@@ -8,12 +8,12 @@
 * Author: Andrew Rowan Barlow <a.barlow.dev@gmail.com>
 */
 
-use crate::{Circuit, Gate, Complex};
-use super::{GateSize, GateInfo, standard_gate_ops, ZERO_MARGIN};
+use super::{standard_gate_ops, GateInfo, GateSize, ZERO_MARGIN};
+use crate::states::{ProductState, Qubit, SuperPosition};
+use crate::{Circuit, Complex, Gate};
 use core::panic;
 use std::collections::HashMap;
 use std::ops::{Add, Mul};
-use crate::states::{ProductState, Qubit, SuperPosition};
 
 impl<'a> Circuit<'a> {
     // If the user toggles the log on, then prints the simulation of each circuit.

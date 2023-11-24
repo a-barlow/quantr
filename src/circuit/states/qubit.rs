@@ -41,4 +41,3 @@ impl Qubit {
         ProductState::new_unchecked(&[self])
     }
 }
-

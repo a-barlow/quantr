@@ -15,4 +15,3 @@ mod super_positions;
 pub use product_states::ProductState;
 pub use qubit::Qubit;
 pub use super_positions::{SuperPosition, SuperPositionIterator};
-

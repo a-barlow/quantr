@@ -4,9 +4,9 @@
 [![Static Badge](https://img.shields.io/badge/version%20-%201.74.0%20-%20white?style=flat-square&logo=rust&color=%23B94700)](https://releases.rs/)
 [![GitHub Workflow Status (with event)](https://img.shields.io/github/actions/workflow/status/a-barlow/quantr/rust.yml?style=flat-square&label=tests&color=%2349881B)](https://github.com/a-barlow/quantr/actions/workflows/rust.yml)
 [![GitHub Workflow Status (with event)](https://img.shields.io/github/actions/workflow/status/a-barlow/quantr/rust_dev.yml?style=flat-square&label=tests%20(dev)&color=%2349881B)](https://github.com/a-barlow/quantr/actions/workflows/rust_dev.yml)
-![docs.rs](https://img.shields.io/docsrs/quantr?style=flat-square&color=%2349881B)
-![Crates.io](https://img.shields.io/crates/d/quantr?style=flat-square&color=%23009250)
-![Crates.io](https://img.shields.io/crates/l/quantr?style=flat-square&label=licence&color=%23009982)
+[![docs.rs](https://img.shields.io/docsrs/quantr?style=flat-square&color=%2349881B)](https://crates.io/crates/quantr)
+[![Crates.io](https://img.shields.io/crates/d/quantr?style=flat-square&color=%23009250)](https://crates.io/crates/quantr)
+[![Crates.io](https://img.shields.io/crates/l/quantr?style=flat-square&label=licence&color=%23009982)](https://joinup.ec.europa.eu/collection/eupl)
 
 > This crate is not production ready and so should **not** be considered
 > stable, nor produce correct answers. It is still under heavy

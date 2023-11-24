@@ -8,9 +8,9 @@
 * Author: Andrew Rowan Barlow <a.barlow.dev@gmail.com>
 */
 
-use crate::{states::ProductState, Complex, COMPLEX_ZERO, QuantrError};
 use crate::circuit::{HashMap, ZERO_MARGIN};
 use crate::complex_Re;
+use crate::{states::ProductState, Complex, QuantrError, COMPLEX_ZERO};
 
 /// A superposition of [ProductState]s.
 ///
@@ -248,9 +248,9 @@ impl SuperPosition {
 
 #[cfg(test)]
 mod tests {
-    use crate::states::{Qubit, ProductState, SuperPosition};
-    use crate::{complex_Im, complex_Re, COMPLEX_ZERO, Complex};
     use crate::circuit::HashMap;
+    use crate::states::{ProductState, Qubit, SuperPosition};
+    use crate::{complex_Im, complex_Re, Complex, COMPLEX_ZERO};
     use std::f64::consts::FRAC_1_SQRT_2;
 
     #[test]
@@ -286,8 +286,6 @@ mod tests {
             complex_Im!(-FRAC_1_SQRT_2)
         )
     }
-
-
 
     #[test]
     fn sets_amplitude_from_states() {
@@ -402,5 +400,4 @@ mod tests {
             ])
             .unwrap();
     }
-
 }

@@ -8,10 +8,10 @@
 * Author: Andrew Rowan Barlow <a.barlow.dev@gmail.com>
 */
 
-use crate::{QuantrError, Complex};
-use crate::states::{Qubit, SuperPosition};
 use crate::circuit::HashMap;
 use crate::complex_Re;
+use crate::states::{Qubit, SuperPosition};
+use crate::{Complex, QuantrError};
 
 /// A product state in the computational basis.
 #[derive(Clone, Hash, PartialEq, Eq, Debug)]
@@ -143,11 +143,10 @@ impl ProductState {
     }
 }
 
-
 #[cfg(test)]
 mod tests {
-    use crate::states::{Qubit, ProductState, SuperPosition};
-    use crate::{complex_Re, COMPLEX_ZERO, Complex};
+    use crate::states::{ProductState, Qubit, SuperPosition};
+    use crate::{complex_Re, Complex, COMPLEX_ZERO};
 
     #[test]
     fn converts_from_integer_to_product_state() {
@@ -207,5 +206,4 @@ mod tests {
                 .unwrap()
         )
     }
-
 }
