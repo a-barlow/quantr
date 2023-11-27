@@ -76,7 +76,7 @@ impl<'a> Circuit<'a> {
     // This takes linear mappings defined on how they act on the basis of their product space, to
     // then apply on an arbitrary register. This algorithm is used instead of matrices, or sparse
     // matrices, in an effort to reduce memory. Cannot guarantee if this method is the fastest.
-    pub(super) fn apply_gate(gate: &GateInfo, register: &SuperPosition) -> SuperPosition {
+    pub(super) fn apply_gate(gate: GateInfo, register: &mut SuperPosition) -> SuperPosition {
         // the sum of states that are required to be added to the register
         let mut mapped_states: HashMap<ProductState, Complex<f64>> = Default::default();
 
@@ -87,30 +87,29 @@ impl<'a> Circuit<'a> {
             let mut acting_positions: Vec<usize> = vec![gate.position]; // change to array for increased speed?
 
             let super_pos: SuperPosition = match gate.size {
-                GateSize::Single => Self::single_gate_on_wire(gate, &prod_state),
+                GateSize::Single => Self::single_gate_on_wire(&gate, &prod_state),
                 GateSize::Double => {
-                    Self::double_gate_on_wires(gate, &prod_state, &mut acting_positions)
+                    Self::double_gate_on_wires(&gate, &prod_state, &mut acting_positions)
                 }
                 GateSize::Triple => {
-                    Self::triple_gate_on_wires(gate, &prod_state, &mut acting_positions)
+                    Self::triple_gate_on_wires(&gate, &prod_state, &mut acting_positions)
                 }
                 GateSize::Custom => {
-                    Self::custom_gate_on_wires(gate, &prod_state, &mut acting_positions)
+                    Self::custom_gate_on_wires(&gate, &prod_state, &mut acting_positions)
                 }
             };
 
             acting_positions.reverse(); // to fit the gate definitions to our convention
             Self::insert_gate_image_into_product_state(
                 super_pos,
-                acting_positions.as_slice(),
-                &prod_state,
+                acting_positions,
+                prod_state,
                 amp,
                 &mut mapped_states,
             );
         }
         // All states in register considers, and can create new super position
-        // GET RID OF RETURNING SUPERPOSITION, INSTEAD JUST PASS REGISTER BY REFERENCE, &mut register
-        register.set_amplitudes_from_states_unchecked(&mapped_states)
+        register.set_amplitudes_from_states_unchecked(mapped_states)
     }
 
     // The following functions compartmentalise the algorithms for applying a gate to the
@@ -215,7 +214,7 @@ impl<'a> Circuit<'a> {
             prod_state
                 .get(control_node_one)
                 .kronecker_prod(prod_state.get(control_node_two))
-                .kronecker_prod(prod_state.get(triple_gate.position)), // make qubit joiner for product states
+                .kronecker_prod(prod_state.get(triple_gate.position)), 
         )
     }
 
@@ -251,8 +250,8 @@ impl<'a> Circuit<'a> {
 
     fn insert_gate_image_into_product_state(
         gate_image: SuperPosition,
-        gate_positions: &[usize],
-        prod_state: &ProductState,
+        gate_positions: Vec<usize>,
+        prod_state: ProductState,
         amp: Complex<f64>,
         mapped_states: &mut HashMap<ProductState, Complex<f64>>,
     ) {
@@ -262,7 +261,7 @@ impl<'a> Circuit<'a> {
             }
             // Insert these image states back into a product space
             let swapped_state: ProductState =
-                prod_state.insert_qubits(state.qubits.as_slice(), gate_positions);
+                prod_state.insert_qubits(state.qubits.as_slice(), gate_positions.as_slice());
             if mapped_states.contains_key(&swapped_state) {
                 let existing_amp: Complex<f64> = *mapped_states.get(&swapped_state).unwrap();
                 mapped_states.insert(swapped_state, existing_amp.add(state_amp.mul(amp)));

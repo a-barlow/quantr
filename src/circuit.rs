@@ -50,6 +50,7 @@ pub enum Measurement<T> {
     Observable(T),
     NonObservable(T),
 }
+
 /// A quantum circuit where gates can be appended and then simulated to measure resulting
 /// superpositions.
 pub struct Circuit<'a> {
@@ -415,7 +416,7 @@ impl<'a> Circuit<'a> {
                 position: gate_pos,
                 size: gate_class,
             };
-            register = Circuit::apply_gate(&gate_to_apply, &register);
+            register = Circuit::apply_gate(gate_to_apply, &mut register);
 
             qubit_counter += 1;
         }

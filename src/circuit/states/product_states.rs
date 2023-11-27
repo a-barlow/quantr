@@ -112,7 +112,7 @@ impl ProductState {
     /// Returns the [ProductState] as a [SuperPosition].
     pub fn into_super_position(self) -> SuperPosition {
         SuperPosition::new(self.num_qubits())
-            .set_amplitudes_from_states_unchecked(&HashMap::from([(self, complex_Re!(1f64))]))
+            .set_amplitudes_from_states_unchecked(HashMap::from([(self, complex_Re!(1f64))]))
     }
 
     // Converts the computational basis labelling (a binary integer), into base 10.

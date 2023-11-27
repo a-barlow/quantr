@@ -209,12 +209,12 @@ impl SuperPosition {
     // States that are missing from the HashMap will be assumed to have 0 amplitude.
     pub(crate) fn set_amplitudes_from_states_unchecked(
         &self,
-        amplitudes: &HashMap<ProductState, Complex<f64>>,
+        amplitudes: HashMap<ProductState, Complex<f64>>,
     ) -> SuperPosition {
         let product_size: usize = amplitudes.keys().next().unwrap().num_qubits();
         let mut new_amps: Vec<Complex<f64>> = vec![COMPLEX_ZERO; 2usize.pow(product_size as u32)];
 
-        Self::from_hash_to_array(amplitudes, &mut new_amps);
+        Self::from_hash_to_array(&amplitudes, &mut new_amps);
 
         SuperPosition {
             amplitudes: new_amps,
@@ -311,7 +311,7 @@ mod tests {
                 .unwrap()
                 .amplitudes,
             SuperPosition::new(2)
-                .set_amplitudes_from_states_unchecked(&states)
+                .set_amplitudes_from_states_unchecked(states)
                 .amplitudes
         )
     }
