@@ -2,12 +2,14 @@
 
 This file logs the versions of quantr.
 
+## 0.4.0 - Optimisations of speed and memory consumption
+
 ## 0.3.0 - Interface refresh 
 
 This major update overhauls the structure of quantr, and the naming of
 many methods. The aim is to increase simplicity in using the library,
 in turn producing more readable and efficient code. The re-naming of
-methods is meant to be more inkeeping with the Rust standard library,
+methods is meant to be more in keeping with the Rust standard library,
 that is `to` represents a pass by reference, while `into` moves the value
 into the method.
 

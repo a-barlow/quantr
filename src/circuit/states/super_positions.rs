@@ -19,7 +19,6 @@ use crate::{states::ProductState, Complex, QuantrError, COMPLEX_ZERO};
 pub struct SuperPosition {
     pub amplitudes: Vec<Complex<f64>>,
     pub product_dim: usize,
-    index: usize,
 }
 
 /// Returns the product state and it's respective amplitude in each iteration.
@@ -85,13 +84,17 @@ impl<'a> Iterator for SuperPositionIterator<'a> {
 impl SuperPosition {
     /// Creates a superposition in the |0..0> state.
     pub fn new(num_qubits: usize) -> SuperPosition {
-        let mut new_amps: Vec<Complex<f64>> = vec![COMPLEX_ZERO; 2usize.pow(num_qubits as u32)];
+        let mut new_amps: Vec<Complex<f64>> = vec![COMPLEX_ZERO; 1 << num_qubits];
         new_amps[0] = complex_Re!(1f64);
         SuperPosition {
             amplitudes: new_amps,
             product_dim: num_qubits,
-            index: 0,
         }
+    }
+
+    /// Used in standard_gate_ops.rs for defining the "standard gates".1
+    pub(crate) fn new_with_register_unchecked<const N: usize>(amplitudes: [Complex<f64>; N]) -> SuperPosition {
+        SuperPosition { amplitudes: amplitudes.to_vec(), product_dim: N.trailing_zeros() as usize }
     }
 
     /// Retrieves the coefficient of the product state given by the list index.
@@ -138,7 +141,6 @@ impl SuperPosition {
         Ok(SuperPosition {
             amplitudes: new_amps,
             product_dim: self.product_dim,
-            index: 0,
         })
     }
 
@@ -150,19 +152,6 @@ impl SuperPosition {
 
     fn equal_within_error(num: f64, compare_num: f64) -> bool {
         num < compare_num + ZERO_MARGIN && num > compare_num - ZERO_MARGIN
-    }
-
-    pub(crate) fn set_amplitudes_unchecked(
-        self,
-        amplitudes: &[Complex<f64>],
-    ) -> Result<SuperPosition, QuantrError> {
-        let mut new_amps: Vec<Complex<f64>> = (*self.amplitudes).to_vec();
-        Self::copy_slice_to_vec(&mut new_amps, amplitudes);
-        Ok(SuperPosition {
-            amplitudes: new_amps,
-            product_dim: self.product_dim,
-            index: 0,
-        })
     }
 
     /// Returns a superposition constructed from a HashMap with [ProductState] keys and amplitudes
@@ -201,7 +190,6 @@ impl SuperPosition {
         Ok(SuperPosition {
             amplitudes: new_amps,
             product_dim: self.product_dim,
-            index: 0,
         })
     }
 
@@ -219,7 +207,6 @@ impl SuperPosition {
         SuperPosition {
             amplitudes: new_amps,
             product_dim: self.product_dim,
-            index: 0,
         }
     }
 
