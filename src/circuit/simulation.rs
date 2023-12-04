@@ -84,29 +84,36 @@ impl<'a> Circuit<'a> {
             //Looping through super position of register
 
             // Obtain superposition from applying gate from a specified wire onto the product state, and add control nodes if necersary
-            let mut acting_positions: Vec<usize> = vec![gate.position]; // change to array for increased speed?
+            let mut acting_positions: Vec<usize> = Vec::<usize>::with_capacity(3); // change to array for increased speed?
 
-            let super_pos: SuperPosition = match gate.size {
-                GateSize::Single => Self::single_gate_on_wire(&gate, &prod_state),
-                GateSize::Double => {
-                    Self::double_gate_on_wires(&gate, &prod_state, &mut acting_positions)
-                }
-                GateSize::Triple => {
-                    Self::triple_gate_on_wires(&gate, &prod_state, &mut acting_positions)
-                }
+            let wrapped_super_pos: Option<SuperPosition> = match gate.size {
+                GateSize::Single => Some(Self::single_gate_on_wire(&gate, &prod_state)),
+                GateSize::Double => Some(Self::double_gate_on_wires(
+                    &gate,
+                    &prod_state,
+                    &mut acting_positions,
+                )),
+                GateSize::Triple => Some(Self::triple_gate_on_wires(
+                    &gate,
+                    &prod_state,
+                    &mut acting_positions,
+                )),
                 GateSize::Custom => {
                     Self::custom_gate_on_wires(&gate, &prod_state, &mut acting_positions)
                 }
             };
 
-            acting_positions.reverse(); // to fit the gate definitions to our convention
-            Self::insert_gate_image_into_product_state(
-                super_pos,
-                acting_positions,
-                prod_state,
-                amp,
-                &mut mapped_states,
-            );
+            if let Some(super_pos) = wrapped_super_pos {
+                acting_positions.reverse();
+                acting_positions.push(gate.position);
+                Self::insert_gate_image_into_product_state(
+                    super_pos,
+                    acting_positions,
+                    prod_state,
+                    amp,
+                    &mut mapped_states,
+                );
+            }
         }
         // All states in register considers, and can create new super position
         register.set_amplitudes_from_states_unchecked(mapped_states);
@@ -222,13 +229,13 @@ impl<'a> Circuit<'a> {
         custom_gate: &GateInfo,
         prod_state: &ProductState,
         positions: &mut Vec<usize>,
-    ) -> SuperPosition {
+    ) -> Option<SuperPosition> {
         let (operator, controls) = match custom_gate.name {
             Gate::Custom(func, control_map, _) => (func, control_map),
             _ => panic!("Non custom gate was passed to custom gate operation function."),
         };
 
-        let result_super: SuperPosition = if !controls.is_empty() {
+        let result_super: Option<SuperPosition> = if !controls.is_empty() {
             let mut concat_prodstate: ProductState = prod_state.get(controls[0]).into_state();
 
             for c in &controls[1..] {
@@ -256,7 +263,7 @@ impl<'a> Circuit<'a> {
         mapped_states: &mut HashMap<ProductState, Complex<f64>>,
     ) {
         for (state, state_amp) in gate_image.into_iter() {
-            if state_amp.abs_square() < ZERO_MARGIN {
+            if state_amp.re.abs() < ZERO_MARGIN && state_amp.im.abs() < ZERO_MARGIN {
                 continue;
             }
             // Insert these image states back into a product space

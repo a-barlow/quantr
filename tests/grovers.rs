@@ -135,38 +135,38 @@ fn x3sudoko() -> Result<(), QuantrError> {
     Ok(())
 }
 
-fn cccnot(input_state: ProductState) -> SuperPosition {
+fn cccnot(input_state: ProductState) -> Option<SuperPosition> {
     let mut copy_state = input_state.clone();
     if copy_state.qubits == [Qubit::One; CCC_NUMBER] {
         copy_state.qubits[CCC_NUMBER - 1] = Qubit::Zero;
-        return copy_state.into_super_position();
+        return Some(copy_state.into_super_position());
     } else if copy_state.qubits == {
         let mut temp = [Qubit::One; CCC_NUMBER];
         temp[CCC_NUMBER - 1] = Qubit::Zero;
         temp
     } {
         copy_state.qubits[CCC_NUMBER - 1] = Qubit::One;
-        return copy_state.into_super_position();
+        return Some(copy_state.into_super_position());
     } else {
-        copy_state.into_super_position()
+        None
     }
 }
 
 // Implementation of a 5 controlled toffoli gate
-fn cccccnot(input_state: ProductState) -> SuperPosition {
+fn cccccnot(input_state: ProductState) -> Option<SuperPosition> {
     let mut copy_state = input_state.clone();
     if copy_state.qubits == [Qubit::One; CCCCC_NUMBER] {
         copy_state.qubits[CCCCC_NUMBER - 1] = Qubit::Zero;
-        return copy_state.into_super_position();
+        return Some(copy_state.into_super_position());
     } else if copy_state.qubits == {
         let mut temp = [Qubit::One; CCCCC_NUMBER];
         temp[CCCCC_NUMBER - 1] = Qubit::Zero;
         temp
     } {
         copy_state.qubits[CCCCC_NUMBER - 1] = Qubit::One;
-        return copy_state.into_super_position();
+        return Some(copy_state.into_super_position());
     } else {
-        copy_state.into_super_position()
+        None
     }
 }
 

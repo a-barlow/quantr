@@ -80,14 +80,14 @@ pub enum Gate<'a> {
     /// use quantr::{Complex, complex_Re_array};
     ///
     /// // Defines a C-Not gate
-    /// fn example_cnot(prod: ProductState) -> SuperPosition {
+    /// fn example_cnot(prod: ProductState) -> Option<SuperPosition> {
     ///    let input_register: [Qubit; 2] = [prod.qubits[0], prod.qubits[1]];
-    ///    SuperPosition::new_with_amplitudes(match input_register {
-    ///        [Qubit::Zero, Qubit::Zero] => &complex_Re_array!(1f64, 0f64, 0f64, 0f64),
-    ///        [Qubit::Zero, Qubit::One]  => &complex_Re_array!(0f64, 1f64, 0f64, 0f64),
+    ///    Some(SuperPosition::new_with_amplitudes(match input_register {
+    ///        [Qubit::Zero, Qubit::Zero] => return None,
+    ///        [Qubit::Zero, Qubit::One]  => return None,
     ///        [Qubit::One, Qubit::Zero]  => &complex_Re_array!(0f64, 0f64, 0f64, 1f64),
     ///        [Qubit::One, Qubit::One]   => &complex_Re_array!(0f64, 0f64, 1f64, 0f64),
-    ///    }).unwrap()
+    ///    }).unwrap())
     /// }
     ///
     /// let mut quantum_circuit = Circuit::new(3).unwrap();
@@ -97,7 +97,11 @@ pub enum Gate<'a> {
     /// quantum_circuit.add_gate(Gate::CNot(2), 1).unwrap();
     ///
     /// ```
-    Custom(fn(ProductState) -> SuperPosition, &'a [usize], String),
+    Custom(
+        fn(ProductState) -> Option<SuperPosition>,
+        &'a [usize],
+        String,
+    ),
 }
 
 impl<'a> Gate<'a> {

@@ -420,15 +420,15 @@ mod tests {
     // These are primarily tested by making sure they print correctly to
     // the terminal, and then copy the output for the assert_eq! macro.
 
-    fn example_cnot(prod: ProductState) -> SuperPosition {
+    fn example_cnot(prod: ProductState) -> Option<SuperPosition> {
         let input_register: [Qubit; 2] = [prod.qubits[0], prod.qubits[1]];
-        SuperPosition::new_with_amplitudes(match input_register {
-                [Qubit::Zero, Qubit::Zero] => &complex_Re_array!(1f64, 0f64, 0f64, 0f64),
-                [Qubit::Zero, Qubit::One] => &complex_Re_array!(0f64, 1f64, 0f64, 0f64),
+        Some(SuperPosition::new_with_amplitudes(match input_register {
+                [Qubit::Zero, Qubit::Zero] => return None,
+                [Qubit::Zero, Qubit::One] => return None, 
                 [Qubit::One, Qubit::Zero] => &complex_Re_array!(0f64, 0f64, 0f64, 1f64),
                 [Qubit::One, Qubit::One] => &complex_Re_array!(0f64, 0f64, 1f64, 0f64),
             })
-            .unwrap()
+            .unwrap())
     }
 
     #[test]
