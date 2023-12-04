@@ -76,7 +76,7 @@ impl<'a> Circuit<'a> {
     // This takes linear mappings defined on how they act on the basis of their product space, to
     // then apply on an arbitrary register. This algorithm is used instead of matrices, or sparse
     // matrices, in an effort to reduce memory. Cannot guarantee if this method is the fastest.
-    pub(super) fn apply_gate(gate: GateInfo, register: &mut SuperPosition) -> SuperPosition {
+    pub(super) fn apply_gate(gate: GateInfo, register: &mut SuperPosition) {
         // the sum of states that are required to be added to the register
         let mut mapped_states: HashMap<ProductState, Complex<f64>> = Default::default();
 
@@ -109,7 +109,7 @@ impl<'a> Circuit<'a> {
             );
         }
         // All states in register considers, and can create new super position
-        register.set_amplitudes_from_states_unchecked(mapped_states)
+        register.set_amplitudes_from_states_unchecked(mapped_states);
     }
 
     // The following functions compartmentalise the algorithms for applying a gate to the
@@ -214,7 +214,7 @@ impl<'a> Circuit<'a> {
             prod_state
                 .get(control_node_one)
                 .kronecker_prod(prod_state.get(control_node_two))
-                .kronecker_prod(prod_state.get(triple_gate.position)), 
+                .kronecker_prod(prod_state.get(triple_gate.position)),
         )
     }
 

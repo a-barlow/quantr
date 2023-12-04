@@ -422,8 +422,7 @@ mod tests {
 
     fn example_cnot(prod: ProductState) -> SuperPosition {
         let input_register: [Qubit; 2] = [prod.qubits[0], prod.qubits[1]];
-        SuperPosition::new(2)
-            .set_amplitudes(match input_register {
+        SuperPosition::new_with_amplitudes(match input_register {
                 [Qubit::Zero, Qubit::Zero] => &complex_Re_array!(1f64, 0f64, 0f64, 0f64),
                 [Qubit::Zero, Qubit::One] => &complex_Re_array!(0f64, 1f64, 0f64, 0f64),
                 [Qubit::One, Qubit::Zero] => &complex_Re_array!(0f64, 0f64, 0f64, 1f64),

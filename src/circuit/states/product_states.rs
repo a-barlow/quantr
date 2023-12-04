@@ -111,8 +111,10 @@ impl ProductState {
 
     /// Returns the [ProductState] as a [SuperPosition].
     pub fn into_super_position(self) -> SuperPosition {
-        SuperPosition::new(self.num_qubits())
-            .set_amplitudes_from_states_unchecked(HashMap::from([(self, complex_Re!(1f64))]))
+        SuperPosition::new_with_hash_amplitudes_unchecked(HashMap::from([(
+            self,
+            complex_Re!(1f64),
+        )]))
     }
 
     // Converts the computational basis labelling (a binary integer), into base 10.
@@ -123,7 +125,7 @@ impl ProductState {
             .enumerate()
             .map(|(pos, i)| match i {
                 Qubit::Zero => 0u32,
-                Qubit::One => 2u32.pow(pos as u32),
+                Qubit::One => 1 << pos,
             })
             .fold(0, |sum, i| sum + i) as usize
     }
@@ -200,7 +202,7 @@ mod tests {
     #[test]
     fn converts_productstate_to_superpos() {
         assert_eq!(
-            ProductState::new_unchecked(&[Qubit::One, Qubit::Zero]).into_super_position(),
+            &mut ProductState::new_unchecked(&[Qubit::One, Qubit::Zero]).into_super_position(),
             SuperPosition::new(2)
                 .set_amplitudes(&[COMPLEX_ZERO, COMPLEX_ZERO, complex_Re!(1f64), COMPLEX_ZERO])
                 .unwrap()

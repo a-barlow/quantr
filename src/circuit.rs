@@ -36,7 +36,7 @@ mod standard_gate_ops;
 pub mod states;
 
 // The tolerance for declaring non-zero amplitudes.
-const ZERO_MARGIN: f64 = 0.0000001;
+const ZERO_MARGIN: f64 = 1e-7;
 
 // Maximum qubits for any circuit.
 const CIRCUIT_MAX_QUBITS: usize = 50;
@@ -416,7 +416,7 @@ impl<'a> Circuit<'a> {
                 position: gate_pos,
                 size: gate_class,
             };
-            register = Circuit::apply_gate(gate_to_apply, &mut register);
+            Circuit::apply_gate(gate_to_apply, &mut register);
 
             qubit_counter += 1;
         }
@@ -619,7 +619,7 @@ mod tests {
 
     fn example_cnot(prod: ProductState) -> SuperPosition {
         let input_register: [Qubit; 2] = [prod.qubits[0], prod.qubits[1]];
-        SuperPosition::new(2).set_amplitudes(match input_register {
+        SuperPosition::new_with_amplitudes(match input_register {
             [Qubit::Zero, Qubit::Zero] => &complex_Re_array!(1f64, 0f64, 0f64, 0f64),
             [Qubit::Zero, Qubit::One]  => &complex_Re_array!(0f64, 1f64, 0f64, 0f64),
             [Qubit::One, Qubit::Zero]  => &complex_Re_array!(0f64, 0f64, 0f64, 1f64),

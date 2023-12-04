@@ -11,6 +11,7 @@
 mod product_states;
 mod qubit;
 mod super_positions;
+mod super_positions_unchecked;
 
 pub use product_states::ProductState;
 pub use qubit::Qubit;
