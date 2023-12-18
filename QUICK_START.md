@@ -102,16 +102,16 @@ that solution states are more likely to be measured than other non-solution
 states. This can be achieved by adding:
 
 ```rust,ignore
-circuit.add_repeating_gate(Gate::H, vec![0, 1, 2]).unwrap()
-    .add_repeating_gate(Gate::X, vec![0, 1, 2]).unwrap();
+circuit.add_repeating_gate(Gate::H, &[0, 1, 2]).unwrap()
+    .add_repeating_gate(Gate::X, &[0, 1, 2]).unwrap();
 
 // CC-Z gate
 circuit.add_gate(Gate::H, 2).unwrap()
     .add_gate(Gate::Toffoli(0, 1), 2).unwrap()
     .add_gate(Gate::H, 2).unwrap();
 
-circuit.add_repeating_gate(Gate::X, vec![0, 1, 2]).unwrap()
-    .add_repeating_gate(Gate::H, vec![0, 1, 2]).unwrap();
+circuit.add_repeating_gate(Gate::X, &[0, 1, 2]).unwrap()
+    .add_repeating_gate(Gate::H, &[0, 1, 2]).unwrap();
 ```
 
 This completes the construction of Grover's algorithm. To make sure that

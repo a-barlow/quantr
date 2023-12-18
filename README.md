@@ -1,12 +1,12 @@
 # quantr
 
 [![Crates.io](https://img.shields.io/crates/v/quantr?style=flat-square&color=%23B94700)](https://crates.io/crates/quantr)
-[![Static Badge](https://img.shields.io/badge/version%20-%201.74.0%20-%20white?style=flat-square&logo=rust&color=%23B94700)](https://releases.rs/)
+[![Static Badge](https://img.shields.io/badge/version%20-%201.74.1%20-%20white?style=flat-square&logo=rust&color=%23B94700)](https://releases.rs/)
 [![GitHub Workflow Status (with event)](https://img.shields.io/github/actions/workflow/status/a-barlow/quantr/rust.yml?style=flat-square&label=tests&color=%2349881B)](https://github.com/a-barlow/quantr/actions/workflows/rust.yml)
 [![GitHub Workflow Status (with event)](https://img.shields.io/github/actions/workflow/status/a-barlow/quantr/rust_dev.yml?style=flat-square&label=tests%20(dev)&color=%2349881B)](https://github.com/a-barlow/quantr/actions/workflows/rust_dev.yml)
-![docs.rs](https://img.shields.io/docsrs/quantr?style=flat-square&color=%2349881B)
-![Crates.io](https://img.shields.io/crates/d/quantr?style=flat-square&color=%23009250)
-![Crates.io](https://img.shields.io/crates/l/quantr?style=flat-square&label=licence&color=%23009982)
+[![docs.rs](https://img.shields.io/docsrs/quantr?style=flat-square&color=%2349881B)](https://crates.io/crates/quantr)
+[![Crates.io](https://img.shields.io/crates/d/quantr?style=flat-square&color=%23009250)](https://crates.io/crates/quantr)
+[![Crates.io](https://img.shields.io/crates/l/quantr?style=flat-square&label=licence&color=%23009982)](https://joinup.ec.europa.eu/collection/eupl)
 
 > This crate is not production ready and so should **not** be considered
 > stable, nor produce correct answers. It is still under heavy
@@ -42,6 +42,8 @@ implementation of Grover's algorithm.
 - Attempts to minimise memory consumption by not using matrices nor
   sparse matrices, but instead uses functions to represent the linear
   mapping of gates.
+- Can simulate circuits up to ~20 qubits within a reasonable time
+  period.
 - Only safe Rust code is used, and the only dependency is the
   [rand](https://docs.rs/rand/latest/rand/) crate and its
   sub-dependencies.
@@ -58,7 +60,7 @@ fn main() {
     let mut quantum_circuit: Circuit = Circuit::new(2).unwrap();
     
     quantum_circuit 
-        .add_gates(&[Gate::H, Gate::H]).unwrap()
+        .add_gates(&[Gate::H, Gate::Y]).unwrap()
         .add_gate(Gate::CNot(0), 1).unwrap();
     
     let mut printer = Printer::new(&quantum_circuit);
@@ -69,7 +71,7 @@ fn main() {
     // ┗━━━┛  │  
     //        │  
     // ┏━━━┓┏━┷━┓
-    // ┨ H ┠┨ X ┠
+    // ┨ Y ┠┨ X ┠
     // ┗━━━┛┗━━━┛
 
     quantum_circuit.simulate();
@@ -77,7 +79,7 @@ fn main() {
     // Below prints the number of times that each state was observered 
     // over 500 measurements of superpositions.
 
-    if let Observable(bin_count) = quantum_circuit.repeat_measurement(500).unwrap() {
+    if let Ok(Observable(bin_count)) = quantum_circuit.repeat_measurement(500) {
         println!("[Observable] Bin count of observed states.");
         for (state, count) in bin_count {
             println!("|{}> observed {} times", state.to_string(), count);
@@ -93,10 +95,8 @@ guide](QUICK_START.md).
 ### Limitations (currently)
 
 - There is **no noise** consideration, or ability to introduce noise.
-- There is **no ability to add classical wires**.
-- The circuit size has an **upper bound of 50 qubits**. Although, due to
-  incomplete optimisations, it's recommended that the circuit size
-  should be much less.
+- There is **no ability to add classical wires** nor gates that measure a
+  single wire of a quantum circuit.
 
 ### Conventions
 

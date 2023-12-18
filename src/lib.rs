@@ -10,13 +10,14 @@
 
 #![doc = include_str!("../README.md")]
 
-// Make available for public use.
 mod circuit;
 mod complex;
 mod error;
 
+// Make available for public use.
+pub use circuit::gate::Gate;
 pub use circuit::printer::Printer;
 pub use circuit::states;
-pub use circuit::{Circuit, Gate, Measurement};
+pub use circuit::{Circuit, Measurement};
 pub use complex::{Complex, COMPLEX_ZERO};
 pub use error::QuantrError;
