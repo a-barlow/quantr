@@ -35,9 +35,4 @@ impl Qubit {
     pub fn kronecker_prod(self, other: Qubit) -> ProductState {
         ProductState::new_unchecked(&[self, other])
     }
-
-    /// Converts the [Qubit] to a [ProductState] struct.
-    pub fn into_state(self) -> ProductState {
-        ProductState::new_unchecked(&[self])
-    }
 }

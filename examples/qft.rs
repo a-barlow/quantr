@@ -58,7 +58,7 @@ fn qft(input_state: ProductState) -> Option<SuperPosition> {
     }
 
     mini_circuit
-        .change_register(input_state.into_super_position())
+        .change_register(SuperPosition::from(input_state))
         .unwrap()
         .simulate();
 

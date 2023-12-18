@@ -8,16 +8,15 @@
 * Author: Andrew Rowan Barlow <a.barlow.dev@gmail.com>
 */
 
-use crate::circuit::HashMap;
-use crate::complex_Re;
-use crate::states::{Qubit, SuperPosition};
-use crate::{Complex, QuantrError};
+
+use crate::states::Qubit;
+use crate::QuantrError;
 
 /// A product state in the computational basis.
 #[derive(Clone, Hash, PartialEq, Eq, Debug)]
 pub struct ProductState {
     /// Each element of `Vec<Qubit>` is mapped to bra-ket notation like so:
-    /// `Vec<Qubit>{a, b, ..., c} -> |a...bc>`
+    /// `Vec<Qubit>{a, b, ..., c} -> |ab...c>`
     pub qubits: Vec<Qubit>,
 }
 
@@ -71,7 +70,7 @@ impl ProductState {
     ///
     /// The position index starts from the far most left qubit. An error will be returned if the
     /// position is larger or equal to the product dimension of the state.
-    pub fn invert_digit(&mut self, place_num: usize) -> Result<(), QuantrError> {
+    pub fn invert_digit(&mut self, place_num: usize) -> Result<&mut ProductState, QuantrError> {
         if place_num >= self.num_qubits() {
             return Err(QuantrError { message: format!("The position of the binary digit, {}, is out of bounds. The product dimension is {}, and so the position must be strictly less.", place_num, self.num_qubits()) });
         }
@@ -82,7 +81,7 @@ impl ProductState {
         } else {
             Qubit::Zero
         };
-        Ok(())
+        Ok(self)
     }
 
     /// Concatenate a product state with a qubit.
@@ -107,14 +106,6 @@ impl ProductState {
                 Qubit::One => "1",
             })
             .collect::<String>()
-    }
-
-    /// Returns the [ProductState] as a [SuperPosition].
-    pub fn into_super_position(self) -> SuperPosition {
-        SuperPosition::new_with_hash_amplitudes_unchecked(HashMap::from([(
-            self,
-            complex_Re!(1f64),
-        )]))
     }
 
     // Converts the computational basis labelling (a binary integer), into base 10.
@@ -143,6 +134,15 @@ impl ProductState {
 
         ProductState::new_unchecked(binary_index.as_slice())
     }
+}
+
+impl From<Qubit> for ProductState {
+    
+    /// Converts the [Qubit] to a [ProductState] struct.
+    fn from(value: Qubit) -> Self {
+        ProductState::new_unchecked(&[value])
+    }
+
 }
 
 #[cfg(test)]
@@ -202,7 +202,7 @@ mod tests {
     #[test]
     fn converts_productstate_to_superpos() {
         assert_eq!(
-            &mut ProductState::new_unchecked(&[Qubit::One, Qubit::Zero]).into_super_position(),
+            &mut SuperPosition::from(ProductState::new_unchecked(&[Qubit::One, Qubit::Zero])),
             SuperPosition::new(2)
                 .set_amplitudes(&[COMPLEX_ZERO, COMPLEX_ZERO, complex_Re!(1f64), COMPLEX_ZERO])
                 .unwrap()

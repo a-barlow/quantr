@@ -12,7 +12,9 @@ mod product_states;
 mod qubit;
 mod super_positions;
 mod super_positions_unchecked;
+mod super_position_iter;
 
 pub use product_states::ProductState;
 pub use qubit::Qubit;
-pub use super_positions::{SuperPosition, SuperPositionIterator};
+pub use super_positions::SuperPosition;
+pub use super_position_iter::SuperPositionIterator;

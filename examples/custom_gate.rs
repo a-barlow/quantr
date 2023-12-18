@@ -51,12 +51,12 @@ fn cccnot(input_state: ProductState) -> Option<SuperPosition> {
         [Qubit::One, Qubit::One, Qubit::One, Qubit::Zero] => Some(
             ProductState::new(&[Qubit::One; 4])
                 .unwrap()
-                .into_super_position(),
+                .into(),
         ),
         [Qubit::One, Qubit::One, Qubit::One, Qubit::One] => Some(
             ProductState::new(&[Qubit::One, Qubit::One, Qubit::One, Qubit::Zero])
                 .unwrap()
-                .into_super_position(),
+                .into(),
         ),
         _ => return None,
     }

@@ -536,7 +536,7 @@ impl<'a> Circuit<'a> {
     /// let register: SuperPosition =
     ///     ProductState::new(&[Qubit::One, Qubit::Zero])
     ///         .unwrap()
-    ///         .into_super_position();
+    ///         .into();
     ///
     /// circuit.change_register(register).unwrap();
     /// circuit.simulate();
@@ -1094,7 +1094,7 @@ mod tests {
     #[test]
     fn custom_register() {
         let mut circuit = Circuit::new(3).unwrap();
-        let register: SuperPosition = ProductState::new_unchecked(&[Qubit::One, Qubit::Zero, Qubit::One]).into_super_position();
+        let register: SuperPosition = ProductState::new_unchecked(&[Qubit::One, Qubit::Zero, Qubit::One]).into();
         circuit.add_gate(Gate::X, 1).unwrap()
             .change_register(register).unwrap()
             .simulate();
@@ -1111,7 +1111,7 @@ mod tests {
     #[should_panic]
     fn custom_register_wrong_dimension() {
         let mut circuit = Circuit::new(3).unwrap();
-        let register: SuperPosition = ProductState::new_unchecked(&[Qubit::One, Qubit::Zero]).into_super_position();
+        let register: SuperPosition = ProductState::new_unchecked(&[Qubit::One, Qubit::Zero]).into();
         circuit.add_gate(Gate::X, 1).unwrap()
             .change_register(register).unwrap()
             .simulate();

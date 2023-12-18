@@ -17,8 +17,9 @@ The main difference is in how custom functions return an
 state has not been affected. This bypasses large amounts of unnecessary
 computation. 
 
-The last update is to conform to Rust protocol, where instead of
-`into_superposition`, this is replaced with the `From` and `Into` trait.
+The last update is to conform to Rust protocol, where instead of using
+`into_superposition` or like methods, the `From` trait is implemented
+instead (which also implements the `Into` trait).
 
 Lastly, the quantr repository will no longer follow the
 Contributor Covenant Code of Conduct for moderating it's GitHub
@@ -38,6 +39,14 @@ Breaking Changes:
   `SuperPosition::set_amplitudes(&mut self, amplitudes: &[Complex<f64>])
   -> Result<&mut SuperPosition, QuantrError>`. The same has been done
   with `SuperPosition::set_amplitudes_from_states`.
+- Changed the return value of `ProductState::invert_digit` to
+  `Result<&mut ProductState, QuantrError>`.
+- The conversion methods `Qubit::into_state` and
+  `ProductState::into_super_position` have been replaced by the
+  `ProductState::From<Qubit>` and `SuperPosition::From<ProductState>`
+  trait implementations respectively. These trait implementations will
+  automatically generate the `Into` traits for `Qubit` and
+  `ProductState`. 
 
 Examples:
 
@@ -47,8 +56,8 @@ Examples:
 
 Tests:
 
-- The qft and grover's tests has had their custom functions updated
-  accordingly to the breaking change.
+- The qft and grover tests have had their custom functions updated
+  accordingly to satisfy the breaking change of custom functions.
 
 Features:
 

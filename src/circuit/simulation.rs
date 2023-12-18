@@ -236,7 +236,7 @@ impl<'a> Circuit<'a> {
         };
 
         let result_super: Option<SuperPosition> = if !controls.is_empty() {
-            let mut concat_prodstate: ProductState = prod_state.get(controls[0]).into_state();
+            let mut concat_prodstate: ProductState = prod_state.get(controls[0]).into();
 
             for c in &controls[1..] {
                 //converts product to larger product
@@ -247,7 +247,7 @@ impl<'a> Circuit<'a> {
 
             operator(concat_prodstate)
         } else {
-            operator(prod_state.qubits[custom_gate.position].into_state())
+            operator(ProductState::from(prod_state.qubits[custom_gate.position]))
         };
 
         positions.extend(controls.iter().rev());

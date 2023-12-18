@@ -136,14 +136,14 @@ fn multicnot<const NUM_CONTROL: usize>(input_state: ProductState) -> Option<Supe
     let mut copy_state = input_state.clone();
     if copy_state.qubits == [Qubit::One; NUM_CONTROL] {
         copy_state.qubits[NUM_CONTROL - 1] = Qubit::Zero;
-        return Some(copy_state.into_super_position());
+        return Some(copy_state.into());
     } else if copy_state.qubits == {
         let mut temp = [Qubit::One; NUM_CONTROL];
         temp[NUM_CONTROL - 1] = Qubit::Zero;
         temp
     } {
         copy_state.qubits[NUM_CONTROL - 1] = Qubit::One;
-        return Some(copy_state.into_super_position());
+        return Some(copy_state.into());
     } else {
         None
     }
