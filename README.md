@@ -1,7 +1,7 @@
 # quantr
 
 [![Crates.io](https://img.shields.io/crates/v/quantr?style=flat-square&color=%23B94700)](https://crates.io/crates/quantr)
-[![Static Badge](https://img.shields.io/badge/version%20-%201.74.0%20-%20white?style=flat-square&logo=rust&color=%23B94700)](https://releases.rs/)
+[![Static Badge](https://img.shields.io/badge/version%20-%201.74.1%20-%20white?style=flat-square&logo=rust&color=%23B94700)](https://releases.rs/)
 [![GitHub Workflow Status (with event)](https://img.shields.io/github/actions/workflow/status/a-barlow/quantr/rust.yml?style=flat-square&label=tests&color=%2349881B)](https://github.com/a-barlow/quantr/actions/workflows/rust.yml)
 [![GitHub Workflow Status (with event)](https://img.shields.io/github/actions/workflow/status/a-barlow/quantr/rust_dev.yml?style=flat-square&label=tests%20(dev)&color=%2349881B)](https://github.com/a-barlow/quantr/actions/workflows/rust_dev.yml)
 [![docs.rs](https://img.shields.io/docsrs/quantr?style=flat-square&color=%2349881B)](https://crates.io/crates/quantr)
@@ -42,7 +42,8 @@ implementation of Grover's algorithm.
 - Attempts to minimise memory consumption by not using matrices nor
   sparse matrices, but instead uses functions to represent the linear
   mapping of gates.
-- Can simulate circuits up to ~20 qubits within in a reasonable time.
+- Can simulate circuits up to ~20 qubits within a reasonable time
+  period.
 - Only safe Rust code is used, and the only dependency is the
   [rand](https://docs.rs/rand/latest/rand/) crate and its
   sub-dependencies.

@@ -110,7 +110,10 @@ fn x3sudoko() -> Result<(), QuantrError> {
     qc.add_repeating_gate(Gate::H, &[0, 1, 2, 3, 4, 5])?
         .add_repeating_gate(Gate::X, &[0, 1, 2, 3, 4, 5])?
         .add_gate(Gate::H, 5)?
-        .add_gate(Gate::Custom(multicnot::<6>, &[0, 1, 2, 3, 4], "X".to_string()), 5)?
+        .add_gate(
+            Gate::Custom(multicnot::<6>, &[0, 1, 2, 3, 4], "X".to_string()),
+            5,
+        )?
         .add_gate(Gate::H, 5)?
         .add_repeating_gate(Gate::X, &[0, 1, 2, 3, 4, 5])?
         .add_repeating_gate(Gate::H, &[0, 1, 2, 3, 4, 5])?;

@@ -48,11 +48,9 @@ fn cccnot(input_state: ProductState) -> Option<SuperPosition> {
                                                                             // guarantees that state_slice has length 4 to the rust compiler. Useful for the match
                                                                             // statement.
     match state_slice {
-        [Qubit::One, Qubit::One, Qubit::One, Qubit::Zero] => Some(
-            ProductState::new(&[Qubit::One; 4])
-                .unwrap()
-                .into(),
-        ),
+        [Qubit::One, Qubit::One, Qubit::One, Qubit::Zero] => {
+            Some(ProductState::new(&[Qubit::One; 4]).unwrap().into())
+        }
         [Qubit::One, Qubit::One, Qubit::One, Qubit::One] => Some(
             ProductState::new(&[Qubit::One, Qubit::One, Qubit::One, Qubit::Zero])
                 .unwrap()
@@ -61,4 +59,3 @@ fn cccnot(input_state: ProductState) -> Option<SuperPosition> {
         _ => return None,
     }
 }
-

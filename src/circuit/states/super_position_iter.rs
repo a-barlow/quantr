@@ -69,4 +69,3 @@ impl<'a> Iterator for SuperPositionIterator<'a> {
         }
     }
 }
-

@@ -8,7 +8,6 @@
 * Author: Andrew Rowan Barlow <a.barlow.dev@gmail.com>
 */
 
-
 use crate::states::Qubit;
 use crate::QuantrError;
 
@@ -137,12 +136,10 @@ impl ProductState {
 }
 
 impl From<Qubit> for ProductState {
-    
     /// Converts the [Qubit] to a [ProductState] struct.
     fn from(value: Qubit) -> Self {
         ProductState::new_unchecked(&[value])
     }
-
 }
 
 #[cfg(test)]

@@ -193,7 +193,6 @@ impl SuperPosition {
 }
 
 impl From<ProductState> for SuperPosition {
-    
     /// Returns the [ProductState] as a [SuperPosition].
     fn from(value: ProductState) -> Self {
         SuperPosition::new_with_hash_amplitudes_unchecked(HashMap::from([(
