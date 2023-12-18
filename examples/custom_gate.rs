@@ -31,7 +31,7 @@ fn main() -> Result<(), QuantrError> {
     qc.simulate();
 
     // Prints the bin count of measured states.
-    if let Measurement::Observable(bin_count) = qc.repeat_measurement(50).unwrap() {
+    if let Ok(Measurement::Observable(bin_count)) = qc.repeat_measurement(50) {
         println!("\nStates observed over 50 measurements:");
         for (states, count) in bin_count.into_iter() {
             println!("|{}> : {}", states.to_string(), count);
@@ -61,3 +61,4 @@ fn cccnot(input_state: ProductState) -> Option<SuperPosition> {
         _ => return None,
     }
 }
+
