@@ -38,9 +38,6 @@ pub mod states;
 // The tolerance for declaring non-zero amplitudes.
 const ZERO_MARGIN: f64 = 1e-7;
 
-// Maximum qubits for any circuit.
-const CIRCUIT_MAX_QUBITS: usize = 50;
-
 /// Distinguishes observable and non-observable quantities.
 ///
 /// For example, this will distinguish the retrieval of a superposition (that cannot be measured
@@ -75,14 +72,7 @@ impl<'a> Circuit<'a> {
     /// let quantum_circuit: Circuit = Circuit::new(3).unwrap();
     /// ```
     pub fn new(num_qubits: usize) -> Result<Circuit<'a>, QuantrError> {
-        if num_qubits > CIRCUIT_MAX_QUBITS {
-            return Err(QuantrError {
-                message: format!(
-                    "The initialised circuit must have {} or less qubits.",
-                    CIRCUIT_MAX_QUBITS
-                ),
-            });
-        } else if num_qubits == 0 {
+        if num_qubits == 0 {
             return Err(QuantrError {
                 message: String::from("The initiliased circuit must have at least one wire."),
             });
@@ -279,7 +269,7 @@ impl<'a> Circuit<'a> {
             match gate.get_nodes() {
                 Some(nodes) => {
                     // check for overlapping control nodes.
-                    if Self::contains_repeating_values(&nodes) {
+                    if Self::contains_repeating_values(circuit_size, &nodes) {
                         return Err(QuantrError {
                             message: format!(
                                 "The gate, {:?}, has overlapping control nodes.",
@@ -305,8 +295,8 @@ impl<'a> Circuit<'a> {
 
     // Find if there are any repeating values in array, O(n)
     // The initialisation of the circuit guarantees the max circuit size.
-    fn contains_repeating_values(array: &[usize]) -> bool {
-        let mut counter: [bool; CIRCUIT_MAX_QUBITS] = [false; CIRCUIT_MAX_QUBITS];
+    fn contains_repeating_values(num_qubits: usize, array: &[usize]) -> bool {
+        let mut counter: Vec<bool> = vec![false; num_qubits];
         for j in array {
             if counter[*j] {
                 return true;
@@ -339,7 +329,7 @@ impl<'a> Circuit<'a> {
         positions: &[usize],
     ) -> Result<&mut Circuit<'a>, QuantrError> {
         // Incase the user has attempted to place the gate twice on the same wire.
-        if Self::contains_repeating_values(positions) {
+        if Self::contains_repeating_values(self.num_qubits, positions) {
             return Err(QuantrError {
                 message: format!(
                     "Attempted to add more than one gate onto a single wire. The positions in {:?} must all differ.", positions 

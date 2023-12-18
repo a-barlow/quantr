@@ -42,6 +42,7 @@ implementation of Grover's algorithm.
 - Attempts to minimise memory consumption by not using matrices nor
   sparse matrices, but instead uses functions to represent the linear
   mapping of gates.
+- Can simulate circuits up to ~20 qubits within in a reasonable time.
 - Only safe Rust code is used, and the only dependency is the
   [rand](https://docs.rs/rand/latest/rand/) crate and its
   sub-dependencies.
@@ -58,7 +59,7 @@ fn main() {
     let mut quantum_circuit: Circuit = Circuit::new(2).unwrap();
     
     quantum_circuit 
-        .add_gates(&[Gate::H, Gate::H]).unwrap()
+        .add_gates(&[Gate::H, Gate::Y]).unwrap()
         .add_gate(Gate::CNot(0), 1).unwrap();
     
     let mut printer = Printer::new(&quantum_circuit);
@@ -69,7 +70,7 @@ fn main() {
     // ┗━━━┛  │  
     //        │  
     // ┏━━━┓┏━┷━┓
-    // ┨ H ┠┨ X ┠
+    // ┨ Y ┠┨ X ┠
     // ┗━━━┛┗━━━┛
 
     quantum_circuit.simulate();
@@ -77,7 +78,7 @@ fn main() {
     // Below prints the number of times that each state was observered 
     // over 500 measurements of superpositions.
 
-    if let Observable(bin_count) = quantum_circuit.repeat_measurement(500).unwrap() {
+    if let Ok(Observable(bin_count)) = quantum_circuit.repeat_measurement(500) {
         println!("[Observable] Bin count of observed states.");
         for (state, count) in bin_count {
             println!("|{}> observed {} times", state.to_string(), count);
@@ -93,10 +94,8 @@ guide](QUICK_START.md).
 ### Limitations (currently)
 
 - There is **no noise** consideration, or ability to introduce noise.
-- There is **no ability to add classical wires**.
-- The circuit size has an **upper bound of 50 qubits**. Although, due to
-  incomplete optimisations, it's recommended that the circuit size
-  should be much less.
+- There is **no ability to add classical wires** nor gates that measure a
+  single wire of a quantum circuit.
 
 ### Conventions
 
