@@ -41,9 +41,12 @@ implementation of Grover's algorithm.
   the gates as matrices.
 - Attempts to minimise memory consumption by not using matrices nor
   sparse matrices, but instead uses functions to represent the linear
-  mapping of gates.
-- Can simulate circuits up to ~20 qubits within a reasonable time
-  period.
+  mapping of gates. For the number of qubits in a circuit, `n`, the
+  estimated memory that is required for quantr to simulate the circuit
+  when `n >= 16` is the size of the state vector itself in Rust,
+  `2**(n-6) KiB`. For `n < 16`, the memory required is less than `1
+  MiB`.
+- Can simulate circuits up to ~20 qubits within a reasonable time.
 - Only safe Rust code is used, and the only dependency is the
   [rand](https://docs.rs/rand/latest/rand/) crate and its
   sub-dependencies.
