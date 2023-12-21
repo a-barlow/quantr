@@ -9,7 +9,7 @@
 */
 use crate::circuit::HashMap;
 use crate::states::{ProductState, SuperPosition};
-use crate::{Complex, COMPLEX_ZERO};
+use crate::{complex_re, Complex, COMPLEX_ZERO};
 
 impl SuperPosition {
     pub(crate) fn new_with_hash_amplitudes_unchecked(
@@ -35,12 +35,26 @@ impl SuperPosition {
     }
 
     /// Sets the amplitudes of a [SuperPosition] from a HashMap.
+    /// BUT, it does not clear the pre-existing vector, so it does produce state vectors that do
+    /// not conserve probability. See circuit::tests::custom_gate for an example. This is needed
+    /// for the main algorithm to currently operate (quantr 0.4.0).
     /// States that are missing from the HashMap will be assumed to have 0 amplitude.
     pub(crate) fn set_amplitudes_from_states_unchecked(
         &mut self,
         amplitudes: HashMap<ProductState, Complex<f64>>,
     ) -> &mut SuperPosition {
-        Self::from_hash_to_array(amplitudes, &mut self.amplitudes);
+        for (key, val) in amplitudes {
+            self.amplitudes[key.comp_basis()] = val;
+        }
         self
+    }
+
+    pub(crate) fn new_unchecked(num_qubits: usize) -> SuperPosition {
+        let mut new_amps: Vec<Complex<f64>> = vec![COMPLEX_ZERO; 1 << num_qubits];
+        new_amps[0] = complex_re!(1f64);
+        SuperPosition {
+            amplitudes: new_amps,
+            product_dim: num_qubits,
+        }
     }
 }

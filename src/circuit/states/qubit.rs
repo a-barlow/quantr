@@ -10,7 +10,7 @@
 
 use crate::states::ProductState;
 
-/// The fundamental unit in quantum computers, the qubit.
+/// The fundamental unit in quantum computers.
 #[derive(Clone, Copy, Hash, PartialEq, Eq, Debug)]
 pub enum Qubit {
     /// |0⟩
@@ -30,7 +30,7 @@ impl Qubit {
     /// let qubit_b: Qubit = Qubit::One;  // |1>
     ///
     /// let new_product: ProductState = qubit_a.kronecker_prod(qubit_b); // |0> ⊗ |1> = |01>
-    /// assert_eq!(new_product.qubits.as_slice(), &[Qubit::Zero, Qubit::One])
+    /// assert_eq!(new_product.get_qubits(), &[Qubit::Zero, Qubit::One])
     /// ```
     pub fn kronecker_prod(self, other: Qubit) -> ProductState {
         ProductState::new_unchecked(&[self, other])

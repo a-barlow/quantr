@@ -8,7 +8,7 @@
 * Author: Andrew Rowan Barlow <a.barlow.dev@gmail.com>
 */
 
-use quantr::{complex_Re, Complex, QuantrError};
+use quantr::{complex_re, Complex, QuantrError};
 use quantr::{
     states::{ProductState, Qubit, SuperPosition},
     Circuit, Gate,
@@ -42,14 +42,14 @@ fn grovers_3qubit() -> Result<(), QuantrError> {
     circuit.simulate();
 
     let correct_super: [Complex<f64>; 8] = [
-        complex_Re!(0f64),
-        complex_Re!(0f64),
-        complex_Re!(0f64),
-        complex_Re!(-FRAC_1_SQRT_2),
-        complex_Re!(0f64),
-        complex_Re!(0f64),
-        complex_Re!(0f64),
-        complex_Re!(-FRAC_1_SQRT_2),
+        complex_re!(0f64),
+        complex_re!(0f64),
+        complex_re!(0f64),
+        complex_re!(-FRAC_1_SQRT_2),
+        complex_re!(0f64),
+        complex_re!(0f64),
+        complex_re!(0f64),
+        complex_re!(-FRAC_1_SQRT_2),
     ];
 
     if let NonObservable(output_register) = circuit.get_superposition().unwrap() {
@@ -137,15 +137,15 @@ fn x3sudoko() -> Result<(), QuantrError> {
 
 fn multicnot<const NUM_CONTROL: usize>(input_state: ProductState) -> Option<SuperPosition> {
     let mut copy_state = input_state.clone();
-    if copy_state.qubits == [Qubit::One; NUM_CONTROL] {
-        copy_state.qubits[NUM_CONTROL - 1] = Qubit::Zero;
+    if input_state.get_qubits() == [Qubit::One; NUM_CONTROL] {
+        copy_state.get_mut_qubits()[NUM_CONTROL - 1] = Qubit::Zero;
         return Some(copy_state.into());
-    } else if copy_state.qubits == {
+    } else if copy_state.get_qubits() == {
         let mut temp = [Qubit::One; NUM_CONTROL];
         temp[NUM_CONTROL - 1] = Qubit::Zero;
         temp
     } {
-        copy_state.qubits[NUM_CONTROL - 1] = Qubit::One;
+        copy_state.get_mut_qubits()[NUM_CONTROL - 1] = Qubit::One;
         return Some(copy_state.into());
     } else {
         None
@@ -153,7 +153,7 @@ fn multicnot<const NUM_CONTROL: usize>(input_state: ProductState) -> Option<Supe
 }
 
 fn compare_complex_lists_and_register(correct_list: &[Complex<f64>], register: &SuperPosition) {
-    for (i, &comp_num) in register.amplitudes.iter().enumerate() {
+    for (i, &comp_num) in register.get_amplitudes().iter().enumerate() {
         // Make sure that it turns up complex
         assert!(equal_within_error(comp_num.re, correct_list[i].re));
         assert!(equal_within_error(comp_num.im, correct_list[i].im));

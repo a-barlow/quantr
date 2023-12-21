@@ -8,8 +8,9 @@
 * Author: Andrew Rowan Barlow <a.barlow.dev@gmail.com>
 */
 
-/// This example is a copy of `example/custom_gate.rs`, but instead uses a custom function that
-/// showcases a controlled not gate which generalises the number of control nodes.
+//! This example is a copy of `example/custom_gate.rs`, but instead uses a custom function that
+//! showcases a controlled not gate which generalises the number of control nodes.
+
 use quantr::{
     states::{ProductState, Qubit, SuperPosition},
     Circuit, Gate, Measurement, Printer, QuantrError,
@@ -18,7 +19,7 @@ use quantr::{
 const CIRCUIT_SIZE: usize = 6;
 
 fn main() -> Result<(), QuantrError> {
-    let mut qc: Circuit = Circuit::new(6)?;
+    let mut qc: Circuit = Circuit::new(CIRCUIT_SIZE)?;
 
     // Multi-controlled gate used here.
     qc.add_repeating_gate(Gate::X, &[0, 1, 2, 3, 4, 5])?
@@ -47,15 +48,15 @@ fn main() -> Result<(), QuantrError> {
 // Implements a multi-controlled Not gate.
 fn multicnot<const NUM_CONTROL: usize>(input_state: ProductState) -> Option<SuperPosition> {
     let mut copy_state = input_state.clone();
-    if copy_state.qubits == [Qubit::One; NUM_CONTROL] {
-        copy_state.qubits[NUM_CONTROL - 1] = Qubit::Zero;
+    if input_state.get_qubits() == [Qubit::One; NUM_CONTROL] {
+        copy_state.get_mut_qubits()[NUM_CONTROL - 1] = Qubit::Zero;
         return Some(copy_state.into());
-    } else if copy_state.qubits == {
+    } else if copy_state.get_qubits() == {
         let mut temp = [Qubit::One; NUM_CONTROL];
         temp[NUM_CONTROL - 1] = Qubit::Zero;
         temp
     } {
-        copy_state.qubits[NUM_CONTROL - 1] = Qubit::One;
+        copy_state.get_mut_qubits()[NUM_CONTROL - 1] = Qubit::One;
         return Some(copy_state.into());
     } else {
         None

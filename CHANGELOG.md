@@ -53,6 +53,9 @@ Examples:
 - The `.unwrap()` on measurements have been removed, in favour of
   explicitly showing the `Result` return type of `Circuit::repeated_measurement`
   and `Circuit::get_superposition`.
+- Added examples for implementing a controlled not gate with arbitary
+  number of control nodes. This uses generic constants. This can be
+  found in `examples/generalised_control_not_gate.rs`.
 
 Tests:
 

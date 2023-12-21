@@ -54,7 +54,7 @@ fn main() -> Result<(), QuantrError>{
         for (state, count) in bin_count {
             println!("|{}> observed {} times", state.to_string(), count);
         }
-    }
+    } 
 
     // Returns the superpsoition that cannot be directly observed.
     if let Ok(Measurement::NonObservable(output_super_position)) = circuit.get_superposition()

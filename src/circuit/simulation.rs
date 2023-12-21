@@ -161,16 +161,16 @@ impl<'a> Circuit<'a> {
             positions.push(control);
             standard_gate_ops::cr(
                 prod_state
-                    .get(control)
-                    .kronecker_prod(prod_state.get(double_gate.position)),
+                    .get_unchecked(control)
+                    .kronecker_prod(prod_state.get_unchecked(double_gate.position)),
                 angle,
             )
         } else if let Gate::CRk(k, control) = double_gate.name {
             positions.push(control);
             standard_gate_ops::crk(
                 prod_state
-                    .get(control)
-                    .kronecker_prod(prod_state.get(double_gate.position)),
+                    .get_unchecked(control)
+                    .kronecker_prod(prod_state.get_unchecked(double_gate.position)),
                 k,
             )
         } else {
@@ -198,8 +198,8 @@ impl<'a> Circuit<'a> {
             positions.push(control_node);
             operator(
                 prod_state
-                    .get(control_node)
-                    .kronecker_prod(prod_state.get(double_gate.position)),
+                    .get_unchecked(control_node)
+                    .kronecker_prod(prod_state.get_unchecked(double_gate.position)),
             )
         }
     }
@@ -219,9 +219,9 @@ impl<'a> Circuit<'a> {
         positions.push(control_node_one);
         operator(
             prod_state
-                .get(control_node_one)
-                .kronecker_prod(prod_state.get(control_node_two))
-                .kronecker_prod(prod_state.get(triple_gate.position)),
+                .get_unchecked(control_node_one)
+                .kronecker_prod(prod_state.get_unchecked(control_node_two))
+                .kronecker_prod(prod_state.get_unchecked(triple_gate.position)),
         )
     }
 
@@ -236,14 +236,14 @@ impl<'a> Circuit<'a> {
         };
 
         let result_super: Option<SuperPosition> = if !controls.is_empty() {
-            let mut concat_prodstate: ProductState = prod_state.get(controls[0]).into();
+            let mut concat_prodstate: ProductState = prod_state.get_unchecked(controls[0]).into();
 
             for c in &controls[1..] {
                 //converts product to larger product
-                concat_prodstate = concat_prodstate.kronecker_prod(prod_state.get(*c));
+                concat_prodstate = concat_prodstate.kronecker_prod(prod_state.get_unchecked(*c));
             }
             concat_prodstate =
-                concat_prodstate.kronecker_prod(prod_state.get(custom_gate.position));
+                concat_prodstate.kronecker_prod(prod_state.get_unchecked(custom_gate.position));
 
             operator(concat_prodstate)
         } else {

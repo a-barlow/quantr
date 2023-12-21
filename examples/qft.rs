@@ -45,7 +45,7 @@ fn main() -> Result<(), QuantrError> {
 // A QFT implementation that can be used for other circuits. Note, the output is reveresed compared
 // to usual conventions; swap gates are needed.
 fn qft(input_state: ProductState) -> Option<SuperPosition> {
-    let qubit_num = input_state.qubits.len();
+    let qubit_num = input_state.num_qubits();
     let mut mini_circuit: Circuit = Circuit::new(qubit_num).unwrap();
 
     for pos in 0..qubit_num {
