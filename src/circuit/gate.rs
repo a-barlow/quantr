@@ -77,16 +77,16 @@ pub enum Gate<'a> {
     /// ```
     /// use quantr::{Circuit, Gate};
     /// use quantr::states::{SuperPosition, ProductState, Qubit};
-    /// use quantr::{Complex, complex_Re_array};
+    /// use quantr::{Complex, complex_re_array};
     ///
     /// // Defines a C-Not gate
     /// fn example_cnot(prod: ProductState) -> Option<SuperPosition> {
-    ///    let input_register: [Qubit; 2] = [prod.qubits[0], prod.qubits[1]];
+    ///    let input_register: [Qubit; 2] = [prod.get_qubits()[0], prod.get_qubits()[0]];
     ///    Some(SuperPosition::new_with_amplitudes(match input_register {
     ///        [Qubit::Zero, Qubit::Zero] => return None,
     ///        [Qubit::Zero, Qubit::One]  => return None,
-    ///        [Qubit::One, Qubit::Zero]  => &complex_Re_array!(0f64, 0f64, 0f64, 1f64),
-    ///        [Qubit::One, Qubit::One]   => &complex_Re_array!(0f64, 0f64, 1f64, 0f64),
+    ///        [Qubit::One, Qubit::Zero]  => &complex_re_array!(0f64, 0f64, 0f64, 1f64),
+    ///        [Qubit::One, Qubit::One]   => &complex_re_array!(0f64, 0f64, 1f64, 0f64),
     ///    }).unwrap())
     /// }
     ///

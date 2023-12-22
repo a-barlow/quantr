@@ -9,7 +9,7 @@
 */
 
 use quantr::{
-    complex, complex_Im, complex_Re,
+    complex, complex_im, complex_re,
     states::{ProductState, SuperPosition},
     Circuit, Complex, Gate, Measurement, QuantrError,
 };
@@ -28,10 +28,10 @@ fn simple_qft() -> Result<(), QuantrError> {
     qc.simulate();
 
     let correct_super = [
-        complex_Re!(FRAC_1_SQRT_2 * 0.5f64),
-        complex_Re!(-FRAC_1_SQRT_2 * 0.5f64),
-        complex_Im!(-FRAC_1_SQRT_2 * 0.5f64),
-        complex_Im!(FRAC_1_SQRT_2 * 0.5f64),
+        complex_re!(FRAC_1_SQRT_2 * 0.5f64),
+        complex_re!(-FRAC_1_SQRT_2 * 0.5f64),
+        complex_im!(-FRAC_1_SQRT_2 * 0.5f64),
+        complex_im!(FRAC_1_SQRT_2 * 0.5f64),
         complex!(-0.25f64, 0.25f64),
         complex!(0.25f64, -0.25f64),
         complex!(0.25f64, 0.25f64),
@@ -48,7 +48,7 @@ fn simple_qft() -> Result<(), QuantrError> {
 // A QFT implementation that can be used for other circuits. Note, the output is reveresed, swap
 // gates are needed.
 fn qft(input_state: ProductState) -> Option<SuperPosition> {
-    let qubit_num = input_state.qubits.len();
+    let qubit_num = input_state.num_qubits();
     let mut mini_circuit: Circuit = Circuit::new(qubit_num).unwrap();
 
     for pos in 0..qubit_num {
@@ -73,7 +73,7 @@ fn qft(input_state: ProductState) -> Option<SuperPosition> {
 }
 
 fn compare_complex_lists_and_register(correct_list: &[Complex<f64>], register: &SuperPosition) {
-    for (i, &comp_num) in register.amplitudes.iter().enumerate() {
+    for (i, &comp_num) in register.get_amplitudes().iter().enumerate() {
         // Make sure that it turns up complex
         assert!(equal_within_error(comp_num.re, correct_list[i].re));
         assert!(equal_within_error(comp_num.im, correct_list[i].im));

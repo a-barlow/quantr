@@ -16,11 +16,11 @@ use crate::Complex;
 /// # Example
 /// ```
 /// use quantr::states::{ProductState, Qubit, SuperPosition};
-/// use quantr::{complex_Re, complex_Re_vec, COMPLEX_ZERO, Complex};
+/// use quantr::{complex_re, complex_re_vec, COMPLEX_ZERO, Complex};
 /// use std::f64::consts::FRAC_1_SQRT_2;
 ///
 /// let super_pos: SuperPosition
-///     = SuperPosition::new_with_amplitudes(&complex_Re_vec!(0f64, FRAC_1_SQRT_2, FRAC_1_SQRT_2, 0f64))
+///     = SuperPosition::new_with_amplitudes(&complex_re_vec!(0f64, FRAC_1_SQRT_2, FRAC_1_SQRT_2, 0f64))
 ///         .unwrap();
 ///
 /// let mut iterator_super_pos = super_pos.into_iter();
@@ -28,9 +28,9 @@ use crate::Complex;
 /// assert_eq!(iterator_super_pos.next(),
 ///     Some((ProductState::new(&[Qubit::Zero, Qubit::Zero]).unwrap(), COMPLEX_ZERO)));
 /// assert_eq!(iterator_super_pos.next(),
-///     Some((ProductState::new(&[Qubit::Zero, Qubit::One]).unwrap(), complex_Re!(FRAC_1_SQRT_2))));
+///     Some((ProductState::new(&[Qubit::Zero, Qubit::One]).unwrap(), complex_re!(FRAC_1_SQRT_2))));
 /// assert_eq!(iterator_super_pos.next(),
-///     Some((ProductState::new(&[Qubit::One, Qubit::Zero]).unwrap(), complex_Re!(FRAC_1_SQRT_2))));
+///     Some((ProductState::new(&[Qubit::One, Qubit::Zero]).unwrap(), complex_re!(FRAC_1_SQRT_2))));
 /// assert_eq!(iterator_super_pos.next(),
 ///     Some((ProductState::new(&[Qubit::One, Qubit::One]).unwrap(), COMPLEX_ZERO)));
 /// assert_eq!(iterator_super_pos.next(), None);

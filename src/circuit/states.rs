@@ -8,6 +8,23 @@
 * Author: Andrew Rowan Barlow <a.barlow.dev@gmail.com>
 */
 
+//! Defines the qubit, product states and super positions including relevant operations.
+//!
+//! The [Qubit] is constructed as an enum, with variants [Qubit::Zero] and [Qubit::One] to represent
+//! |0> and |1> respectively.
+//!
+//! The [ProductState] gives structure to a slice of qubits which represents a state in the
+//! computational basis. For example the product state |01> which can be constructed from performing the Kronecker
+//! product on |0> and |1>. Another example of a [ProductState] is |01101>.
+//!
+//! Finally, the [SuperPosition] represents a linear combination of [ProductState] with [crate::Complex] as
+//! coefficients. The sum of the absolute conjugate square of each coefficient is 1 (conservation of
+//! probability).
+//!
+//! These three objects all have operations that help manipulate the states in the computational
+//! basis, or easily transform them into each other. Examples include
+//! [ProductState::invert_digit] and [SuperPosition::from] respectively.
+
 mod product_states;
 mod qubit;
 mod super_position_iter;

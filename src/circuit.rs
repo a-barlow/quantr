@@ -8,21 +8,6 @@
 * Author: Andrew Rowan Barlow <a.barlow.dev@gmail.com>
 */
 
-//! Construct, simulate and measure quantum circuits.
-//!
-//! Initialise a new quantum circuit by using [Circuit::new] where the argument defines the number
-//! of qubits. Afterwards, various methods can be called to append gates onto the circuit in columns.
-//! For instance, [Circuit::add_gate] will add a single gate, whilst
-//! [Circuit::add_gates_with_positions] and [Circuit::add_repeating_gate] will add multiple.
-//!
-//! The circuit can then be simulated with [Circuit::simulate]. The progress of the simulation can
-//! be printed to the terminal by calling [Circuit::toggle_simulation_progress] before simulating
-//! the circuit.
-//!
-//! A bin count of states that are observed over a period of measurements can be performed with
-//! [Circuit::repeat_measurement], where a new register is attached before each measurement. Or, the
-//! explicit superposition can be retrieved using [Circuit::get_superposition].
-
 use super::circuit::gate::{GateInfo, GateSize};
 use crate::states::{ProductState, SuperPosition};
 use crate::{Gate, QuantrError};
@@ -378,7 +363,7 @@ impl<'a> Circuit<'a> {
         // Form the initial state if the product space, that is |0...0>
         let mut register: SuperPosition = match &self.register {
             Some(custom_register) => custom_register.clone(),
-            None => SuperPosition::new(self.num_qubits),
+            None => SuperPosition::new_unchecked(self.num_qubits),
         };
         let mut qubit_counter: usize = 0;
         let number_gates: usize = self.circuit_gates.len();
@@ -430,7 +415,7 @@ impl<'a> Circuit<'a> {
     /// circuit.simulate();
     ///
     /// println!("State | Amplitude of State");
-    /// if let NonObservable(super_pos) = circuit.get_superposition().unwrap() {
+    /// if let Ok(NonObservable(super_pos)) = circuit.get_superposition() {
     ///     for (state, amplitude) in super_pos.into_iter() {
     ///         println!("|{}>   : {}", state.to_string(), amplitude);
     ///     }
@@ -470,7 +455,7 @@ impl<'a> Circuit<'a> {
     ///
     /// // Measures 500 superpositions.
     /// println!("State | Number of Times Observed");
-    /// if let Observable(bin_count) = circuit.repeat_measurement(500).unwrap() {
+    /// if let Ok(Observable(bin_count)) = circuit.repeat_measurement(500) {
     ///     for (state, observed_count) in bin_count {
     ///         println!("|{}>   : {}", state.to_string(), observed_count);
     ///     }
@@ -559,6 +544,7 @@ impl<'a> Circuit<'a> {
 
         Ok(self)
     }
+
     /// Toggles if the circuit should print the progress of simulating each gate.
     ///
     /// It will only show the application of non-identity gates. The toggle is set to `false` by
@@ -583,7 +569,7 @@ impl<'a> Circuit<'a> {
 #[rustfmt::skip]
 #[cfg(test)]
 mod tests {
-    use crate::{complex_Im, complex_Re, complex_Re_array, complex, COMPLEX_ZERO, Gate, Complex, Circuit};
+    use crate::{complex_im, complex_re, complex_re_array, complex, COMPLEX_ZERO, Gate, Complex, Circuit};
     use crate::states::{SuperPosition, Qubit, ProductState};
     use super::HashMap;
     use std::f64::consts::{FRAC_1_SQRT_2, PI};
@@ -612,8 +598,8 @@ mod tests {
         Some(SuperPosition::new_with_amplitudes(match input_register {
             [Qubit::Zero, Qubit::Zero] => return None,
             [Qubit::Zero, Qubit::One]  => return None,
-            [Qubit::One, Qubit::Zero]  => &complex_Re_array!(0f64, 0f64, 0f64, 1f64),
-            [Qubit::One, Qubit::One]   => &complex_Re_array!(0f64, 0f64, 1f64, 0f64),
+            [Qubit::One, Qubit::Zero]  => &complex_re_array!(0f64, 0f64, 0f64, 1f64),
+            [Qubit::One, Qubit::One]   => &complex_re_array!(0f64, 0f64, 1f64, 0f64),
         }).unwrap())
     }
 
@@ -714,8 +700,8 @@ mod tests {
             .simulate();
 
         let correct_register: [Complex<f64>; 4] = [
-            complex_Re!(0.5f64), complex_Im!(-0.5f64),
-            complex_Im!(0.5f64), complex_Re!(0.5f64)];
+            complex_re!(0.5f64), complex_im!(-0.5f64),
+            complex_im!(0.5f64), complex_re!(0.5f64)];
         compare_circuit(circuit, &correct_register);
     }
 
@@ -727,8 +713,8 @@ mod tests {
                .simulate();
 
         let correct_register: [Complex<f64>; 4] = [
-            complex_Re!(0.5f64), complex!(0.5f64*FRAC_1_SQRT_2, -0.5f64*FRAC_1_SQRT_2),
-            complex!(0.5f64*FRAC_1_SQRT_2, 0.5f64*FRAC_1_SQRT_2), complex_Re!(0.5f64)];
+            complex_re!(0.5f64), complex!(0.5f64*FRAC_1_SQRT_2, -0.5f64*FRAC_1_SQRT_2),
+            complex!(0.5f64*FRAC_1_SQRT_2, 0.5f64*FRAC_1_SQRT_2), complex_re!(0.5f64)];
         compare_circuit(circuit, &correct_register);
     }
 
@@ -739,10 +725,10 @@ mod tests {
         quantum_circuit.add_gate(Gate::H, 2).unwrap()
             .add_gate(Gate::Custom(example_cnot, &[2], String::from("cNot")), 1).unwrap()
             .simulate();
-        
+
         let correct_register: [Complex<f64>; 8] = [
-            complex_Re!(FRAC_1_SQRT_2), COMPLEX_ZERO,
-            COMPLEX_ZERO, complex_Re!(FRAC_1_SQRT_2),
+            complex_re!(FRAC_1_SQRT_2), COMPLEX_ZERO,
+            COMPLEX_ZERO, complex_re!(FRAC_1_SQRT_2),
             COMPLEX_ZERO, COMPLEX_ZERO,
             COMPLEX_ZERO, COMPLEX_ZERO];
 
@@ -761,8 +747,8 @@ mod tests {
         let correct_register = [
             COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO,
             COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO,
-            complex_Im!(-FRAC_1_SQRT_2), COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO,
-            COMPLEX_ZERO, complex_Im!(FRAC_1_SQRT_2), COMPLEX_ZERO, COMPLEX_ZERO
+            complex_im!(-FRAC_1_SQRT_2), COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO,
+            COMPLEX_ZERO, complex_im!(FRAC_1_SQRT_2), COMPLEX_ZERO, COMPLEX_ZERO
         ];
         compare_circuit(quantum_circuit, &correct_register);
     }
@@ -804,7 +790,7 @@ mod tests {
 
         let correct_register = [
             COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO,
-            COMPLEX_ZERO, complex_Im!(FRAC_1_SQRT_2), COMPLEX_ZERO,complex_Im!(FRAC_1_SQRT_2),
+            COMPLEX_ZERO, complex_im!(FRAC_1_SQRT_2), COMPLEX_ZERO, complex_im!(FRAC_1_SQRT_2),
             COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO,
             COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO
         ];
@@ -818,7 +804,7 @@ mod tests {
         let correct_register: [Complex<f64>; 8] = [
             COMPLEX_ZERO, COMPLEX_ZERO,
             COMPLEX_ZERO, COMPLEX_ZERO,
-            complex_Re!(FRAC_1_SQRT_2), complex_Re!(FRAC_1_SQRT_2),
+            complex_re!(FRAC_1_SQRT_2), complex_re!(FRAC_1_SQRT_2),
             COMPLEX_ZERO, COMPLEX_ZERO];
         compare_circuit(circuit, &correct_register);
     }
@@ -836,8 +822,8 @@ mod tests {
         circuit.add_gates(&[Gate::H, Gate::H]).unwrap().simulate();
 
         let correct_register: [Complex<f64>; 4] = [
-            complex_Re!(0.5f64), complex_Re!(0.5f64),
-            complex_Re!(0.5f64), complex_Re!(0.5f64)];
+            complex_re!(0.5f64), complex_re!(0.5f64),
+            complex_re!(0.5f64), complex_re!(0.5f64)];
         compare_circuit(circuit, &correct_register);
     }
 
@@ -852,7 +838,7 @@ mod tests {
         let correct_register = [
             COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO,
             COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO,
-            COMPLEX_ZERO, complex_Re!(FRAC_1_SQRT_2), COMPLEX_ZERO, complex_Re!(FRAC_1_SQRT_2),
+            COMPLEX_ZERO, complex_re!(FRAC_1_SQRT_2), COMPLEX_ZERO, complex_re!(FRAC_1_SQRT_2),
             COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO
         ];
         
@@ -873,7 +859,7 @@ mod tests {
             COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO,
             COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO,
             COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO,
-            complex_Re!(1f64), COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO
+            complex_re!(1f64), COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO
         ];
         
         compare_circuit(circuit, &correct_register);
@@ -891,7 +877,7 @@ mod tests {
 
         let correct_register = [
             COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO,
-            COMPLEX_ZERO, COMPLEX_ZERO, complex_Re!(-1f64), COMPLEX_ZERO,
+            COMPLEX_ZERO, COMPLEX_ZERO, complex_re!(-1f64), COMPLEX_ZERO,
             COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO,
             COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO
         ];
@@ -908,8 +894,8 @@ mod tests {
             .simulate();
 
         let correct_register: [Complex<f64>; 4] = [
-            complex_Re!(FRAC_1_SQRT_2), COMPLEX_ZERO,
-            complex_Re!(FRAC_1_SQRT_2), COMPLEX_ZERO
+            complex_re!(FRAC_1_SQRT_2), COMPLEX_ZERO,
+            complex_re!(FRAC_1_SQRT_2), COMPLEX_ZERO
         ];
         
         compare_circuit(circuit, &correct_register);
@@ -925,8 +911,8 @@ mod tests {
             .simulate();
 
         let correct_register: [Complex<f64>; 4] = [
-            complex_Re!(FRAC_1_SQRT_2), COMPLEX_ZERO,
-            COMPLEX_ZERO, complex_Re!(FRAC_1_SQRT_2)
+            complex_re!(FRAC_1_SQRT_2), COMPLEX_ZERO,
+            COMPLEX_ZERO, complex_re!(FRAC_1_SQRT_2)
         ];
 
         compare_circuit(circuit, &correct_register);
@@ -943,8 +929,8 @@ mod tests {
             .simulate();
 
         let correct_register = [
-            COMPLEX_ZERO, complex_Im!(-FRAC_1_SQRT_2), COMPLEX_ZERO, COMPLEX_ZERO,
-            complex_Im!(FRAC_1_SQRT_2), COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO,
+            COMPLEX_ZERO, complex_im!(-FRAC_1_SQRT_2), COMPLEX_ZERO, COMPLEX_ZERO,
+            complex_im!(FRAC_1_SQRT_2), COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO,
             COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO,
             COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO
         ];
@@ -970,8 +956,8 @@ mod tests {
             .simulate();
 
         let correct_register: [Complex<f64>; 4] = [
-            complex_Im!(-0.5f64), complex_Im!(-0.5f64),
-            complex_Im!(-0.5f64), complex_Im!(-0.5f64)
+            complex_im!(-0.5f64), complex_im!(-0.5f64),
+            complex_im!(-0.5f64), complex_im!(-0.5f64)
         ];
 
         compare_circuit(circuit, &correct_register);
@@ -986,8 +972,8 @@ mod tests {
             .simulate();
 
         let correct_register: [Complex<f64>; 4] = [
-            complex_Re!(-0.5f64), complex_Re!(-0.5f64),
-            complex_Re!(0.5f64), complex_Re!(0.5f64)
+            complex_re!(-0.5f64), complex_re!(-0.5f64),
+            complex_re!(0.5f64), complex_re!(0.5f64)
         ];
 
         compare_circuit(circuit, &correct_register);
@@ -1002,8 +988,8 @@ mod tests {
             .simulate();
 
         let correct_register: [Complex<f64>; 4] = [
-            complex_Im!(-0.5f64), complex_Im!(-0.5f64),
-            complex_Im!(0.5f64), complex_Im!(0.5f64)
+            complex_im!(-0.5f64), complex_im!(-0.5f64),
+            complex_im!(0.5f64), complex_im!(0.5f64)
         ];
 
         compare_circuit(circuit, &correct_register);
@@ -1018,8 +1004,8 @@ mod tests {
             .simulate();
 
         let correct_register: [Complex<f64>; 4] = [
-            complex_Im!(0.5f64), complex_Im!(0.5f64),
-            complex_Im!(0.5f64), complex_Im!(0.5f64)
+            complex_im!(0.5f64), complex_im!(0.5f64),
+            complex_im!(0.5f64), complex_im!(0.5f64)
         ];
 
         compare_circuit(circuit, &correct_register);
@@ -1035,8 +1021,8 @@ mod tests {
             .simulate();
 
         let correct_register: [Complex<f64>; 4] = [
-            complex_Re!(0.5f64), complex_Re!(0.5f64),
-            complex_Re!(0.5f64), complex_Re!(0.5f64)
+            complex_re!(0.5f64), complex_re!(0.5f64),
+            complex_re!(0.5f64), complex_re!(0.5f64)
         ];
 
         compare_circuit(circuit, &correct_register);
@@ -1052,8 +1038,8 @@ mod tests {
             .simulate();
 
         let correct_register: [Complex<f64>; 4] = [
-            complex_Re!(-0.5f64), complex_Re!(0.5f64),
-            complex_Re!(0.5f64), complex_Re!(-0.5f64)
+            complex_re!(-0.5f64), complex_re!(0.5f64),
+            complex_re!(0.5f64), complex_re!(-0.5f64)
         ];
 
         compare_circuit(circuit, &correct_register);
@@ -1069,7 +1055,7 @@ mod tests {
 
         let correct_register = [
             COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO,
-            COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO, complex_Im!(-1f64)
+            COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO, complex_im!(-1f64)
         ];
        
         compare_circuit(circuit, &correct_register);
@@ -1085,7 +1071,7 @@ mod tests {
 
         let correct_register = [
             COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO,
-            COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO, complex_Im!(1f64)
+            COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO, complex_im!(1f64)
         ];
         
         compare_circuit(circuit, &correct_register);
@@ -1101,7 +1087,7 @@ mod tests {
 
         let correct_register = [
             COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO,
-            COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO, complex_Re!(1f64)
+            COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO, complex_re!(1f64)
         ];
         
         compare_circuit(circuit, &correct_register);

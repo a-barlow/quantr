@@ -43,7 +43,7 @@ fn main() -> Result<(), QuantrError> {
 
 // Implements the CCC-not gate.
 fn cccnot(input_state: ProductState) -> Option<SuperPosition> {
-    let state: Vec<Qubit> = input_state.qubits.clone();
+    let state: &[Qubit] = input_state.get_qubits();
     let state_slice: [Qubit; 4] = [state[0], state[1], state[2], state[3]]; // In this format, this
                                                                             // guarantees that state_slice has length 4 to the rust compiler. Useful for the match
                                                                             // statement.
