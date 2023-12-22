@@ -22,7 +22,7 @@
 //! probability).
 //!
 //! These three objects all have operations that help manipulate the states in the computational
-//! basis, or easily transform into each other. Examples include
+//! basis, or easily transform them into each other. Examples include
 //! [ProductState::invert_digit] and [SuperPosition::from] respectively.
 
 mod product_states;

@@ -20,7 +20,9 @@ pub struct SuperPosition {
 }
 
 impl SuperPosition {
-    /// Creates a superposition in the |0..0> state.
+    /// Creates a superposition in the |0..0> state. The `prod_dimension` specifies the number of
+    /// qubits that compose each product state. For example, |000> corresponds to `prod_dimension =
+    /// 3`.
     ///
     /// # Example
     /// ```
@@ -31,18 +33,18 @@ impl SuperPosition {
     ///
     /// assert_eq!(&complex_re_array![1f64, 0f64, 0f64, 0f64], superpos.get_amplitudes());
     /// ```
-    pub fn new(num_qubits: usize) -> Result<SuperPosition, QuantrError> {
-        if num_qubits == 0 {
+    pub fn new(prod_dimension: usize) -> Result<SuperPosition, QuantrError> {
+        if prod_dimension == 0 {
             return Err(QuantrError {
                 message: String::from("The number of qubits must be non-zero."),
             });
         }
 
-        let mut new_amps: Vec<Complex<f64>> = vec![COMPLEX_ZERO; 1 << num_qubits];
+        let mut new_amps: Vec<Complex<f64>> = vec![COMPLEX_ZERO; 1 << prod_dimension];
         new_amps[0] = complex_re!(1f64);
         Ok(SuperPosition {
             amplitudes: new_amps,
-            product_dim: num_qubits,
+            product_dim: prod_dimension,
         })
     }
 
@@ -92,7 +94,7 @@ impl SuperPosition {
     ///
     /// let prod = ProductState::new(&[Qubit::Zero, Qubit::One]).unwrap();
     /// let hash_amps = HashMap::from([(prod, complex_re!(1f64))]);
-    /// let superpos = SuperPosition::new_with_amplitudes(&complex_re_array![0f64, 1f64, 0f64, 0f64]).unwrap();
+    /// let superpos = SuperPosition::new_with_hash_amplitudes(hash_amps).unwrap();
     ///
     /// assert_eq!(&complex_re_array![0f64, 1f64, 0f64, 0f64], superpos.get_amplitudes());
     /// ```
@@ -124,7 +126,7 @@ impl SuperPosition {
         })
     }
 
-    /// Retrieves the coefficient of the product state in the computational basis given by the list index
+    /// Retrieves the coefficient of the product state in the computational basis given by the list index.
     ///
     /// # Example
     /// ```
@@ -145,7 +147,7 @@ impl SuperPosition {
         }
     }
 
-    /// Returns the minimum number of qubits that are required to form each computational basis.
+    /// Returns the number of qubits that each product state in the super position is composed of by using the Kronecker product.
     ///
     /// # Example
     /// ```

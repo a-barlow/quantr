@@ -47,6 +47,10 @@ Breaking Changes:
   trait implementations respectively. These trait implementations will
   automatically generate the `Into` traits for `Qubit` and
   `ProductState`. 
+- The fields of `SuperPosition` and `ProductState` have been made
+  private (inaccessible to the user). This forces the user to go
+  initialise and change these structs through methods with validation
+- The macros names for complex numbers are now lower case.
 
 Examples:
 
@@ -74,7 +78,29 @@ Features:
 - `SuperPosition::new_with_hasp` allows creation of a super position
   based on a hash map defining states and their amplitudes. States that
   don't appear as a key will have zero amplitudes set.
-
+- The states module has been fully documented with examples included for
+  every object.
+- Added the following methods to `ProductState` as its fields are now
+  private (more info in documentation):
+    - `get`, Returns the qubit of the given the list index. 
+    - `get_qubits`, Returns the slice of qubits that label the state.
+    - `get_mut_qubits`, Returns a mutable slice of qubits that label the
+      state.
+    - `num_qubits`, Returns the number of qubits that compose the
+      product state in the computational basis.
+- For the same reason as above, `SuperPosition` has the following new
+  methods:
+    - `get_amplitudes`, Returns a slice of amplitudes in the
+      computational basis.
+    - `get_dimension`, Returns the Hilbert space dimension that the
+      super position exists in.
+    - `get_num_qubits`, Returns the number of qubits that compose the
+      product states in the computational basis.
+    - `new_with_amplitudes`, Initialises a new super position based on a
+      slice of amplitudes in the computational basis.
+    - `new_with_hash_amplitudes`, Same as above, but uses a Hashmap as
+      an argument to define the super position.
+    
 
 ## 0.3.0 - Interface refresh 
 
