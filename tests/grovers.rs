@@ -8,7 +8,7 @@
 * Author: Andrew Rowan Barlow <a.barlow.dev@gmail.com>
 */
 
-use quantr::{complex_Re, Complex, QuantrError};
+use quantr::{complex_re, Complex, QuantrError};
 use quantr::{
     states::{ProductState, Qubit, SuperPosition},
     Circuit, Gate,
@@ -42,14 +42,14 @@ fn grovers_3qubit() -> Result<(), QuantrError> {
     circuit.simulate();
 
     let correct_super: [Complex<f64>; 8] = [
-        complex_Re!(0f64),
-        complex_Re!(0f64),
-        complex_Re!(0f64),
-        complex_Re!(-FRAC_1_SQRT_2),
-        complex_Re!(0f64),
-        complex_Re!(0f64),
-        complex_Re!(0f64),
-        complex_Re!(-FRAC_1_SQRT_2),
+        complex_re!(0f64),
+        complex_re!(0f64),
+        complex_re!(0f64),
+        complex_re!(-FRAC_1_SQRT_2),
+        complex_re!(0f64),
+        complex_re!(0f64),
+        complex_re!(0f64),
+        complex_re!(-FRAC_1_SQRT_2),
     ];
 
     if let NonObservable(output_register) = circuit.get_superposition().unwrap() {
@@ -68,9 +68,6 @@ fn grovers_3qubit() -> Result<(), QuantrError> {
     Ok(())
 }
 
-const CCC_NUMBER: usize = 4;
-const CCCCC_NUMBER: usize = 6;
-
 #[test]
 fn x3sudoko() -> Result<(), QuantrError> {
     let mut qc: Circuit = Circuit::new(10)?;
@@ -84,27 +81,27 @@ fn x3sudoko() -> Result<(), QuantrError> {
     for i in 0..=2 {
         qc.add_gate(Gate::Toffoli(i, i + 3), 8)?;
     }
-    qc.add_gate(Gate::Custom(cccnot, &[0, 1, 2], "X".to_string()), 6)?;
+    qc.add_gate(Gate::Custom(multicnot::<4>, &[0, 1, 2], "X".to_string()), 6)?;
     for i in 0..=2 {
         qc.add_gate(Gate::CNot(i), 6)?;
     }
-    qc.add_gate(Gate::Custom(cccnot, &[3, 4, 5], "X".to_string()), 7)?;
+    qc.add_gate(Gate::Custom(multicnot::<4>, &[3, 4, 5], "X".to_string()), 7)?;
     for i in 3..=5 {
         qc.add_gate(Gate::CNot(i), 7)?;
     }
 
     // The phase kickback
-    qc.add_gate(Gate::Custom(cccnot, &[6, 7, 8], "X".to_string()), 9)?;
+    qc.add_gate(Gate::Custom(multicnot::<4>, &[6, 7, 8], "X".to_string()), 9)?;
 
     // Reset by using the oracle again
     for i in 0..=2 {
         qc.add_gate(Gate::Toffoli(i, i + 3), 8)?;
     }
-    qc.add_gate(Gate::Custom(cccnot, &[0, 1, 2], "X".to_string()), 6)?;
+    qc.add_gate(Gate::Custom(multicnot::<4>, &[0, 1, 2], "X".to_string()), 6)?;
     for i in 0..=2 {
         qc.add_gate(Gate::CNot(i), 6)?;
     }
-    qc.add_gate(Gate::Custom(cccnot, &[3, 4, 5], "X".to_string()), 7)?;
+    qc.add_gate(Gate::Custom(multicnot::<4>, &[3, 4, 5], "X".to_string()), 7)?;
     for i in 3..=5 {
         qc.add_gate(Gate::CNot(i), 7)?;
     }
@@ -113,7 +110,10 @@ fn x3sudoko() -> Result<(), QuantrError> {
     qc.add_repeating_gate(Gate::H, &[0, 1, 2, 3, 4, 5])?
         .add_repeating_gate(Gate::X, &[0, 1, 2, 3, 4, 5])?
         .add_gate(Gate::H, 5)?
-        .add_gate(Gate::Custom(cccccnot, &[0, 1, 2, 3, 4], "X".to_string()), 5)?
+        .add_gate(
+            Gate::Custom(multicnot::<6>, &[0, 1, 2, 3, 4], "X".to_string()),
+            5,
+        )?
         .add_gate(Gate::H, 5)?
         .add_repeating_gate(Gate::X, &[0, 1, 2, 3, 4, 5])?
         .add_repeating_gate(Gate::H, &[0, 1, 2, 3, 4, 5])?;
@@ -135,43 +135,25 @@ fn x3sudoko() -> Result<(), QuantrError> {
     Ok(())
 }
 
-fn cccnot(input_state: ProductState) -> SuperPosition {
+fn multicnot<const NUM_CONTROL: usize>(input_state: ProductState) -> Option<SuperPosition> {
     let mut copy_state = input_state.clone();
-    if copy_state.qubits == [Qubit::One; CCC_NUMBER] {
-        copy_state.qubits[CCC_NUMBER - 1] = Qubit::Zero;
-        return copy_state.into_super_position();
-    } else if copy_state.qubits == {
-        let mut temp = [Qubit::One; CCC_NUMBER];
-        temp[CCC_NUMBER - 1] = Qubit::Zero;
+    if input_state.get_qubits() == [Qubit::One; NUM_CONTROL] {
+        copy_state.get_mut_qubits()[NUM_CONTROL - 1] = Qubit::Zero;
+        return Some(copy_state.into());
+    } else if copy_state.get_qubits() == {
+        let mut temp = [Qubit::One; NUM_CONTROL];
+        temp[NUM_CONTROL - 1] = Qubit::Zero;
         temp
     } {
-        copy_state.qubits[CCC_NUMBER - 1] = Qubit::One;
-        return copy_state.into_super_position();
+        copy_state.get_mut_qubits()[NUM_CONTROL - 1] = Qubit::One;
+        return Some(copy_state.into());
     } else {
-        copy_state.into_super_position()
-    }
-}
-
-// Implementation of a 5 controlled toffoli gate
-fn cccccnot(input_state: ProductState) -> SuperPosition {
-    let mut copy_state = input_state.clone();
-    if copy_state.qubits == [Qubit::One; CCCCC_NUMBER] {
-        copy_state.qubits[CCCCC_NUMBER - 1] = Qubit::Zero;
-        return copy_state.into_super_position();
-    } else if copy_state.qubits == {
-        let mut temp = [Qubit::One; CCCCC_NUMBER];
-        temp[CCCCC_NUMBER - 1] = Qubit::Zero;
-        temp
-    } {
-        copy_state.qubits[CCCCC_NUMBER - 1] = Qubit::One;
-        return copy_state.into_super_position();
-    } else {
-        copy_state.into_super_position()
+        None
     }
 }
 
 fn compare_complex_lists_and_register(correct_list: &[Complex<f64>], register: &SuperPosition) {
-    for (i, &comp_num) in register.amplitudes.iter().enumerate() {
+    for (i, &comp_num) in register.get_amplitudes().iter().enumerate() {
         // Make sure that it turns up complex
         assert!(equal_within_error(comp_num.re, correct_list[i].re));
         assert!(equal_within_error(comp_num.im, correct_list[i].im));

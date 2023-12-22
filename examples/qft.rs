@@ -32,7 +32,7 @@ fn main() -> Result<(), QuantrError> {
 
     qc.simulate();
 
-    if let Measurement::NonObservable(final_sup) = qc.get_superposition().unwrap() {
+    if let Ok(Measurement::NonObservable(final_sup)) = qc.get_superposition() {
         println!("\nThe final superposition is:");
         for (state, amplitude) in final_sup.into_iter() {
             println!("|{}> : {}", state.to_string(), amplitude);
@@ -42,10 +42,10 @@ fn main() -> Result<(), QuantrError> {
     Ok(())
 }
 
-// A QFT implementation that can be used for other circuits. Note, the output is reveresed, swap
-// gates are needed.
-fn qft(input_state: ProductState) -> SuperPosition {
-    let qubit_num = input_state.qubits.len();
+// A QFT implementation that can be used for other circuits. Note, the output is reveresed compared
+// to usual conventions; swap gates are needed.
+fn qft(input_state: ProductState) -> Option<SuperPosition> {
+    let qubit_num = input_state.num_qubits();
     let mut mini_circuit: Circuit = Circuit::new(qubit_num).unwrap();
 
     for pos in 0..qubit_num {
@@ -58,12 +58,12 @@ fn qft(input_state: ProductState) -> SuperPosition {
     }
 
     mini_circuit
-        .change_register(input_state.into_super_position())
+        .change_register(SuperPosition::from(input_state))
         .unwrap()
         .simulate();
 
-    if let Measurement::NonObservable(super_pos) = mini_circuit.get_superposition().unwrap() {
-        super_pos.clone()
+    if let Ok(Measurement::NonObservable(super_pos)) = mini_circuit.get_superposition() {
+        Some(super_pos.clone())
     } else {
         panic!("No superposition was simualted!");
     }

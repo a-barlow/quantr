@@ -2,12 +2,112 @@
 
 This file logs the versions of quantr.
 
+## 0.4.0 - Optimisations of speed and memory allocation
+
+The optimisations and breaking changes that this update induces greatly
+increases the speed of simulating circuits. Even though it's generally
+discouraged to make breaking changes without deprecation warnings, or
+even so suddenly after another breaking change (0.3.0), this
+optimisation has been deemed beneficial enough to warrant such a soon
+breaking update. Moreover, quantr is still in it's infancy, where
+nobody, or very few people, are currently using it. 
+
+The main difference is in how custom functions return an
+`Option<SuperPosition>` object, where it returns `None` if the input
+state has not been affected. This bypasses large amounts of unnecessary
+computation. 
+
+The last update is to conform to Rust protocol, where instead of using
+`into_superposition` or like methods, the `From` trait is implemented
+instead (which also implements the `Into` trait).
+
+Lastly, the quantr repository will no longer follow the
+Contributor Covenant Code of Conduct for moderating it's GitHub
+repository. Please see `CODE_OF_CONDUCT.md` for the reason to why.
+
+Breaking Changes:
+
+- The `Gate::Custom` now requires a `fn (ProductState) ->
+  Option<SuperPosition>` type as a function to define the custom gate.
+  This function should return `None` if the input `ProductState` is
+  unchanged, and `Some(SuperPosition)` if the product state has changed.
+  This ultimately increases the speed of processing gates such as
+  multi-controlled not gates.
+- The function `SuperPosition::set_amplitudes(self, amplitudes:
+  &[Complex<f64>]) -> Result<SuperPosition, QuantrError>` has changed
+  its arguments so that borrows a mutable reference:
+  `SuperPosition::set_amplitudes(&mut self, amplitudes: &[Complex<f64>])
+  -> Result<&mut SuperPosition, QuantrError>`. The same has been done
+  with `SuperPosition::set_amplitudes_from_states`.
+- Changed the return value of `ProductState::invert_digit` to
+  `Result<&mut ProductState, QuantrError>`.
+- The conversion methods `Qubit::into_state` and
+  `ProductState::into_super_position` have been replaced by the
+  `ProductState::From<Qubit>` and `SuperPosition::From<ProductState>`
+  trait implementations respectively. These trait implementations will
+  automatically generate the `Into` traits for `Qubit` and
+  `ProductState`. 
+- The fields of `SuperPosition` and `ProductState` have been made
+  private (inaccessible to the user). This forces the user to go
+  initialise and change these structs through methods with validation
+- The macros names for complex numbers are now lower case.
+
+Examples:
+
+- The `.unwrap()` on measurements have been removed, in favour of
+  explicitly showing the `Result` return type of `Circuit::repeated_measurement`
+  and `Circuit::get_superposition`.
+- Added examples for implementing a controlled not gate with arbitary
+  number of control nodes. This uses generic constants. This can be
+  found in `examples/generalised_control_not_gate.rs`.
+
+Tests:
+
+- The qft and grover tests have had their custom functions updated
+  accordingly to satisfy the breaking change of custom functions.
+
+Features:
+
+- The upper bound for the circuit size of 50 qubits has been removed.
+  Although, currently this version of quantr can reasonably simulate up
+  to 20 qubits. 50 qubits would be unphysical to simulate anyway on a
+  desktop due to the large amount of memory required to store the state
+  vector alone.
+- `SuperPosition::new_with_amplitudes` allows creation of a super
+  position by defining amplitudes at the same time.
+- `SuperPosition::new_with_hasp` allows creation of a super position
+  based on a hash map defining states and their amplitudes. States that
+  don't appear as a key will have zero amplitudes set.
+- The states module has been fully documented with examples included for
+  every object.
+- Added the following methods to `ProductState` as its fields are now
+  private (more info in documentation):
+    - `get`, Returns the qubit of the given the list index. 
+    - `get_qubits`, Returns the slice of qubits that label the state.
+    - `get_mut_qubits`, Returns a mutable slice of qubits that label the
+      state.
+    - `num_qubits`, Returns the number of qubits that compose the
+      product state in the computational basis.
+- For the same reason as above, `SuperPosition` has the following new
+  methods:
+    - `get_amplitudes`, Returns a slice of amplitudes in the
+      computational basis.
+    - `get_dimension`, Returns the Hilbert space dimension that the
+      super position exists in.
+    - `get_num_qubits`, Returns the number of qubits that compose the
+      product states in the computational basis.
+    - `new_with_amplitudes`, Initialises a new super position based on a
+      slice of amplitudes in the computational basis.
+    - `new_with_hash_amplitudes`, Same as above, but uses a Hashmap as
+      an argument to define the super position.
+    
+
 ## 0.3.0 - Interface refresh 
 
 This major update overhauls the structure of quantr, and the naming of
 many methods. The aim is to increase simplicity in using the library,
 in turn producing more readable and efficient code. The re-naming of
-methods is meant to be more inkeeping with the Rust standard library,
+methods is meant to be more in keeping with the Rust standard library,
 that is `to` represents a pass by reference, while `into` moves the value
 into the method.
 

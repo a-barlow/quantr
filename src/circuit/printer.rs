@@ -8,21 +8,16 @@
 * Author: Andrew Rowan Barlow <a.barlow.dev@gmail.com>
 */
 
-//! Constructs, displays and saves the circuit diagram as a UTF-8 string.
-//!
-//! The user has the option to print the string to the terminal or a text file, where the text file
-//! has the advantage of not wrapping the circuit within the terminal. The [Printer] will also
-//! cache a copy of the diagram so subsequent prints will require no building of the diagram.
-
 use super::{Circuit, Gate, GateSize};
 use std::fs::File;
 use std::io::Write;
 use std::path::Path;
 
-/// Constructs and prints the diagram of a given circuit.
+/// Constructs, displays and saves the circuit diagram as a UTF-8 string.
 ///
-/// The methods [Printer::print_diagram] and [Printer::save_diagram] print the diagram to the
-/// console, and save the diagram to a text file respectively.
+/// The user has the option to print the string to the terminal or a text file, where the text file
+/// has the advantage of not wrapping the circuit within the terminal. The [Printer] will also
+/// cache a copy of the diagram so subsequent prints will require no building of the diagram.
 pub struct Printer<'a> {
     circuit: &'a Circuit<'a>,
     diagram: Option<String>,
@@ -416,20 +411,19 @@ mod tests {
         Printer, Circuit, Gate, states::{Qubit, ProductState, SuperPosition},
     };
     use crate::Complex;
-    use crate::complex_Re_array;
+    use crate::complex_re_array;
     // These are primarily tested by making sure they print correctly to
     // the terminal, and then copy the output for the assert_eq! macro.
 
-    fn example_cnot(prod: ProductState) -> SuperPosition {
+    fn example_cnot(prod: ProductState) -> Option<SuperPosition> {
         let input_register: [Qubit; 2] = [prod.qubits[0], prod.qubits[1]];
-        SuperPosition::new(2)
-            .set_amplitudes(match input_register {
-                [Qubit::Zero, Qubit::Zero] => &complex_Re_array!(1f64, 0f64, 0f64, 0f64),
-                [Qubit::Zero, Qubit::One] => &complex_Re_array!(0f64, 1f64, 0f64, 0f64),
-                [Qubit::One, Qubit::Zero] => &complex_Re_array!(0f64, 0f64, 0f64, 1f64),
-                [Qubit::One, Qubit::One] => &complex_Re_array!(0f64, 0f64, 1f64, 0f64),
+        Some(SuperPosition::new_with_amplitudes(match input_register {
+                [Qubit::Zero, Qubit::Zero] => return None,
+                [Qubit::Zero, Qubit::One] => return None, 
+                [Qubit::One, Qubit::Zero] => &complex_re_array!(0f64, 0f64, 0f64, 1f64),
+                [Qubit::One, Qubit::One] => &complex_re_array!(0f64, 0f64, 1f64, 0f64),
             })
-            .unwrap()
+            .unwrap())
     }
 
     #[test]

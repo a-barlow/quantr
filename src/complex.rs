@@ -10,7 +10,7 @@
 
 //! Generic complex numbers.
 //!
-//! Simple implementation with operations that are needed for the quantum computer. Quantr will
+//! Simple implementation with operations that are needed for simulating the a quantum circuit. Quantr will
 //! mostly use `Complex<f64>`, so additional functionality is added for this type, such as square
 //! roots and multiplication with `f64`.
 
@@ -18,7 +18,7 @@ use std::fmt;
 use std::fmt::{Debug, Formatter};
 use std::ops::{Add, Mul, Sub};
 
-/// A constant for 0+0i.
+/// The zero complex number, 0+0i.
 pub const COMPLEX_ZERO: Complex<f64> = Complex::<f64> { re: 0f64, im: 0f64 };
 
 /// A square root trait, that is only implemented for `f32` and `f64` as Sqrt is not a closed
@@ -39,7 +39,7 @@ impl Sqr for f64 {
     }
 }
 
-/// Generic complex number for the quantum computer. Will mostly use `f64`.
+/// Generic complex number.
 #[derive(Debug, PartialEq, Copy, Clone)]
 pub struct Complex<T> {
     pub re: T,
@@ -52,7 +52,7 @@ impl Complex<f64> {
     /// # Example
     /// ```
     /// use quantr::Complex;
-    /// use quantr::complex_Im;
+    /// use quantr::complex_im;
     /// use std::f64::consts::PI;
     ///
     /// let num: Complex<f64> = Complex::<f64>::exp_im(0.5f64 * PI);
@@ -71,12 +71,11 @@ impl Complex<f32> {
     /// # Example
     /// ```
     /// use quantr::Complex;
-    /// use quantr::complex_Im;
+    /// use quantr::complex_im;
     /// use std::f32::consts::PI;
     ///
     /// let num: Complex<f32> = Complex::<f32>::exp_im(0.5f32 * PI);
     /// ```
-
     pub fn exp_im(theta: f32) -> Complex<f32> {
         Complex {
             re: theta.cos(),
@@ -89,6 +88,14 @@ impl Complex<f32> {
 impl<T: Add<Output = T>> Add for Complex<T> {
     type Output = Self;
 
+    /// # Example
+    /// ```
+    /// use quantr::Complex;
+    ///
+    /// let z1: Complex<i16> = Complex{ re: -4i16, im: 2i16 };
+    /// let z2: Complex<i16> = Complex{ re: 2i16, im: 7i16 };
+    /// assert_eq!(z1 + z2, Complex{ re: -2i16, im: 9i16 });
+    /// ```
     fn add(self, rhs: Self) -> Self::Output {
         Complex {
             re: self.re.add(rhs.re),
@@ -101,6 +108,14 @@ impl<T: Add<Output = T>> Add for Complex<T> {
 impl<T: Sub<Output = T>> Sub for Complex<T> {
     type Output = Self;
 
+    /// # Example
+    /// ```
+    /// use quantr::Complex;
+    ///
+    /// let z1: Complex<i16> = Complex{ re: -4i16, im: 2i16 };
+    /// let z2: Complex<i16> = Complex{ re: 2i16, im: 7i16 };
+    /// assert_eq!(z1 - z2, Complex{ re: -6i16, im: -5i16 });
+    /// ```
     fn sub(self, rhs: Self) -> Self::Output {
         Complex {
             re: self.re.sub(rhs.re),
@@ -113,6 +128,14 @@ impl<T: Sub<Output = T>> Sub for Complex<T> {
 impl<T: Mul<Output = T> + Add<Output = T> + Sub<Output = T> + Copy> Mul for Complex<T> {
     type Output = Self;
 
+    /// # Example
+    /// ```
+    /// use quantr::Complex;
+    ///
+    /// let z1: Complex<i16> = Complex{ re: -4i16, im: 2i16 };
+    /// let z2: Complex<i16> = Complex{ re: 2i16, im: 7i16 };
+    /// assert_eq!(z1 * z2, Complex{ re: -22i16, im: -24i16 });
+    /// ```
     fn mul(self, rhs: Self) -> Self::Output {
         Complex {
             re: self.re.mul(rhs.re).sub(self.im.mul(rhs.im)),
@@ -121,10 +144,19 @@ impl<T: Mul<Output = T> + Add<Output = T> + Sub<Output = T> + Copy> Mul for Comp
     }
 }
 
-/// Multiplication of `f64 * Complex<f64>`.
 impl Mul<f64> for Complex<f64> {
     type Output = Self;
 
+    /// LHS scalar multiplication: `f64 * Complex<f64>`.
+    ///
+    /// # Example
+    /// ```
+    /// use quantr::Complex;
+    ///
+    /// let z1: f64 = 2f64;
+    /// let z2: Complex<f64> = Complex{ re: 2f64, im: 7f64 };
+    /// assert_eq!(z1 * z2, Complex{ re: 4f64, im: 14f64 });
+    /// ```
     fn mul(self, rhs: f64) -> Self::Output {
         Complex {
             re: self.re.mul(rhs),
@@ -137,6 +169,16 @@ impl Mul<f64> for Complex<f64> {
 impl Mul<Complex<f64>> for f64 {
     type Output = Complex<f64>;
 
+    /// RHS scalar multiplication: `Complex<f64> * f64`.
+    ///
+    /// # Example
+    /// ```
+    /// use quantr::Complex;
+    ///
+    /// let z1: f64 = 2f64;
+    /// let z2: Complex<f64> = Complex{ re: 2f64, im: 7f64 };
+    /// assert_eq!(z2 * z1, Complex{ re: 4f64, im: 14f64 });
+    /// ```
     fn mul(self, rhs: Complex<f64>) -> Self::Output {
         Complex {
             re: rhs.re.mul(self),
@@ -148,6 +190,14 @@ impl Mul<Complex<f64>> for f64 {
 impl<T: Add<Output = T> + Mul<Output = T> + Copy> Complex<T> {
     /// Absolute square of a complex number, that is `|z|^2 = a^2+b^2`
     /// where `z = a + bi`.
+    ///
+    /// # Example
+    /// ```
+    /// use quantr::Complex;
+    ///
+    /// let z: Complex<i16> = Complex{ re: 3i16, im: 4i16 };
+    /// assert_eq!(z.abs_square(), 25i16);
+    /// ```
     pub fn abs_square(self) -> T {
         self.re.mul(self.re).add(self.im.mul(self.im))
     }
@@ -156,6 +206,14 @@ impl<T: Add<Output = T> + Mul<Output = T> + Copy> Complex<T> {
 impl<T: Add<Output = T> + Mul<Output = T> + Sqr + Copy> Complex<T> {
     /// Absolute value of a complex number, that is
     /// `|z| = Sqrt(a^2+b^2)` where `z = a + bi`.
+    ///
+    /// # Example
+    /// ```
+    /// use quantr::Complex;
+    ///
+    /// let z: Complex<f64> = Complex{ re: 3f64, im: 4f64 };
+    /// assert_eq!(z.abs(), 5f64);
+    /// ```
     pub fn abs(&self) -> T {
         self.abs_square().square_root()
     }
@@ -176,10 +234,10 @@ macro_rules! complex {
     };
 }
 
-/// Usage: `complex_Re_array!(input: [f64; n]) -> [Complex<f64>; n]`
+/// Usage: `complex_re_array!(input: [f64; n]) -> [Complex<f64>; n]`
 /// Returns an array of complex numbers with zero imaginary part, and the real part set by `input`.
 #[macro_export]
-macro_rules! complex_Re_array {
+macro_rules! complex_re_array {
     ( $( $x:expr ),*  ) => {
         [
         $(
@@ -192,10 +250,10 @@ macro_rules! complex_Re_array {
     };
 }
 
-/// Usage: `complex_Im_array!(input: [f64; n]) -> [Complex<f64>; n]`
+/// Usage: `complex_im_array!(input: [f64; n]) -> [Complex<f64>; n]`
 /// Returns an array of complex number with zero real part, and imaginaries set by `input`.
 #[macro_export]
-macro_rules! complex_Im_array {
+macro_rules! complex_im_array {
     ( $( $x:expr ),*  ) => {
         [
         $(
@@ -208,10 +266,10 @@ macro_rules! complex_Im_array {
     };
 }
 
-/// Usage: `complex_Re_vec!(input: [f64; n]) -> Vec<Complex<f64>>`
+/// Usage: `complex_re_vec!(input: [f64; n]) -> Vec<Complex<f64>>`
 /// Returns a vector of complex number with zero imaginary part, and reals set by `input`.
 #[macro_export]
-macro_rules! complex_Re_vec {
+macro_rules! complex_re_vec {
     ( $( $x:expr ),*  ) => {
         {
             let mut temp_vec: Vec<Complex<f64>> = Vec::new();
@@ -228,10 +286,10 @@ macro_rules! complex_Re_vec {
     };
 }
 
-/// Usage: `complex_Im_vec!(input: [f64; n]) -> Vec<Complex<f64>>`
+/// Usage: `complex_im_vec!(input: [f64; n]) -> Vec<Complex<f64>>`
 /// Returns a vector of complex numbers with zero real part, and imaginaries set by `input`.
 #[macro_export]
-macro_rules! complex_Im_vec {
+macro_rules! complex_im_vec {
     ( $( $x:expr ),*  ) => {
         {
             let mut temp_vec: Vec<Complex<f64>> = Vec::new();
@@ -248,19 +306,19 @@ macro_rules! complex_Im_vec {
     };
 }
 
-/// Usage: `complex_Re!(re: f64) -> Complex<f64>`
+/// Usage: `complex_re!(re: f64) -> Complex<f64>`
 /// A quick way to define a real f64; the imaginary part is set to zero.
 #[macro_export]
-macro_rules! complex_Re {
+macro_rules! complex_re {
     ($r:expr) => {
         Complex::<f64> { re: $r, im: 0f64 }
     };
 }
 
-/// Usage: `complex_Im!(im: f64) -> Complex<f64>`
+/// Usage: `complex_im!(im: f64) -> Complex<f64>`
 /// A quick way to define an imaginary f64; the real part is set to zero.
 #[macro_export]
-macro_rules! complex_Im {
+macro_rules! complex_im {
     ($i:expr) => {
         Complex::<f64> { re: 0f64, im: $i }
     };
