@@ -8,6 +8,9 @@
 * Author: Andrew Rowan Barlow <a.barlow.dev@gmail.com>
 */
 
+// Added only for silencing deprecated warnings for using public fields of `Circuit`. 
+#![allow(deprecated)]
+
 use super::circuit::gate::{GateInfo, GateSize};
 use crate::states::{ProductState, SuperPosition};
 use crate::{Gate, QuantrError};
@@ -36,7 +39,9 @@ pub enum Measurement<T> {
 /// A quantum circuit where gates can be appended and then simulated to measure resulting
 /// superpositions.
 pub struct Circuit<'a> {
+    #[deprecated(note="This field will be made private to the user, where it will be given pub(crate) status in the next major update.")]
     pub circuit_gates: Vec<Gate<'a>>,
+    #[deprecated(note="This field will be made private to the user, where it will be given pub(crate) status in the next major update.")]
     pub num_qubits: usize,
     output_state: Option<SuperPosition>,
     register: Option<SuperPosition>,

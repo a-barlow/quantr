@@ -2,6 +2,13 @@
 
 This file logs the versions of quantr.
 
+## 0.4.1 - More optimisations
+
+Deprecated features:
+
+- The public fields of `Circuit` are to be made private (specifically
+  updated to `pub(crate)` status in the next breaking update).
+
 ## 0.4.0 - Optimisations of speed and memory allocation
 
 The optimisations and breaking changes that this update induces greatly
