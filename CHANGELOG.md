@@ -4,11 +4,18 @@ This file logs the versions of quantr.
 
 ## 0.4.1 - More optimisations
 
+Edited the README to include "No parallelisation" to limitations, and
+reduced the tractable number of qubit simulations to 18.
+
+Change of dependency:
+
+- For the random
+
 Optimisations:
 
 - The main simulating algorithm has been updated to increase it's speed,
-  mostly bypassing computations that are uneeded:
-  - Product state qubits are flipped only if they are indeed different.
+  mostly bypassing computations that are uneeded, for instance product
+  state qubits are flipped only if they are indeed different.
 
 Deprecated features:
 

@@ -41,9 +41,9 @@ impl SuperPosition {
     /// States that are missing from the HashMap will be assumed to have 0 amplitude.
     pub(crate) fn set_amplitudes_from_states_unchecked(
         &mut self,
-        amplitudes: HashMap<ProductState, Complex<f64>>,
+        hash_amplitudes: HashMap<ProductState, Complex<f64>>,
     ) -> &mut SuperPosition {
-        for (key, val) in amplitudes {
+        for (key, val) in hash_amplitudes {
             self.amplitudes[key.comp_basis()] = val;
         }
         self

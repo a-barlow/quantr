@@ -8,6 +8,7 @@
 * Author: Andrew Rowan Barlow <a.barlow.dev@gmail.com>
 */
 
+use crate::circuit::QResult;
 use crate::states::Qubit;
 use crate::QuantrError;
 
@@ -31,7 +32,7 @@ impl ProductState {
     ///
     /// let prod: ProductState = ProductState::new(&[Qubit::One, Qubit::Zero]).unwrap(); // |10>
     /// ```
-    pub fn new(product_state: &[Qubit]) -> Result<ProductState, QuantrError> {
+    pub fn new(product_state: &[Qubit]) -> QResult<ProductState> {
         if product_state.is_empty() {
             return Err(QuantrError {
                 message: String::from(
@@ -117,7 +118,6 @@ impl ProductState {
                 };
             }
         }
-
     }
 
     /// Returns the number of qubits that form the product state.
@@ -149,7 +149,7 @@ impl ProductState {
     ///
     /// assert_eq!(&[Qubit::One, Qubit::One, Qubit::One], prod.get_qubits());
     /// ```
-    pub fn invert_digit(&mut self, place_num: usize) -> Result<&mut ProductState, QuantrError> {
+    pub fn invert_digit(&mut self, place_num: usize) -> QResult<&mut ProductState> {
         if place_num >= self.num_qubits() {
             return Err(QuantrError { message: format!("The position of the binary digit, {}, is out of bounds. The product dimension is {}, and so the position must be strictly less.", place_num, self.num_qubits()) });
         }
@@ -274,11 +274,11 @@ mod tests {
 
     #[test]
     fn insert_qubits_in_state() {
-        let mut prod = ProductState::new_unchecked(&[Qubit::One, Qubit::One, Qubit::One]); 
+        let mut prod = ProductState::new_unchecked(&[Qubit::One, Qubit::One, Qubit::One]);
         prod.insert_qubits(&[Qubit::Zero, Qubit::Zero], &[0, 2]);
         assert_eq!(
             ProductState::new_unchecked(&[Qubit::Zero, Qubit::One, Qubit::Zero]).qubits,
-            prod.qubits 
+            prod.qubits
         );
     }
 
