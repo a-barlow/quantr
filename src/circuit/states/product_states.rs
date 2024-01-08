@@ -106,18 +106,18 @@ impl ProductState {
 
     // Changes the qubits at specified positions within the product state with a slice of other
     // qubits.
-    pub(crate) fn insert_qubits(&self, qubits: &[Qubit], pos: &[usize]) -> ProductState {
-        let mut edited_qubits: Vec<Qubit> = self.qubits.clone();
-        let num_qubits: usize = qubits.len();
+    pub(crate) fn insert_qubits(&mut self, qubits: &[Qubit], pos: &[usize]) {
+        //let mut edited_qubits: Vec<Qubit> = self.qubits.clone();
 
-        if num_qubits != pos.len() {
-            panic!("Size of qubits and positions must be equal.")
+        for (enum_i, &i) in pos.iter().enumerate() {
+            if self.qubits[i] != qubits[enum_i] {
+                self.qubits[i] = match self.qubits[i] {
+                    Qubit::Zero => Qubit::One,
+                    Qubit::One => Qubit::Zero,
+                };
+            }
         }
 
-        for (index, position) in pos.iter().enumerate() {
-            edited_qubits[*position] = qubits[index];
-        }
-        ProductState::new_unchecked(&edited_qubits)
     }
 
     /// Returns the number of qubits that form the product state.
@@ -274,11 +274,11 @@ mod tests {
 
     #[test]
     fn insert_qubits_in_state() {
+        let mut prod = ProductState::new_unchecked(&[Qubit::One, Qubit::One, Qubit::One]); 
+        prod.insert_qubits(&[Qubit::Zero, Qubit::Zero], &[0, 2]);
         assert_eq!(
-            ProductState::new_unchecked(&[Qubit::Zero, Qubit::Zero, Qubit::One]).qubits,
-            ProductState::new_unchecked(&[Qubit::One, Qubit::One, Qubit::One])
-                .insert_qubits(&[Qubit::Zero, Qubit::Zero], &[0, 1])
-                .qubits
+            ProductState::new_unchecked(&[Qubit::Zero, Qubit::One, Qubit::Zero]).qubits,
+            prod.qubits 
         );
     }
 

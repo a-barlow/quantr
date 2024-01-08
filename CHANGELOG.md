@@ -4,6 +4,12 @@ This file logs the versions of quantr.
 
 ## 0.4.1 - More optimisations
 
+Optimisations:
+
+- The main simulating algorithm has been updated to increase it's speed,
+  mostly bypassing computations that are uneeded:
+  - Product state qubits are flipped only if they are indeed different.
+
 Deprecated features:
 
 - The public fields of `Circuit` are to be made private (specifically

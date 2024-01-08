@@ -267,10 +267,10 @@ impl<'a> Circuit<'a> {
                 continue;
             }
             // Insert these image states back into a product space
-            let swapped_state: ProductState =
-                prod_state.insert_qubits(state.qubits.as_slice(), gate_positions.as_slice());
-            if mapped_states.contains_key(&swapped_state) {
-                let existing_amp: Complex<f64> = *mapped_states.get(&swapped_state).unwrap();
+            let mut swapped_state: ProductState = prod_state.clone();
+            swapped_state.insert_qubits(state.qubits.as_slice(), gate_positions.as_slice());
+
+            if let Some(existing_amp) = mapped_states.get(&swapped_state) {
                 mapped_states.insert(swapped_state, existing_amp.add(state_amp.mul(amp)));
             } else {
                 mapped_states.insert(swapped_state, state_amp.mul(amp));
