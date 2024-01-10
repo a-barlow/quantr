@@ -48,7 +48,7 @@ implementation of Grover's algorithm.
   `1 MiB`.
 - Can simulate circuits up to ~18 qubits within a reasonable time.
 - Only safe Rust code is used, and the only dependency is the
-  [rand](https://docs.rs/rand/latest/rand/) crate and its
+  [fastrand](https://crates.io/crates/fastrand) crate and its
   sub-dependencies.
 
 ### Usage
@@ -97,9 +97,9 @@ guide](QUICK_START.md).
  
 ### Limitations (currently)
 
-- There is **no noise** consideration, or ability to introduce noise.
-- **No parallelisation** available.
-- There is **no ability to add classical wires** nor gates that measure a
+- **No noise** consideration, or ability to introduce noise.
+- **No parallelisation** option.
+- **No ability to add classical wires** nor gates that measure a
   single wire of a quantum circuit.
 
 ### Conventions

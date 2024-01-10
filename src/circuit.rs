@@ -41,11 +41,11 @@ pub enum Measurement<T> {
 /// superpositions.
 pub struct Circuit<'a> {
     #[deprecated(
-        note = "This field will be made private to the user, where it will be given pub(crate) status in the next major update."
+        note = "This field will be made private to the user, where it will be given pub(crate) status in the next major update. Use Circuit::get_gates instead."
     )]
     pub circuit_gates: Vec<Gate<'a>>,
     #[deprecated(
-        note = "This field will be made private to the user, where it will be given pub(crate) status in the next major update."
+        note = "This field will be made private to the user, where it will be given pub(crate) status in the next major update. Use Circuit::get_num_qubits instead."
     )]
     pub num_qubits: usize,
     output_state: Option<SuperPosition>,
@@ -82,6 +82,36 @@ impl<'a> Circuit<'a> {
             config_progress: false,
         })
     }
+
+    /// Returns the number of qubits in the circuit.
+    ///
+    /// # Example
+    /// ```
+    /// use quantr::{Circuit, Gate};
+    ///
+    /// let quantum_circuit: Circuit = Circuit::new(3).unwrap();
+    /// assert_eq!(quantum_circuit.get_num_qubits(), 3usize);
+    /// ```
+    pub fn get_num_qubits(self) -> usize {
+        self.num_qubits
+    }
+
+    /// Returns the vector of gates that have been added to the circuit. 
+    ///
+    /// It is a flattened vector which is buffered with identity gates.
+    ///
+    /// # Example
+    /// ```
+    /// use quantr::{Circuit, Gate};
+    ///
+    /// let mut quantum_circuit: Circuit = Circuit::new(3).unwrap();
+    /// quantum_circuit.add_gate(Gate::X, 2).unwrap();
+    ///
+    /// assert_eq!(quantum_circuit.get_gates(), &[Gate::Id, Gate::Id, Gate::X]);
+    /// ```
+    pub fn get_gates(&self) -> &[Gate<'a>] {
+        self.circuit_gates.as_slice()
+    } 
 
     /// Adds a single gate to the circuit.
     ///
