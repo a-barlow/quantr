@@ -80,7 +80,7 @@ impl<'a> Circuit<'a> {
         // the sum of states that are required to be added to the register
         let mut mapped_states: HashMap<ProductState, Complex<f64>> = Default::default();
 
-        for (prod_state, amp) in (&register).into_iter() {
+        for (prod_state, amp) in register.into_iter() {
             //Looping through super position of register
 
             // Obtain superposition from applying gate from a specified wire onto the product state, and add control nodes if necersary
@@ -160,17 +160,15 @@ impl<'a> Circuit<'a> {
         if let Gate::CR(angle, control) = double_gate.name {
             positions.push(control);
             standard_gate_ops::cr(
-                prod_state
-                    .get_unchecked(control)
-                    .kronecker_prod(prod_state.get_unchecked(double_gate.position)),
+                prod_state.get_unchecked(control),
+                prod_state.get_unchecked(double_gate.position),
                 angle,
             )
         } else if let Gate::CRk(k, control) = double_gate.name {
             positions.push(control);
             standard_gate_ops::crk(
-                prod_state
-                    .get_unchecked(control)
-                    .kronecker_prod(prod_state.get_unchecked(double_gate.position)),
+                prod_state.get_unchecked(control),
+                prod_state.get_unchecked(double_gate.position),
                 k,
             )
         } else {
@@ -197,9 +195,8 @@ impl<'a> Circuit<'a> {
 
             positions.push(control_node);
             operator(
-                prod_state
-                    .get_unchecked(control_node)
-                    .kronecker_prod(prod_state.get_unchecked(double_gate.position)),
+                prod_state.get_unchecked(control_node),
+                prod_state.get_unchecked(double_gate.position),
             )
         }
     }
@@ -218,10 +215,9 @@ impl<'a> Circuit<'a> {
         positions.push(control_node_two);
         positions.push(control_node_one);
         operator(
-            prod_state
-                .get_unchecked(control_node_one)
-                .kronecker_prod(prod_state.get_unchecked(control_node_two))
-                .kronecker_prod(prod_state.get_unchecked(triple_gate.position)),
+            prod_state.get_unchecked(control_node_one),
+            prod_state.get_unchecked(control_node_two),
+            prod_state.get_unchecked(triple_gate.position),
         )
     }
 
@@ -267,10 +263,10 @@ impl<'a> Circuit<'a> {
                 continue;
             }
             // Insert these image states back into a product space
-            let swapped_state: ProductState =
-                prod_state.insert_qubits(state.qubits.as_slice(), gate_positions.as_slice());
-            if mapped_states.contains_key(&swapped_state) {
-                let existing_amp: Complex<f64> = *mapped_states.get(&swapped_state).unwrap();
+            let mut swapped_state: ProductState = prod_state.clone();
+            swapped_state.insert_qubits(state.qubits.as_slice(), gate_positions.as_slice());
+
+            if let Some(existing_amp) = mapped_states.get(&swapped_state) {
                 mapped_states.insert(swapped_state, existing_amp.add(state_amp.mul(amp)));
             } else {
                 mapped_states.insert(swapped_state, state_amp.mul(amp));

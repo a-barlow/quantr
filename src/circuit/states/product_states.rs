@@ -8,6 +8,7 @@
 * Author: Andrew Rowan Barlow <a.barlow.dev@gmail.com>
 */
 
+use crate::circuit::QResult;
 use crate::states::Qubit;
 use crate::QuantrError;
 
@@ -31,7 +32,7 @@ impl ProductState {
     ///
     /// let prod: ProductState = ProductState::new(&[Qubit::One, Qubit::Zero]).unwrap(); // |10>
     /// ```
-    pub fn new(product_state: &[Qubit]) -> Result<ProductState, QuantrError> {
+    pub fn new(product_state: &[Qubit]) -> QResult<ProductState> {
         if product_state.is_empty() {
             return Err(QuantrError {
                 message: String::from(
@@ -106,18 +107,17 @@ impl ProductState {
 
     // Changes the qubits at specified positions within the product state with a slice of other
     // qubits.
-    pub(crate) fn insert_qubits(&self, qubits: &[Qubit], pos: &[usize]) -> ProductState {
-        let mut edited_qubits: Vec<Qubit> = self.qubits.clone();
-        let num_qubits: usize = qubits.len();
+    pub(crate) fn insert_qubits(&mut self, qubits: &[Qubit], pos: &[usize]) {
+        //let mut edited_qubits: Vec<Qubit> = self.qubits.clone();
 
-        if num_qubits != pos.len() {
-            panic!("Size of qubits and positions must be equal.")
+        for (enum_i, &i) in pos.iter().enumerate() {
+            if self.qubits[i] != qubits[enum_i] {
+                self.qubits[i] = match self.qubits[i] {
+                    Qubit::Zero => Qubit::One,
+                    Qubit::One => Qubit::Zero,
+                };
+            }
         }
-
-        for (index, position) in pos.iter().enumerate() {
-            edited_qubits[*position] = qubits[index];
-        }
-        ProductState::new_unchecked(&edited_qubits)
     }
 
     /// Returns the number of qubits that form the product state.
@@ -149,12 +149,12 @@ impl ProductState {
     ///
     /// assert_eq!(&[Qubit::One, Qubit::One, Qubit::One], prod.get_qubits());
     /// ```
-    pub fn invert_digit(&mut self, place_num: usize) -> Result<&mut ProductState, QuantrError> {
+    pub fn invert_digit(&mut self, place_num: usize) -> QResult<&mut ProductState> {
         if place_num >= self.num_qubits() {
             return Err(QuantrError { message: format!("The position of the binary digit, {}, is out of bounds. The product dimension is {}, and so the position must be strictly less.", place_num, self.num_qubits()) });
         }
 
-        let old_qubit: Qubit = self.qubits[place_num].clone();
+        let old_qubit: Qubit = self.qubits[place_num];
         self.qubits[place_num] = if old_qubit == Qubit::Zero {
             Qubit::One
         } else {
@@ -195,6 +195,7 @@ impl ProductState {
     ///
     /// assert_eq!(String::from("01"), prod.to_string());
     /// ```
+    #[allow(clippy::inherent_to_string)]
     pub fn to_string(&self) -> String {
         self.qubits
             .iter()
@@ -215,7 +216,7 @@ impl ProductState {
                 Qubit::Zero => 0u32,
                 Qubit::One => 1 << pos,
             })
-            .fold(0, |sum, i| sum + i) as usize
+            .sum::<u32>() as usize
     }
 
     // Produces a product states based on converting a base 10 number to binary, where the product
@@ -274,11 +275,11 @@ mod tests {
 
     #[test]
     fn insert_qubits_in_state() {
+        let mut prod = ProductState::new_unchecked(&[Qubit::One, Qubit::One, Qubit::One]);
+        prod.insert_qubits(&[Qubit::Zero, Qubit::Zero], &[0, 2]);
         assert_eq!(
-            ProductState::new_unchecked(&[Qubit::Zero, Qubit::Zero, Qubit::One]).qubits,
-            ProductState::new_unchecked(&[Qubit::One, Qubit::One, Qubit::One])
-                .insert_qubits(&[Qubit::Zero, Qubit::Zero], &[0, 1])
-                .qubits
+            ProductState::new_unchecked(&[Qubit::Zero, Qubit::One, Qubit::Zero]).qubits,
+            prod.qubits
         );
     }
 

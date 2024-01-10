@@ -2,6 +2,31 @@
 
 This file logs the versions of quantr.
 
+## 0.4.1 - More optimisations
+
+Edited the README to include "No parallelisation" to limitations, and
+reduced the tractable number of qubit simulations to 18. There has also
+been a general clean up of the code, with the help of `cargo clippy`.
+
+Change of dependency:
+
+- The `rand` crate has been swapped with `fastrand` which decreases
+  compilation time.
+
+Optimisations:
+
+- The definition of the gates in `standard_gate_ops.rs` have had there
+  arguments changed so that the `kronecker_prod` is not used; increasing
+  speed for double gate processing.
+- The main simulating algorithm has been updated to increase it's speed,
+  mostly bypassing computations that are uneeded, for instance product
+  state qubits are flipped only if they are indeed different.
+
+Deprecated features:
+
+- The public fields of `Circuit` are to be made private (specifically
+  updated to `pub(crate)` status in the next breaking update).
+
 ## 0.4.0 - Optimisations of speed and memory allocation
 
 The optimisations and breaking changes that this update induces greatly
