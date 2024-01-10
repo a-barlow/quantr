@@ -34,39 +34,35 @@
 //! ```
 //! use quantr::{Circuit, Gate, Printer, Measurement::Observable};
 //!
-//! fn main() {
+//! let mut quantum_circuit: Circuit = Circuit::new(2).unwrap();
+//! 
+//! quantum_circuit
+//!     .add_gates(&[Gate::H, Gate::Y]).unwrap()
+//!     .add_gate(Gate::CNot(0), 1).unwrap();
+//! 
+//! let mut printer = Printer::new(&quantum_circuit);
+//! printer.print_diagram();
+//! // The above prints the following:
+//! // ┏━━━┓     
+//! // ┨ H ┠──█──
+//! // ┗━━━┛  │  
+//! //        │  
+//! // ┏━━━┓┏━┷━┓
+//! // ┨ Y ┠┨ X ┠
+//! // ┗━━━┛┗━━━┛
 //!
-//!    let mut quantum_circuit: Circuit = Circuit::new(2).unwrap();
-//!     
-//!     quantum_circuit
-//!         .add_gates(&[Gate::H, Gate::Y]).unwrap()
-//!         .add_gate(Gate::CNot(0), 1).unwrap();
-//!     
-//!     let mut printer = Printer::new(&quantum_circuit);
-//!     printer.print_diagram();
-//!     // The above prints the following:
-//!     // ┏━━━┓     
-//!     // ┨ H ┠──█──
-//!     // ┗━━━┛  │  
-//!     //        │  
-//!     // ┏━━━┓┏━┷━┓
-//!     // ┨ Y ┠┨ X ┠
-//!     // ┗━━━┛┗━━━┛
+//! quantum_circuit.simulate();
 //!
-//!    quantum_circuit.simulate();
+//! // Below prints the number of times that each state was observered
+//! // over 500 measurements of superpositions.
 //!
-//!    // Below prints the number of times that each state was observered
-//!     // over 500 measurements of superpositions.
-//!
-//!    if let Ok(Observable(bin_count)) = quantum_circuit.repeat_measurement(500) {
-//!         println!("[Observable] Bin count of observed states.");
-//!         for (state, count) in bin_count {
-//!             println!("|{}> observed {} times", state.to_string(), count);
-//!         }
+//! if let Ok(Observable(bin_count)) = quantum_circuit.repeat_measurement(500) {
+//!     println!("[Observable] Bin count of observed states.");
+//!     for (state, count) in bin_count {
+//!         println!("|{}> observed {} times", state.to_string(), count);
 //!     }
-//!
 //! }
-//! ```
+//!
 
 mod circuit;
 mod complex;

@@ -187,7 +187,7 @@ impl<'a> Circuit<'a> {
         }
 
         // No overlapping gates
-        Self::has_overlapping_controls_and_target(&gates_to_add, self.num_qubits.clone())?;
+        Self::has_overlapping_controls_and_target(&gates_to_add, self.num_qubits)?;
 
         // Push any multi-controlled gates to isolated columns
         Self::push_multi_gates(&mut gates_to_add)?;
@@ -225,7 +225,7 @@ impl<'a> Circuit<'a> {
         }
 
         // Make sure there are no control nodes that overlap with it's other nodes.
-        Self::has_overlapping_controls_and_target(&gates, self.num_qubits.clone())?;
+        Self::has_overlapping_controls_and_target(gates, self.num_qubits)?;
 
         // Push n-gates to another line (double, triple, etc.)
         let mut gates_vec: Vec<Gate<'a>> = gates.to_vec();
@@ -284,27 +284,24 @@ impl<'a> Circuit<'a> {
     // need to implement all other gates, in addition to checking that it's within circuit size!
     fn has_overlapping_controls_and_target(gates: &[Gate], circuit_size: usize) -> QResult<()> {
         for (pos, gate) in gates.iter().enumerate() {
-            match gate.get_nodes() {
-                Some(nodes) => {
-                    // check for overlapping control nodes.
-                    if Self::contains_repeating_values(circuit_size, &nodes) {
-                        return Err(QuantrError {
-                            message: format!(
-                                "The gate, {:?}, has overlapping control nodes.",
-                                gate
-                            ),
-                        });
-                    }
-                    if nodes.contains(&pos) {
-                        return Err(QuantrError { message: format!("The gate, {:?}, has a control node that equals the gate's position {}.", gate, pos) });
-                    }
-                    for &node in nodes.iter() {
-                        if node >= circuit_size {
-                            return Err(QuantrError { message: format!("The control node at position {:?}, is greater than the umnber of qubits {}.", node, circuit_size) });
-                        }
+            if let Some(nodes) = gate.get_nodes() {
+                // check for overlapping control nodes.
+                if Self::contains_repeating_values(circuit_size, &nodes) {
+                    return Err(QuantrError {
+                        message: format!(
+                            "The gate, {:?}, has overlapping control nodes.",
+                            gate
+                        ),
+                    });
+                }
+                if nodes.contains(&pos) {
+                    return Err(QuantrError { message: format!("The gate, {:?}, has a control node that equals the gate's position {}.", gate, pos) });
+                }
+                for &node in nodes.iter() {
+                    if node >= circuit_size {
+                        return Err(QuantrError { message: format!("The control node at position {:?}, is greater than the umnber of qubits {}.", node, circuit_size) });
                     }
                 }
-                None => {}
             }
         }
 
@@ -463,7 +460,7 @@ impl<'a> Circuit<'a> {
             Some(super_position) => Ok(Measurement::NonObservable(super_position)),
             None => {
                 Err(QuantrError {
-                    message: format!("The circuit has not been simulated. Call Circuit::simulate before calling this method, Circuit::get_superposition.")
+                    message: "The circuit has not been simulated. Call Circuit::simulate before calling this method, Circuit::get_superposition.".to_string(),
                 })
             }
         }
@@ -516,7 +513,7 @@ impl<'a> Circuit<'a> {
                     let mut cummalitive: f64 = 0f64;
                     let dice_roll: f64 = fastrand::f64();
                     for (state_label, probability) in &probabilities {
-                        cummalitive = cummalitive + probability;
+                        cummalitive += probability;
                         if dice_roll < cummalitive {
                             match bin_count.get(state_label) {
                                 Some(previous_count) => bin_count.insert(state_label.clone(), previous_count+1),
@@ -530,7 +527,7 @@ impl<'a> Circuit<'a> {
             },
             None => {
                 Err(QuantrError {
-                    message: format!("The circuit has not been simulated. Call Circuit::simulate before calling this method, Circuit::repeat_measurement.")
+                    message: "The circuit has not been simulated. Call Circuit::simulate before calling this method, Circuit::repeat_measurement.".to_string(),
                 })
             },
         }

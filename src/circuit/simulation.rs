@@ -80,7 +80,7 @@ impl<'a> Circuit<'a> {
         // the sum of states that are required to be added to the register
         let mut mapped_states: HashMap<ProductState, Complex<f64>> = Default::default();
 
-        for (prod_state, amp) in (&register).into_iter() {
+        for (prod_state, amp) in register.into_iter() {
             //Looping through super position of register
 
             // Obtain superposition from applying gate from a specified wire onto the product state, and add control nodes if necersary

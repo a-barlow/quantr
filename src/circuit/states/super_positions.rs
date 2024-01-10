@@ -206,7 +206,7 @@ impl SuperPosition {
     /// assert_eq!(complex_re!(1f64), superpos.get_amplitude_from_state(prod_state).unwrap());
     /// ```
     pub fn get_amplitude_from_state(&self, prod_state: ProductState) -> QResult<Complex<f64>> {
-        if 2usize << prod_state.qubits.len() - 1 != self.amplitudes.len() {
+        if 2usize << (prod_state.qubits.len() - 1) != self.amplitudes.len() {
             return Err(QuantrError { message: format!("Unable to retreive product state, |{:?}> with dimension {}. The superposition is a linear combination of states with different dimension. These dimensions should be equal.", prod_state.to_string(), prod_state.num_qubits()),});
         }
         Ok(*self.amplitudes.get(prod_state.comp_basis()).unwrap())
@@ -329,11 +329,11 @@ impl SuperPosition {
     ) {
         let length: usize = vec_amplitudes.len();
         let trailing_length: usize = length.trailing_zeros() as usize;
-        for i in 0..length {
+        for (i, amp) in vec_amplitudes.iter_mut().enumerate() {
             let key: ProductState = ProductState::binary_basis(i, trailing_length);
             match hash_amplitudes.get(&key) {
-                Some(val) => vec_amplitudes[i] = *val,
-                None => vec_amplitudes[i] = COMPLEX_ZERO,
+                Some(val) => *amp = *val,
+                None => *amp = COMPLEX_ZERO,
             }
         }
     }

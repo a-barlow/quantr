@@ -154,7 +154,7 @@ impl ProductState {
             return Err(QuantrError { message: format!("The position of the binary digit, {}, is out of bounds. The product dimension is {}, and so the position must be strictly less.", place_num, self.num_qubits()) });
         }
 
-        let old_qubit: Qubit = self.qubits[place_num].clone();
+        let old_qubit: Qubit = self.qubits[place_num];
         self.qubits[place_num] = if old_qubit == Qubit::Zero {
             Qubit::One
         } else {
@@ -195,6 +195,7 @@ impl ProductState {
     ///
     /// assert_eq!(String::from("01"), prod.to_string());
     /// ```
+    #[allow(clippy::inherent_to_string)]
     pub fn to_string(&self) -> String {
         self.qubits
             .iter()
@@ -215,7 +216,7 @@ impl ProductState {
                 Qubit::Zero => 0u32,
                 Qubit::One => 1 << pos,
             })
-            .fold(0, |sum, i| sum + i) as usize
+            .sum::<u32>() as usize
     }
 
     // Produces a product states based on converting a base 10 number to binary, where the product
