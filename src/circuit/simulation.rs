@@ -160,17 +160,15 @@ impl<'a> Circuit<'a> {
         if let Gate::CR(angle, control) = double_gate.name {
             positions.push(control);
             standard_gate_ops::cr(
-                prod_state
-                    .get_unchecked(control)
-                    .kronecker_prod(prod_state.get_unchecked(double_gate.position)),
+                prod_state.get_unchecked(control),
+                prod_state.get_unchecked(double_gate.position),
                 angle,
             )
         } else if let Gate::CRk(k, control) = double_gate.name {
             positions.push(control);
             standard_gate_ops::crk(
-                prod_state
-                    .get_unchecked(control)
-                    .kronecker_prod(prod_state.get_unchecked(double_gate.position)),
+                prod_state.get_unchecked(control),
+                prod_state.get_unchecked(double_gate.position),
                 k,
             )
         } else {
@@ -197,9 +195,8 @@ impl<'a> Circuit<'a> {
 
             positions.push(control_node);
             operator(
-                prod_state
-                    .get_unchecked(control_node)
-                    .kronecker_prod(prod_state.get_unchecked(double_gate.position)),
+                prod_state.get_unchecked(control_node),
+                prod_state.get_unchecked(double_gate.position),
             )
         }
     }
@@ -218,10 +215,9 @@ impl<'a> Circuit<'a> {
         positions.push(control_node_two);
         positions.push(control_node_one);
         operator(
-            prod_state
-                .get_unchecked(control_node_one)
-                .kronecker_prod(prod_state.get_unchecked(control_node_two))
-                .kronecker_prod(prod_state.get_unchecked(triple_gate.position)),
+            prod_state.get_unchecked(control_node_one),
+            prod_state.get_unchecked(control_node_two),
+            prod_state.get_unchecked(triple_gate.position),
         )
     }
 

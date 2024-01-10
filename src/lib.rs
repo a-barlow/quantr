@@ -35,11 +35,11 @@
 //! use quantr::{Circuit, Gate, Printer, Measurement::Observable};
 //!
 //! let mut quantum_circuit: Circuit = Circuit::new(2).unwrap();
-//! 
+//!
 //! quantum_circuit
 //!     .add_gates(&[Gate::H, Gate::Y]).unwrap()
 //!     .add_gate(Gate::CNot(0), 1).unwrap();
-//! 
+//!
 //! let mut printer = Printer::new(&quantum_circuit);
 //! printer.print_diagram();
 //! // The above prints the following:

@@ -260,9 +260,7 @@ impl Printer<'_> {
     }
 
     // Finds if there is a gate with one/multiple control nodes
-    fn get_multi_gate<'a>(
-        gates: &[GatePrinterInfo<'a>],
-    ) -> Option<(usize, GatePrinterInfo<'a>)> {
+    fn get_multi_gate<'a>(gates: &[GatePrinterInfo<'a>]) -> Option<(usize, GatePrinterInfo<'a>)> {
         for (pos, gate_info) in gates.iter().enumerate() {
             match gate_info.gate_size {
                 GateSize::Single => (),

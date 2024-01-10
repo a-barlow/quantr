@@ -96,7 +96,7 @@ impl<'a> Circuit<'a> {
         self.num_qubits
     }
 
-    /// Returns the vector of gates that have been added to the circuit. 
+    /// Returns the vector of gates that have been added to the circuit.
     ///
     /// It is a flattened vector which is buffered with identity gates.
     ///
@@ -111,7 +111,7 @@ impl<'a> Circuit<'a> {
     /// ```
     pub fn get_gates(&self) -> &[Gate<'a>] {
         self.circuit_gates.as_slice()
-    } 
+    }
 
     /// Adds a single gate to the circuit.
     ///
@@ -288,10 +288,7 @@ impl<'a> Circuit<'a> {
                 // check for overlapping control nodes.
                 if Self::contains_repeating_values(circuit_size, &nodes) {
                     return Err(QuantrError {
-                        message: format!(
-                            "The gate, {:?}, has overlapping control nodes.",
-                            gate
-                        ),
+                        message: format!("The gate, {:?}, has overlapping control nodes.", gate),
                     });
                 }
                 if nodes.contains(&pos) {
