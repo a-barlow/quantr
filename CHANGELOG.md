@@ -6,7 +6,7 @@ This file logs the versions of quantr.
 
 Edited the README to include "No parallelisation" to limitations, and
 reduced the tractable number of qubit simulations to 18. There has also
-been a large overhaul of the code increasing maintainability. Some
+been a large overhaul of the code to increase maintainability. Some
 common mistakes were also fixed with the help of `cargo clippy`.
 
 Change of dependency:
@@ -18,7 +18,7 @@ Optimisations:
 
 - The definition of the gates in `standard_gate_ops.rs` have had there
   arguments changed so that the `kronecker_prod` is not used; increasing
-  speed for double gate processing.
+  speed for multi gate processing.
 - The main simulating algorithm has been updated to increase it's speed,
   mostly bypassing computations that are uneeded, for instance product
   state qubits are flipped only if they are indeed different.
