@@ -13,7 +13,7 @@
 //! These linear functions are defined by how they act on product states of qubits. Defining the
 //! mappings on a basis defines how the gates act on larger product spaces.
 
-use crate::states::{ProductState, Qubit, SuperPosition};
+use crate::states::{Qubit, SuperPosition};
 use crate::Complex;
 use crate::{complex, complex_im, complex_im_array, complex_re, complex_re_array, COMPLEX_ZERO};
 use std::f64::consts::FRAC_1_SQRT_2;
@@ -32,14 +32,6 @@ use std::ops::{Div, Mul};
 //
 // Single gates
 //
-
-#[rustfmt::skip]
-pub fn identity(register: Qubit) -> SuperPosition {
-    SuperPosition::new_with_register_unchecked::<2>(match register {
-        Qubit::Zero => [complex_re!(1f64), COMPLEX_ZERO],
-        Qubit::One =>  [COMPLEX_ZERO, complex_re!(1f64)],
-    })
-}
 
 #[rustfmt::skip]
 pub fn hadamard(register: Qubit) -> SuperPosition {
@@ -194,9 +186,8 @@ pub fn pauli_z(register: Qubit) -> SuperPosition {
 //
 
 #[rustfmt::skip]
-pub fn cnot(register: ProductState) -> SuperPosition {
-    let input_register: [Qubit; 2] = [register.qubits[0], register.qubits[1]];
-    SuperPosition::new_with_register_unchecked::<4>(match input_register {
+pub fn cnot(qubit_one: Qubit, qubit_two: Qubit) -> SuperPosition {
+    SuperPosition::new_with_register_unchecked::<4>(match [qubit_one, qubit_two] {
         [Qubit::Zero, Qubit::Zero] => complex_re_array!(1f64, 0f64, 0f64, 0f64),
         [Qubit::Zero, Qubit::One]  => complex_re_array!(0f64, 1f64, 0f64, 0f64),
         [Qubit::One, Qubit::Zero]  => complex_re_array!(0f64, 0f64, 0f64, 1f64),
@@ -205,9 +196,8 @@ pub fn cnot(register: ProductState) -> SuperPosition {
 }
 
 #[rustfmt::skip]
-pub fn cy(register: ProductState) -> SuperPosition {
-    let input_register: [Qubit; 2] = [register.qubits[0], register.qubits[1]];
-    SuperPosition::new_with_register_unchecked::<4>(match input_register {
+pub fn cy(qubit_one: Qubit, qubit_two: Qubit) -> SuperPosition {
+    SuperPosition::new_with_register_unchecked::<4>(match [qubit_one, qubit_two] {
         [Qubit::Zero, Qubit::Zero] => complex_re_array!(1f64, 0f64, 0f64, 0f64),
         [Qubit::Zero, Qubit::One]  => complex_re_array!(0f64, 1f64, 0f64, 0f64),
         [Qubit::One, Qubit::Zero]  => complex_im_array!(0f64, 0f64, 0f64, 1f64),
@@ -216,9 +206,8 @@ pub fn cy(register: ProductState) -> SuperPosition {
 }
 
 #[rustfmt::skip]
-pub fn cz(register: ProductState) -> SuperPosition {
-    let input_register: [Qubit; 2] = [register.qubits[0], register.qubits[1]];
-    SuperPosition::new_with_register_unchecked::<4>(match input_register {
+pub fn cz(qubit_one: Qubit, qubit_two: Qubit) -> SuperPosition {
+    SuperPosition::new_with_register_unchecked::<4>(match [qubit_one, qubit_two] {
         [Qubit::Zero, Qubit::Zero] => complex_re_array!(1f64, 0f64, 0f64, 0f64),
         [Qubit::Zero, Qubit::One]  => complex_re_array!(0f64, 1f64, 0f64, 0f64),
         [Qubit::One, Qubit::Zero]  => complex_re_array!(0f64, 0f64, 1f64, 0f64),
@@ -227,9 +216,8 @@ pub fn cz(register: ProductState) -> SuperPosition {
 }
 
 #[rustfmt::skip]
-pub fn swap(register: ProductState) -> SuperPosition {
-    let input_register: [Qubit; 2] = [register.qubits[0], register.qubits[1]];
-    SuperPosition::new_with_register_unchecked::<4>(match input_register {
+pub fn swap(qubit_one: Qubit, qubit_two: Qubit) -> SuperPosition {
+    SuperPosition::new_with_register_unchecked::<4>(match [qubit_one, qubit_two] {
         [Qubit::Zero, Qubit::Zero] => complex_re_array!(1f64, 0f64, 0f64, 0f64),
         [Qubit::Zero, Qubit::One]  => complex_re_array!(0f64, 0f64, 1f64, 0f64),
         [Qubit::One, Qubit::Zero]  => complex_re_array!(0f64, 1f64, 0f64, 0f64),
@@ -238,10 +226,9 @@ pub fn swap(register: ProductState) -> SuperPosition {
 }
 
 #[rustfmt::skip]
-pub fn cr(register: ProductState, angle: f64) -> SuperPosition {
-    let input_register: [Qubit; 2] = [register.qubits[0], register.qubits[1]];
+pub fn cr(qubit_one: Qubit, qubit_two: Qubit, angle: f64) -> SuperPosition {
     let exp_array: [Complex<f64>; 4] = [COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO, Complex::<f64>::exp_im(angle)];
-    SuperPosition::new_with_register_unchecked::<4>(match input_register {
+    SuperPosition::new_with_register_unchecked::<4>(match [qubit_one, qubit_two] {
         [Qubit::Zero, Qubit::Zero] => complex_re_array!(1f64, 0f64, 0f64, 0f64),
         [Qubit::Zero, Qubit::One]  => complex_re_array!(0f64, 1f64, 0f64, 0f64),
         [Qubit::One, Qubit::Zero]  => complex_re_array!(0f64, 0f64, 1f64, 0f64),
@@ -250,11 +237,10 @@ pub fn cr(register: ProductState, angle: f64) -> SuperPosition {
 }
 
 #[rustfmt::skip]
-pub fn crk(register: ProductState, k: i32) -> SuperPosition {
-    let input_register: [Qubit; 2] = [register.qubits[0], register.qubits[1]];
+pub fn crk(qubit_one: Qubit, qubit_two: Qubit, k: i32) -> SuperPosition {
     let exp_array: [Complex<f64>; 4] = 
         [COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO, Complex::<f64>::exp_im((2f64*std::f64::consts::PI).div(2f64.powi(k)))];
-    SuperPosition::new_with_register_unchecked::<4>(match input_register {
+    SuperPosition::new_with_register_unchecked::<4>(match [qubit_one, qubit_two] {
         [Qubit::Zero, Qubit::Zero] => complex_re_array!(1f64, 0f64, 0f64, 0f64),
         [Qubit::Zero, Qubit::One]  => complex_re_array!(0f64, 1f64, 0f64, 0f64),
         [Qubit::One, Qubit::Zero]  => complex_re_array!(0f64, 0f64, 1f64, 0f64),
@@ -267,9 +253,8 @@ pub fn crk(register: ProductState, k: i32) -> SuperPosition {
 //
 
 #[rustfmt::skip]
-pub fn toffoli(register: ProductState) -> SuperPosition {
-    let input_register: [Qubit; 3] = [register.qubits[0], register.qubits[1], register.qubits[2]];
-    SuperPosition::new_with_register_unchecked::<8>(match input_register {
+pub fn toffoli(qubit_one: Qubit, qubit_two: Qubit, qubit_three: Qubit) -> SuperPosition {
+    SuperPosition::new_with_register_unchecked::<8>(match [qubit_one, qubit_two, qubit_three] {
             [Qubit::Zero, Qubit::Zero, Qubit::Zero] => { complex_re_array!(1f64, 0f64, 0f64, 0f64, 0f64, 0f64, 0f64, 0f64) }
             [Qubit::Zero, Qubit::Zero, Qubit::One] => { complex_re_array!(0f64, 1f64, 0f64, 0f64, 0f64, 0f64, 0f64, 0f64) }
             [Qubit::Zero, Qubit::One, Qubit::Zero] => { complex_re_array!(0f64, 0f64, 1f64, 0f64, 0f64, 0f64, 0f64, 0f64) }

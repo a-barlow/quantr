@@ -8,7 +8,7 @@
 * Author: Andrew Rowan Barlow <a.barlow.dev@gmail.com>
 */
 
-use crate::circuit::{HashMap, ZERO_MARGIN};
+use crate::circuit::{HashMap, QResult, ZERO_MARGIN};
 use crate::complex_re;
 use crate::{states::ProductState, Complex, QuantrError, COMPLEX_ZERO};
 
@@ -33,7 +33,7 @@ impl SuperPosition {
     ///
     /// assert_eq!(&complex_re_array![1f64, 0f64, 0f64, 0f64], superpos.get_amplitudes());
     /// ```
-    pub fn new(prod_dimension: usize) -> Result<SuperPosition, QuantrError> {
+    pub fn new(prod_dimension: usize) -> QResult<SuperPosition> {
         if prod_dimension == 0 {
             return Err(QuantrError {
                 message: String::from("The number of qubits must be non-zero."),
@@ -60,7 +60,7 @@ impl SuperPosition {
     ///
     /// assert_eq!(&complex_re_array![1f64, 0f64, 0f64, 0f64], superpos.get_amplitudes());
     /// ```
-    pub fn new_with_amplitudes(amplitudes: &[Complex<f64>]) -> Result<SuperPosition, QuantrError> {
+    pub fn new_with_amplitudes(amplitudes: &[Complex<f64>]) -> QResult<SuperPosition> {
         if !Self::equal_within_error(amplitudes.iter().map(|x| x.abs_square()).sum::<f64>(), 1f64) {
             return Err(QuantrError {
                 message: String::from("Slice given to set amplitudes in super position does not conserve probability, the absolute square sum of the coefficents must be one."),
@@ -100,7 +100,7 @@ impl SuperPosition {
     /// ```
     pub fn new_with_hash_amplitudes(
         hash_amplitudes: HashMap<ProductState, Complex<f64>>,
-    ) -> Result<SuperPosition, QuantrError> {
+    ) -> QResult<SuperPosition> {
         if hash_amplitudes.is_empty() {
             return Err(QuantrError { message: String::from("An empty HashMap was given. A superposition must have at least one non-zero state.") });
         }
@@ -137,7 +137,7 @@ impl SuperPosition {
     ///
     /// assert_eq!(complex_re!(1f64), superpos.get_amplitude(1).unwrap());
     /// ```
-    pub fn get_amplitude(&self, pos: usize) -> Result<Complex<f64>, QuantrError> {
+    pub fn get_amplitude(&self, pos: usize) -> QResult<Complex<f64>> {
         if pos >= self.amplitudes.len() {
             let length = self.amplitudes.len();
             Err(QuantrError { message: format!("Failed to retrieve amplitude from list. Index given was, {pos}, which is greater than length of list, {length}."), 
@@ -205,11 +205,8 @@ impl SuperPosition {
     ///
     /// assert_eq!(complex_re!(1f64), superpos.get_amplitude_from_state(prod_state).unwrap());
     /// ```
-    pub fn get_amplitude_from_state(
-        &self,
-        prod_state: ProductState,
-    ) -> Result<Complex<f64>, QuantrError> {
-        if 2usize << prod_state.qubits.len() - 1 != self.amplitudes.len() {
+    pub fn get_amplitude_from_state(&self, prod_state: ProductState) -> QResult<Complex<f64>> {
+        if 2usize << (prod_state.qubits.len() - 1) != self.amplitudes.len() {
             return Err(QuantrError { message: format!("Unable to retreive product state, |{:?}> with dimension {}. The superposition is a linear combination of states with different dimension. These dimensions should be equal.", prod_state.to_string(), prod_state.num_qubits()),});
         }
         Ok(*self.amplitudes.get(prod_state.comp_basis()).unwrap())
@@ -230,10 +227,7 @@ impl SuperPosition {
     ///
     /// assert_eq!(&complex_re_array![0f64, 1f64, 0f64, 0f64], superpos.get_amplitudes());
     /// ```
-    pub fn set_amplitudes(
-        &mut self,
-        amplitudes: &[Complex<f64>],
-    ) -> Result<&mut SuperPosition, QuantrError> {
+    pub fn set_amplitudes(&mut self, amplitudes: &[Complex<f64>]) -> QResult<&mut SuperPosition> {
         if amplitudes.len() != self.amplitudes.len() {
             return Err(QuantrError {
                 message: format!("The slice given to set the amplitudes in the computational basis has length {}, when it should have length {}.", amplitudes.len(), self.amplitudes.len()),
@@ -278,7 +272,7 @@ impl SuperPosition {
     pub fn set_amplitudes_from_states(
         &mut self,
         amplitudes: HashMap<ProductState, Complex<f64>>,
-    ) -> Result<&mut SuperPosition, QuantrError> {
+    ) -> QResult<&mut SuperPosition> {
         // Check if amplitudes and product states are correct.
         if amplitudes.is_empty() {
             return Err(QuantrError { message: String::from("An empty HashMap was given. A superposition must have at least one non-zero state.") });
@@ -335,11 +329,11 @@ impl SuperPosition {
     ) {
         let length: usize = vec_amplitudes.len();
         let trailing_length: usize = length.trailing_zeros() as usize;
-        for i in 0..length {
+        for (i, amp) in vec_amplitudes.iter_mut().enumerate() {
             let key: ProductState = ProductState::binary_basis(i, trailing_length);
             match hash_amplitudes.get(&key) {
-                Some(val) => vec_amplitudes[i] = *val,
-                None => vec_amplitudes[i] = COMPLEX_ZERO,
+                Some(val) => *amp = *val,
+                None => *amp = COMPLEX_ZERO,
             }
         }
     }

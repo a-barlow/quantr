@@ -8,7 +8,7 @@
 * Author: Andrew Rowan Barlow <a.barlow.dev@gmail.com>
 */
 
-use super::{Circuit, Gate, GateSize};
+use super::{Circuit, Gate};
 use std::fs::File;
 use std::io::Write;
 use std::path::Path;
@@ -38,7 +38,6 @@ struct RowSchematic {
 
 #[derive(Clone)]
 struct GatePrinterInfo<'a> {
-    gate_size: GateSize,
     gate_name: String,
     gate_name_length: usize,
     gate: &'a Gate<'a>,
@@ -106,7 +105,7 @@ impl Printer<'_> {
     /// ```
     pub fn save_diagram(&mut self, file_path: &str) -> std::io::Result<()> {
         let path: &Path = Path::new(file_path);
-        let mut file = File::create(&path)?;
+        let mut file = File::create(path)?;
         file.write_all(self.get_or_make_diagram().as_bytes())
     }
 
@@ -132,7 +131,7 @@ impl Printer<'_> {
         println!("{}", diagram);
 
         let path = Path::new(file_path);
-        let mut file = File::create(&path)?;
+        let mut file = File::create(path)?;
         file.write_all(diagram.as_bytes())
     }
 
@@ -188,14 +187,14 @@ impl Printer<'_> {
                 );
             } else {
                 // Deals with single gates
-                Self::draw_single_gates(&mut printed_diagram, diagram_schematic);
+                Self::draw_single_gates(printed_diagram.as_mut_slice(), diagram_schematic);
             }
         }
 
         // Collect all the strings to return a single string giving the diagram
         let final_diagram = printed_diagram
             .into_iter()
-            .fold(String::from(""), |acc, line| acc + &line + &"\n");
+            .fold(String::from(""), |acc, line| acc + &line + "\n");
 
         self.diagram = Some(final_diagram.clone());
 
@@ -212,15 +211,13 @@ impl Printer<'_> {
     ) -> (Vec<GatePrinterInfo<'a>>, usize) {
         let mut gates_infos: Vec<GatePrinterInfo> = Default::default();
         let mut longest_name_length: usize = 1usize;
-        for gate in gates_column.into_iter() {
-            let gate_size: GateSize = super::Circuit::classify_gate_size(gate);
-            let gate_name: String = Self::get_gate_name(gate);
+        for gate in gates_column.iter() {
+            let gate_name: String = gate.get_name();
             let gate_name_length: usize = gate_name.len();
             if gate_name_length > longest_name_length {
-                longest_name_length = gate_name_length.clone()
+                longest_name_length = gate_name_length;
             }
             gates_infos.push(GatePrinterInfo {
-                gate_size,
                 gate_name,
                 gate_name_length,
                 gate,
@@ -229,51 +226,18 @@ impl Printer<'_> {
         (gates_infos, longest_name_length)
     }
 
-    fn get_gate_name(gate: &Gate) -> String {
-        match gate {
-            Gate::Id => "".to_string(),
-            Gate::X => "X".to_string(),
-            Gate::H => "H".to_string(),
-            Gate::S => "S".to_string(),
-            Gate::Sdag => "S*".to_string(),
-            Gate::T => "T".to_string(),
-            Gate::Tdag => "T*".to_string(),
-            Gate::Y => "Y".to_string(),
-            Gate::Z => "Z".to_string(),
-            Gate::Rx(_) => "Rx".to_string(),
-            Gate::Ry(_) => "Ry".to_string(),
-            Gate::Rz(_) => "Rz".to_string(),
-            Gate::Phase(_) => "P".to_string(),
-            Gate::X90 => "X90".to_string(),
-            Gate::Y90 => "Y90".to_string(),
-            Gate::MX90 => "X90*".to_string(),
-            Gate::MY90 => "Y90*".to_string(),
-            Gate::CR(_, _) => "CR".to_string(),
-            Gate::CRk(_, _) => "CRk".to_string(),
-            Gate::Swap(_) => "Sw".to_string(),
-            Gate::CZ(_) => "Z".to_string(),
-            Gate::CY(_) => "Y".to_string(),
-            Gate::CNot(_) => "X".to_string(),
-            Gate::Toffoli(_, _) => "X".to_string(),
-            Gate::Custom(_, _, name) => name.to_string(),
-        }
-    }
-
     // Finds if there is a gate with one/multiple control nodes
-    fn get_multi_gate<'a>(
-        gates: &Vec<GatePrinterInfo<'a>>,
-    ) -> Option<(usize, GatePrinterInfo<'a>)> {
+    fn get_multi_gate<'a>(gates: &[GatePrinterInfo<'a>]) -> Option<(usize, GatePrinterInfo<'a>)> {
         for (pos, gate_info) in gates.iter().enumerate() {
-            match gate_info.gate_size {
-                GateSize::Single => (),
-                _ => return Some((pos, gate_info.clone())),
+            if !gate_info.gate.is_single_gate() {
+                return Some((pos, gate_info.clone()));
             }
         }
         None
     }
 
     // Draw a column of single gates
-    fn draw_single_gates(row_schematics: &mut Vec<String>, diagram_scheme: DiagramSchema) {
+    fn draw_single_gates(row_schematics: &mut [String], diagram_scheme: DiagramSchema) {
         for (pos, gate_info) in diagram_scheme.gate_info_column.iter().enumerate() {
             let padding: usize = diagram_scheme.longest_name_length - gate_info.gate_name_length;
             let cache: RowSchematic = match gate_info.gate {
@@ -286,12 +250,12 @@ impl Printer<'_> {
                 _ => RowSchematic {
                     top: "┏━".to_string()
                         + &"━".repeat(gate_info.gate_name_length)
-                        + &"━┓"
+                        + "━┓"
                         + &" ".repeat(padding),
-                    name: "┨ ".to_string() + &gate_info.gate_name + &" ┠" + &"─".repeat(padding),
+                    name: "┨ ".to_string() + &gate_info.gate_name + " ┠" + &"─".repeat(padding),
                     bottom: "┗━".to_string()
                         + &"━".repeat(gate_info.gate_name_length)
-                        + &"━┛"
+                        + "━┛"
                         + &" ".repeat(padding),
                     connection: " ".repeat(diagram_scheme.longest_name_length + 4),
                 },
@@ -301,9 +265,9 @@ impl Printer<'_> {
     }
 
     // Draw a single column containing a multigate function.
-    fn draw_multi_gates<'a>(
-        row_schematics: &mut Vec<String>,
-        multi_gate_info: GatePrinterInfo<'a>,
+    fn draw_multi_gates(
+        row_schematics: &mut [String],
+        multi_gate_info: GatePrinterInfo<'_>,
         column_size: &usize,
         position: usize,
     ) {
@@ -330,8 +294,8 @@ impl Printer<'_> {
                             "━"
                         }
                         + &"━".repeat(multi_gate_info.gate_name_length - 1)
-                        + &"━┓",
-                    name: "┨ ".to_string() + &multi_gate_info.gate_name + &" ┠",
+                        + "━┓",
+                    name: "┨ ".to_string() + &multi_gate_info.gate_name + " ┠",
                     bottom: "┗━".to_string()
                         + if position < extreme_nodes.max {
                             "┯"
@@ -339,7 +303,7 @@ impl Printer<'_> {
                             "━"
                         }
                         + &"━".repeat(multi_gate_info.gate_name_length - 1)
-                        + &"━┛",
+                        + "━┛",
                     connection: "  ".to_string()
                         + if position < extreme_nodes.max {
                             "│"
@@ -393,7 +357,7 @@ impl Printer<'_> {
 
     // Adds a gate to the vector of strings.
     fn add_string_to_schematic(
-        schematic: &mut Vec<String>,
+        schematic: &mut [String],
         row_schem_num: usize,
         cache: RowSchematic,
     ) {

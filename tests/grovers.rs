@@ -19,6 +19,7 @@ const ERROR_MARGIN: f64 = 0.00000001f64;
 
 #[test]
 fn grovers_3qubit() -> Result<(), QuantrError> {
+    fastrand::seed(0);
     let mut circuit = Circuit::new(3)?;
 
     // Kick state into superposition of equal weights
@@ -70,6 +71,7 @@ fn grovers_3qubit() -> Result<(), QuantrError> {
 
 #[test]
 fn x3sudoko() -> Result<(), QuantrError> {
+    fastrand::seed(0);
     let mut qc: Circuit = Circuit::new(10)?;
 
     qc.add_repeating_gate(Gate::H, &[0, 1, 2, 3, 4, 5])?

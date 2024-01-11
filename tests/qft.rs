@@ -19,6 +19,7 @@ const ERROR_MARGIN: f64 = 0.00000001f64;
 
 #[test]
 fn simple_qft() -> Result<(), QuantrError> {
+    fastrand::seed(0);
     let mut qc: Circuit = Circuit::new(3)?;
 
     // Apply qft
@@ -39,6 +40,7 @@ fn simple_qft() -> Result<(), QuantrError> {
     ];
 
     if let Measurement::NonObservable(super_pos) = qc.get_superposition().unwrap() {
+        println!("{:?}", super_pos);
         compare_complex_lists_and_register(&correct_super, &super_pos);
     }
 

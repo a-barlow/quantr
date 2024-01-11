@@ -8,17 +8,22 @@
 * Author: Andrew Rowan Barlow <a.barlow.dev@gmail.com>
 */
 
-use super::circuit::gate::{GateInfo, GateSize};
+// Added only for silencing deprecated warnings for using public fields of `Circuit`.
+#![allow(deprecated)]
+
+use super::circuit::gate::{GateCategory, GateInfo};
 use crate::states::{ProductState, SuperPosition};
 use crate::{Gate, QuantrError};
-use rand::Rng;
 use std::collections::HashMap;
+use std::iter::zip;
 
 pub mod gate;
 pub mod printer;
 mod simulation;
 mod standard_gate_ops;
 pub mod states;
+
+pub(crate) type QResult<T> = Result<T, QuantrError>;
 
 // The tolerance for declaring non-zero amplitudes.
 const ZERO_MARGIN: f64 = 1e-7;
@@ -36,7 +41,14 @@ pub enum Measurement<T> {
 /// A quantum circuit where gates can be appended and then simulated to measure resulting
 /// superpositions.
 pub struct Circuit<'a> {
+    #[deprecated(
+        note = "This field will be made private to the user, where it will be given pub(crate) status in the next major update. Use Circuit::get_gates instead."
+    )]
+    // Change this to Vec<CategoryGate> in next major update.
     pub circuit_gates: Vec<Gate<'a>>,
+    #[deprecated(
+        note = "This field will be made private to the user, where it will be given pub(crate) status in the next major update. Use Circuit::get_num_qubits instead."
+    )]
     pub num_qubits: usize,
     output_state: Option<SuperPosition>,
     register: Option<SuperPosition>,
@@ -56,7 +68,7 @@ impl<'a> Circuit<'a> {
     /// // Initialises a 3 qubit circuit.
     /// let quantum_circuit: Circuit = Circuit::new(3).unwrap();
     /// ```
-    pub fn new(num_qubits: usize) -> Result<Circuit<'a>, QuantrError> {
+    pub fn new(num_qubits: usize) -> QResult<Circuit<'a>> {
         if num_qubits == 0 {
             return Err(QuantrError {
                 message: String::from("The initiliased circuit must have at least one wire."),
@@ -71,6 +83,36 @@ impl<'a> Circuit<'a> {
             register: None,
             config_progress: false,
         })
+    }
+
+    /// Returns the number of qubits in the circuit.
+    ///
+    /// # Example
+    /// ```
+    /// use quantr::{Circuit, Gate};
+    ///
+    /// let quantum_circuit: Circuit = Circuit::new(3).unwrap();
+    /// assert_eq!(quantum_circuit.get_num_qubits(), 3usize);
+    /// ```
+    pub fn get_num_qubits(self) -> usize {
+        self.num_qubits
+    }
+
+    /// Returns the vector of gates that have been added to the circuit.
+    ///
+    /// It is a flattened vector which is buffered with identity gates.
+    ///
+    /// # Example
+    /// ```
+    /// use quantr::{Circuit, Gate};
+    ///
+    /// let mut quantum_circuit: Circuit = Circuit::new(3).unwrap();
+    /// quantum_circuit.add_gate(Gate::X, 2).unwrap();
+    ///
+    /// assert_eq!(quantum_circuit.get_gates(), &[Gate::Id, Gate::Id, Gate::X]);
+    /// ```
+    pub fn get_gates(&self) -> &[Gate<'a>] {
+        self.circuit_gates.as_slice()
     }
 
     /// Adds a single gate to the circuit.
@@ -90,11 +132,7 @@ impl<'a> Circuit<'a> {
     /// // -------
     /// // -------
     /// ```
-    pub fn add_gate(
-        &mut self,
-        gate: Gate<'a>,
-        position: usize,
-    ) -> Result<&mut Circuit<'a>, QuantrError> {
+    pub fn add_gate(&mut self, gate: Gate<'a>, position: usize) -> QResult<&mut Circuit<'a>> {
         Self::add_gates_with_positions(self, HashMap::from([(position, gate)]))
     }
 
@@ -125,7 +163,7 @@ impl<'a> Circuit<'a> {
     pub fn add_gates_with_positions(
         &mut self,
         gates_with_positions: HashMap<usize, Gate<'a>>,
-    ) -> Result<&mut Circuit<'a>, QuantrError> {
+    ) -> QResult<&mut Circuit<'a>> {
         // If any keys are out of bounds, return an error.
         if let Some(out_of_bounds_key) =
             gates_with_positions.keys().find(|k| *k >= &self.num_qubits)
@@ -151,7 +189,7 @@ impl<'a> Circuit<'a> {
         }
 
         // No overlapping gates
-        Self::has_overlapping_controls_and_target(&gates_to_add, self.num_qubits.clone())?;
+        Self::has_overlapping_controls_and_target(&gates_to_add, self.num_qubits)?;
 
         // Push any multi-controlled gates to isolated columns
         Self::push_multi_gates(&mut gates_to_add)?;
@@ -180,7 +218,7 @@ impl<'a> Circuit<'a> {
     /// // -- X --
     /// // -- Y --
     /// ```
-    pub fn add_gates(&mut self, gates: &[Gate<'a>]) -> Result<&mut Circuit<'a>, QuantrError> {
+    pub fn add_gates(&mut self, gates: &[Gate<'a>]) -> QResult<&mut Circuit<'a>> {
         // Ensured we have a gate for every wire.
         if gates.len() != self.num_qubits {
             return Err(QuantrError {
@@ -189,7 +227,7 @@ impl<'a> Circuit<'a> {
         }
 
         // Make sure there are no control nodes that overlap with it's other nodes.
-        Self::has_overlapping_controls_and_target(&gates, self.num_qubits.clone())?;
+        Self::has_overlapping_controls_and_target(gates, self.num_qubits)?;
 
         // Push n-gates to another line (double, triple, etc.)
         let mut gates_vec: Vec<Gate<'a>> = gates.to_vec();
@@ -200,7 +238,7 @@ impl<'a> Circuit<'a> {
 
     // Pushes multi-controlled gates into their own column. Potentially expensive operation to
     // insert new elements at smaller positions into a long vector.
-    fn push_multi_gates(gates: &mut Vec<Gate<'a>>) -> Result<(), QuantrError> {
+    fn push_multi_gates(gates: &mut Vec<Gate<'a>>) -> QResult<()> {
         let mut extended_vec: Vec<Gate> = Default::default();
         let mut multi_gate_positions: Vec<usize> = Default::default();
 
@@ -225,14 +263,11 @@ impl<'a> Circuit<'a> {
             gates.extend(extended_vec)
         } else {
             for (pos, gate) in gates.iter().enumerate() {
-                match Self::classify_gate_size(gate) {
-                    GateSize::Double | GateSize::Triple | GateSize::Custom => {
-                        let mut temp_vec = vec![Gate::Id; gates.len()];
-                        temp_vec[pos] = gate.clone();
-                        extended_vec.extend(temp_vec);
-                        multi_gate_positions.push(pos);
-                    }
-                    _ => {}
+                if !gate.is_single_gate() {
+                    let mut temp_vec = vec![Gate::Id; gates.len()];
+                    temp_vec[pos] = gate.clone();
+                    extended_vec.extend(temp_vec);
+                    multi_gate_positions.push(pos);
                 }
             }
 
@@ -246,32 +281,23 @@ impl<'a> Circuit<'a> {
     }
 
     // need to implement all other gates, in addition to checking that it's within circuit size!
-    fn has_overlapping_controls_and_target(
-        gates: &[Gate],
-        circuit_size: usize,
-    ) -> Result<(), QuantrError> {
+    fn has_overlapping_controls_and_target(gates: &[Gate], circuit_size: usize) -> QResult<()> {
         for (pos, gate) in gates.iter().enumerate() {
-            match gate.get_nodes() {
-                Some(nodes) => {
-                    // check for overlapping control nodes.
-                    if Self::contains_repeating_values(circuit_size, &nodes) {
-                        return Err(QuantrError {
-                            message: format!(
-                                "The gate, {:?}, has overlapping control nodes.",
-                                gate
-                            ),
-                        });
-                    }
-                    if nodes.contains(&pos) {
-                        return Err(QuantrError { message: format!("The gate, {:?}, has a control node that equals the gate's position {}.", gate, pos) });
-                    }
-                    for &node in nodes.iter() {
-                        if node >= circuit_size {
-                            return Err(QuantrError { message: format!("The control node at position {:?}, is greater than the umnber of qubits {}.", node, circuit_size) });
-                        }
+            if let Some(nodes) = gate.get_nodes() {
+                // check for overlapping control nodes.
+                if Self::contains_repeating_values(circuit_size, &nodes) {
+                    return Err(QuantrError {
+                        message: format!("The gate, {:?}, has overlapping control nodes.", gate),
+                    });
+                }
+                if nodes.contains(&pos) {
+                    return Err(QuantrError { message: format!("The gate, {:?}, has a control node that equals the gate's position {}.", gate, pos) });
+                }
+                for &node in nodes.iter() {
+                    if node >= circuit_size {
+                        return Err(QuantrError { message: format!("The control node at position {:?}, is greater than the umnber of qubits {}.", node, circuit_size) });
                     }
                 }
-                None => {}
             }
         }
 
@@ -312,7 +338,7 @@ impl<'a> Circuit<'a> {
         &mut self,
         gate: Gate<'a>,
         positions: &[usize],
-    ) -> Result<&mut Circuit<'a>, QuantrError> {
+    ) -> QResult<&mut Circuit<'a>> {
         // Incase the user has attempted to place the gate twice on the same wire.
         if Self::contains_repeating_values(self.num_qubits, positions) {
             return Err(QuantrError {
@@ -368,28 +394,33 @@ impl<'a> Circuit<'a> {
         let mut qubit_counter: usize = 0;
         let number_gates: usize = self.circuit_gates.len();
 
+        // This will removed in next major update, as the circuit will directly store this. Instead
+        // of what's happening now, in which the gates are being copied into another wapper.
+        let mut categorised_gates: Vec<GateCategory> = Vec::with_capacity(number_gates);
+        for gate in &self.circuit_gates {
+            categorised_gates.push(Gate::linker(gate));
+        }
+
         if self.config_progress {
-            println!("Starting circuit simulation...")
+            println!("Starting circuit simulation...");
         }
 
         // Loop through each gate of circuit from starting at top row to bottom, then moving onto the next.
-        for gate in &self.circuit_gates {
+        for (cat_gate, gate) in zip(categorised_gates, &self.circuit_gates) {
+            if cat_gate == GateCategory::Identity {
+                qubit_counter += 1;
+                continue;
+            }
+
             let gate_pos: usize = qubit_counter % self.num_qubits;
 
             if self.config_progress {
                 Self::print_circuit_log(gate, &gate_pos, &qubit_counter, &number_gates);
             }
 
-            if *gate == Gate::Id {
-                qubit_counter += 1;
-                continue;
-            }
-
-            let gate_class: GateSize = Self::classify_gate_size(gate);
             let gate_to_apply: GateInfo = GateInfo {
-                name: gate.clone(),
+                cat_gate,
                 position: gate_pos,
-                size: gate_class,
             };
             Circuit::apply_gate(gate_to_apply, &mut register);
 
@@ -425,12 +456,12 @@ impl<'a> Circuit<'a> {
     /// // |000> : 0 - 0.71...i     
     /// // |001> : 0 + 0.71...i
     /// ```
-    pub fn get_superposition(&self) -> Result<Measurement<&SuperPosition>, QuantrError> {
+    pub fn get_superposition(&self) -> QResult<Measurement<&SuperPosition>> {
         match &self.output_state {
             Some(super_position) => Ok(Measurement::NonObservable(super_position)),
             None => {
                 Err(QuantrError {
-                    message: format!("The circuit has not been simulated. Call Circuit::simulate before calling this method, Circuit::get_superposition.")
+                    message: "The circuit has not been simulated. Call Circuit::simulate before calling this method, Circuit::get_superposition.".to_string(),
                 })
             }
         }
@@ -468,7 +499,7 @@ impl<'a> Circuit<'a> {
     pub fn repeat_measurement(
         &self,
         number_iterations: usize,
-    ) -> Result<Measurement<HashMap<ProductState, usize>>, QuantrError> {
+    ) -> QResult<Measurement<HashMap<ProductState, usize>>> {
         match &self.output_state {
             Some(super_position) => {
                 // Peform bin count of states
@@ -479,12 +510,11 @@ impl<'a> Circuit<'a> {
 
                 let mut bin_count: HashMap<ProductState, usize> = Default::default();
 
-                let mut rng = rand::thread_rng();
                 for _ in 0..number_iterations {
                     let mut cummalitive: f64 = 0f64;
-                    let dice_roll: f64 = rng.gen();
+                    let dice_roll: f64 = fastrand::f64();
                     for (state_label, probability) in &probabilities {
-                        cummalitive = cummalitive + probability;
+                        cummalitive += probability;
                         if dice_roll < cummalitive {
                             match bin_count.get(state_label) {
                                 Some(previous_count) => bin_count.insert(state_label.clone(), previous_count+1),
@@ -498,7 +528,7 @@ impl<'a> Circuit<'a> {
             },
             None => {
                 Err(QuantrError {
-                    message: format!("The circuit has not been simulated. Call Circuit::simulate before calling this method, Circuit::repeat_measurement.")
+                    message: "The circuit has not been simulated. Call Circuit::simulate before calling this method, Circuit::repeat_measurement.".to_string(),
                 })
             },
         }
@@ -530,10 +560,7 @@ impl<'a> Circuit<'a> {
     /// // |1> -------
     /// // |0> -- X --
     /// ````
-    pub fn change_register(
-        &mut self,
-        super_pos: SuperPosition,
-    ) -> Result<&mut Circuit<'a>, QuantrError> {
+    pub fn change_register(&mut self, super_pos: SuperPosition) -> QResult<&mut Circuit<'a>> {
         if super_pos.product_dim != self.num_qubits {
             return Err(QuantrError {
                 message: format!("The custom register has a product state dimension of {}, while the number of qubits is {}. These must equal each other.", super_pos.product_dim, self.num_qubits)

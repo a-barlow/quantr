@@ -1,7 +1,7 @@
 # quantr
 
 [![Crates.io](https://img.shields.io/crates/v/quantr?style=flat-square&color=%23B94700)](https://crates.io/crates/quantr)
-[![Static Badge](https://img.shields.io/badge/version%20-%201.74.1%20-%20white?style=flat-square&logo=rust&color=%23B94700)](https://releases.rs/)
+[![Static Badge](https://img.shields.io/badge/version%20-%201.75.0%20-%20white?style=flat-square&logo=rust&color=%23B94700)](https://releases.rs/)
 [![GitHub Workflow Status (with event)](https://img.shields.io/github/actions/workflow/status/a-barlow/quantr/rust.yml?style=flat-square&label=tests&color=%2349881B)](https://github.com/a-barlow/quantr/actions/workflows/rust.yml)
 [![GitHub Workflow Status (with event)](https://img.shields.io/github/actions/workflow/status/a-barlow/quantr/rust_dev.yml?style=flat-square&label=tests%20(dev)&color=%2349881B)](https://github.com/a-barlow/quantr/actions/workflows/rust_dev.yml)
 [![docs.rs](https://img.shields.io/docsrs/quantr?style=flat-square&color=%2349881B)](https://crates.io/crates/quantr)
@@ -46,9 +46,9 @@ implementation of Grover's algorithm.
   when `n >= 16` is approximately the size of the state vector itself in
   Rust, `2**(n-6) KiB`. For `n < 16`, the memory required is less than
   `1 MiB`.
-- Can simulate circuits up to ~20 qubits within a reasonable time.
+- Can simulate circuits up to ~18 qubits within a reasonable time.
 - Only safe Rust code is used, and the only dependency is the
-  [rand](https://docs.rs/rand/latest/rand/) crate and its
+  [fastrand](https://crates.io/crates/fastrand) crate and its
   sub-dependencies.
 
 ### Usage
@@ -97,8 +97,9 @@ guide](QUICK_START.md).
  
 ### Limitations (currently)
 
-- There is **no noise** consideration, or ability to introduce noise.
-- There is **no ability to add classical wires** nor gates that measure a
+- **No noise** consideration, or ability to introduce noise.
+- **No parallelisation** option.
+- **No ability to add classical wires** nor gates that measure a
   single wire of a quantum circuit.
 
 ### Conventions
