@@ -11,10 +11,11 @@
 // Added only for silencing deprecated warnings for using public fields of `Circuit`.
 #![allow(deprecated)]
 
-use super::circuit::gate::{GateInfo, GateSize};
+use super::circuit::gate::{GateCategory, GateInfo};
 use crate::states::{ProductState, SuperPosition};
 use crate::{Gate, QuantrError};
 use std::collections::HashMap;
+use std::iter::zip;
 
 pub mod gate;
 pub mod printer;
@@ -43,6 +44,7 @@ pub struct Circuit<'a> {
     #[deprecated(
         note = "This field will be made private to the user, where it will be given pub(crate) status in the next major update. Use Circuit::get_gates instead."
     )]
+    // Change this to Vec<CategoryGate> in next major update.
     pub circuit_gates: Vec<Gate<'a>>,
     #[deprecated(
         note = "This field will be made private to the user, where it will be given pub(crate) status in the next major update. Use Circuit::get_num_qubits instead."
@@ -261,14 +263,11 @@ impl<'a> Circuit<'a> {
             gates.extend(extended_vec)
         } else {
             for (pos, gate) in gates.iter().enumerate() {
-                match Self::classify_gate_size(gate) {
-                    GateSize::Double | GateSize::Triple | GateSize::Custom => {
-                        let mut temp_vec = vec![Gate::Id; gates.len()];
-                        temp_vec[pos] = gate.clone();
-                        extended_vec.extend(temp_vec);
-                        multi_gate_positions.push(pos);
-                    }
-                    _ => {}
+                if !gate.is_single_gate() {
+                    let mut temp_vec = vec![Gate::Id; gates.len()];
+                    temp_vec[pos] = gate.clone();
+                    extended_vec.extend(temp_vec);
+                    multi_gate_positions.push(pos);
                 }
             }
 
@@ -395,28 +394,33 @@ impl<'a> Circuit<'a> {
         let mut qubit_counter: usize = 0;
         let number_gates: usize = self.circuit_gates.len();
 
+        // This will removed in next major update, as the circuit will directly store this. Instead
+        // of what's happening now, in which the gates are being copied into another wapper.
+        let mut categorised_gates: Vec<GateCategory> = Vec::with_capacity(number_gates);
+        for gate in &self.circuit_gates {
+            categorised_gates.push(Gate::linker(gate));
+        }
+
         if self.config_progress {
-            println!("Starting circuit simulation...")
+            println!("Starting circuit simulation...");
         }
 
         // Loop through each gate of circuit from starting at top row to bottom, then moving onto the next.
-        for gate in &self.circuit_gates {
+        for (cat_gate, gate) in zip(categorised_gates, &self.circuit_gates) {
+            if cat_gate == GateCategory::Identity {
+                qubit_counter += 1;
+                continue;
+            }
+
             let gate_pos: usize = qubit_counter % self.num_qubits;
 
             if self.config_progress {
                 Self::print_circuit_log(gate, &gate_pos, &qubit_counter, &number_gates);
             }
 
-            if *gate == Gate::Id {
-                qubit_counter += 1;
-                continue;
-            }
-
-            let gate_class: GateSize = Self::classify_gate_size(gate);
             let gate_to_apply: GateInfo = GateInfo {
-                name: gate.clone(),
+                cat_gate,
                 position: gate_pos,
-                size: gate_class,
             };
             Circuit::apply_gate(gate_to_apply, &mut register);
 

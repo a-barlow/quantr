@@ -6,7 +6,8 @@ This file logs the versions of quantr.
 
 Edited the README to include "No parallelisation" to limitations, and
 reduced the tractable number of qubit simulations to 18. There has also
-been a general clean up of the code, with the help of `cargo clippy`.
+been a large overhaul of the code increasing maintainability. Some
+common mistakes were also fixed with the help of `cargo clippy`.
 
 Change of dependency:
 

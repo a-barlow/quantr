@@ -24,6 +24,7 @@ impl SuperPosition {
         }
     }
 
+    // As only used in `standard_gate_ops`, could specify product_dim manually, saves computation.
     /// Used in standard_gate_ops.rs for defining the "standard gates".1
     pub(crate) fn new_with_register_unchecked<const N: usize>(
         amplitudes: [Complex<f64>; N],
