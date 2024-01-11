@@ -8,7 +8,7 @@
 * Author: Andrew Rowan Barlow <a.barlow.dev@gmail.com>
 */
 
-use super::{Circuit, Gate, GateSize};
+use super::{Circuit, Gate};
 use std::fs::File;
 use std::io::Write;
 use std::path::Path;
@@ -38,7 +38,6 @@ struct RowSchematic {
 
 #[derive(Clone)]
 struct GatePrinterInfo<'a> {
-    gate_size: GateSize,
     gate_name: String,
     gate_name_length: usize,
     gate: &'a Gate<'a>,
@@ -213,14 +212,12 @@ impl Printer<'_> {
         let mut gates_infos: Vec<GatePrinterInfo> = Default::default();
         let mut longest_name_length: usize = 1usize;
         for gate in gates_column.iter() {
-            let gate_size: GateSize = super::Circuit::classify_gate_size(gate);
-            let gate_name: String = Self::get_gate_name(gate);
+            let gate_name: String = gate.get_name();
             let gate_name_length: usize = gate_name.len();
             if gate_name_length > longest_name_length {
                 longest_name_length = gate_name_length;
             }
             gates_infos.push(GatePrinterInfo {
-                gate_size,
                 gate_name,
                 gate_name_length,
                 gate,
@@ -229,42 +226,11 @@ impl Printer<'_> {
         (gates_infos, longest_name_length)
     }
 
-    fn get_gate_name(gate: &Gate) -> String {
-        match gate {
-            Gate::Id => "".to_string(),
-            Gate::X => "X".to_string(),
-            Gate::H => "H".to_string(),
-            Gate::S => "S".to_string(),
-            Gate::Sdag => "S*".to_string(),
-            Gate::T => "T".to_string(),
-            Gate::Tdag => "T*".to_string(),
-            Gate::Y => "Y".to_string(),
-            Gate::Z => "Z".to_string(),
-            Gate::Rx(_) => "Rx".to_string(),
-            Gate::Ry(_) => "Ry".to_string(),
-            Gate::Rz(_) => "Rz".to_string(),
-            Gate::Phase(_) => "P".to_string(),
-            Gate::X90 => "X90".to_string(),
-            Gate::Y90 => "Y90".to_string(),
-            Gate::MX90 => "X90*".to_string(),
-            Gate::MY90 => "Y90*".to_string(),
-            Gate::CR(_, _) => "CR".to_string(),
-            Gate::CRk(_, _) => "CRk".to_string(),
-            Gate::Swap(_) => "Sw".to_string(),
-            Gate::CZ(_) => "Z".to_string(),
-            Gate::CY(_) => "Y".to_string(),
-            Gate::CNot(_) => "X".to_string(),
-            Gate::Toffoli(_, _) => "X".to_string(),
-            Gate::Custom(_, _, name) => name.to_string(),
-        }
-    }
-
     // Finds if there is a gate with one/multiple control nodes
     fn get_multi_gate<'a>(gates: &[GatePrinterInfo<'a>]) -> Option<(usize, GatePrinterInfo<'a>)> {
         for (pos, gate_info) in gates.iter().enumerate() {
-            match gate_info.gate_size {
-                GateSize::Single => (),
-                _ => return Some((pos, gate_info.clone())),
+            if !gate_info.gate.is_single_gate() {
+                return Some((pos, gate_info.clone()));
             }
         }
         None

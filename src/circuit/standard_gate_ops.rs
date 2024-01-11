@@ -34,14 +34,6 @@ use std::ops::{Div, Mul};
 //
 
 #[rustfmt::skip]
-pub fn identity(register: Qubit) -> SuperPosition {
-    SuperPosition::new_with_register_unchecked::<2>(match register {
-        Qubit::Zero => [complex_re!(1f64), COMPLEX_ZERO],
-        Qubit::One =>  [COMPLEX_ZERO, complex_re!(1f64)],
-    })
-}
-
-#[rustfmt::skip]
 pub fn hadamard(register: Qubit) -> SuperPosition {
     SuperPosition::new_with_register_unchecked::<2>(match register {
         Qubit::Zero => complex_re_array!(FRAC_1_SQRT_2, FRAC_1_SQRT_2),

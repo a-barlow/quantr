@@ -8,10 +8,10 @@
 * Author: Andrew Rowan Barlow <a.barlow.dev@gmail.com>
 */
 
-use super::{standard_gate_ops, GateInfo, GateSize, ZERO_MARGIN};
-use crate::states::{ProductState, Qubit, SuperPosition};
+use super::gate::GateCategory;
+use super::{GateInfo, ZERO_MARGIN};
+use crate::states::{ProductState, SuperPosition};
 use crate::{Circuit, Complex, Gate};
-use core::panic;
 use std::collections::HashMap;
 use std::ops::{Add, Mul};
 
@@ -23,51 +23,16 @@ impl<'a> Circuit<'a> {
         qubit_counter: &usize,
         number_gates: &usize,
     ) {
-        if gate != &Gate::Id {
-            println!(
-                "Applying {:?} on wire {} # {}/{} ",
-                gate,
-                gate_pos,
-                qubit_counter + 1,
-                number_gates
-            );
-        }
+        println!(
+            "Applying {:?} on wire {} # {}/{} ",
+            gate,
+            gate_pos,
+            qubit_counter + 1,
+            number_gates
+        );
 
         if *qubit_counter + 1 == *number_gates {
             println!("Finished circuit simulation.")
-        }
-    }
-
-    // Helps in constructing a bundle. This ultimately makes the match statements more concise.
-    // Maybe best to see if this can be hardcoded in before hand; that is the bundles are added to
-    // the circuit instead?
-    pub(crate) fn classify_gate_size(gate: &Gate) -> GateSize {
-        match gate {
-            Gate::Id
-            | Gate::H
-            | Gate::S
-            | Gate::Sdag
-            | Gate::T
-            | Gate::Tdag
-            | Gate::X
-            | Gate::Y
-            | Gate::Z
-            | Gate::Rx(_)
-            | Gate::Ry(_)
-            | Gate::Rz(_)
-            | Gate::Phase(_)
-            | Gate::X90
-            | Gate::Y90
-            | Gate::MX90
-            | Gate::MY90 => GateSize::Single,
-            Gate::CNot(_)
-            | Gate::Swap(_)
-            | Gate::CZ(_)
-            | Gate::CY(_)
-            | Gate::CR(_, _)
-            | Gate::CRk(_, _) => GateSize::Double,
-            Gate::Toffoli(_, _) => GateSize::Triple,
-            Gate::Custom(_, _, _) => GateSize::Custom,
         }
     }
 
@@ -86,25 +51,43 @@ impl<'a> Circuit<'a> {
             // Obtain superposition from applying gate from a specified wire onto the product state, and add control nodes if necersary
             let mut acting_positions: Vec<usize> = Vec::<usize>::with_capacity(3); // change to array for increased speed?
 
-            let wrapped_super_pos: Option<SuperPosition> = match gate.size {
-                GateSize::Single => Some(Self::single_gate_on_wire(&gate, &prod_state)),
-                GateSize::Double => Some(Self::double_gate_on_wires(
-                    &gate,
-                    &prod_state,
-                    &mut acting_positions,
-                )),
-                GateSize::Triple => Some(Self::triple_gate_on_wires(
-                    &gate,
-                    &prod_state,
-                    &mut acting_positions,
-                )),
-                GateSize::Custom => {
-                    Self::custom_gate_on_wires(&gate, &prod_state, &mut acting_positions)
+            let wrapped_super_pos: Option<SuperPosition> = match gate.cat_gate {
+                GateCategory::Identity => None,
+                GateCategory::Single(func) => Some(func(prod_state.get_qubits()[gate.position])),
+                GateCategory::SingleArg(arg, func) => {
+                    Some(func(prod_state.get_qubits()[gate.position], arg))
+                }
+                GateCategory::Double(c, func) => {
+                    acting_positions.push(c);
+                    let qubits = prod_state.get_qubits();
+                    Some(func(qubits[c], qubits[gate.position]))
+                }
+                GateCategory::DoubleArg(arg, c, func) => {
+                    acting_positions.push(c);
+                    let qubits = prod_state.get_qubits();
+                    Some(func(qubits[c], qubits[gate.position], arg))
+                }
+                GateCategory::DoubleArgInt(arg_int, c, func) => {
+                    acting_positions.push(c);
+                    let qubits = prod_state.get_qubits();
+                    Some(func(qubits[c], qubits[gate.position], arg_int))
+                }
+                GateCategory::Triple(c1, c2, func) => {
+                    acting_positions.push(c2);
+                    acting_positions.push(c1);
+                    let qubits = prod_state.get_qubits();
+                    Some(func(qubits[c1], qubits[c2], qubits[gate.position]))
+                }
+                GateCategory::Custom(func, controls) => {
+                    acting_positions.extend(controls.iter().rev());
+                    Self::custom_gate_on_wires(func, controls, gate.position, &prod_state)
                 }
             };
 
             if let Some(super_pos) = wrapped_super_pos {
-                acting_positions.reverse();
+                if !acting_positions.is_empty() {
+                    acting_positions.reverse()
+                };
                 acting_positions.push(gate.position);
                 Self::insert_gate_image_into_product_state(
                     super_pos,
@@ -119,136 +102,25 @@ impl<'a> Circuit<'a> {
         register.set_amplitudes_from_states_unchecked(mapped_states);
     }
 
-    // The following functions compartmentalise the algorithms for applying a gate to the
-    // register.
-    fn single_gate_on_wire(single_gate: &GateInfo, prod_state: &ProductState) -> SuperPosition {
-        if let Gate::Rx(angle) = single_gate.name {
-            standard_gate_ops::rx(prod_state.qubits[single_gate.position], angle)
-        } else if let Gate::Ry(angle) = single_gate.name {
-            standard_gate_ops::ry(prod_state.qubits[single_gate.position], angle)
-        } else if let Gate::Rz(angle) = single_gate.name {
-            standard_gate_ops::rz(prod_state.qubits[single_gate.position], angle)
-        } else if let Gate::Phase(angle) = single_gate.name {
-            standard_gate_ops::global_phase(prod_state.qubits[single_gate.position], angle)
-        } else {
-            let operator: fn(Qubit) -> SuperPosition = match single_gate.name {
-                Gate::Id => standard_gate_ops::identity,
-                Gate::H => standard_gate_ops::hadamard,
-                Gate::S => standard_gate_ops::phase,
-                Gate::Sdag => standard_gate_ops::phasedag,
-                Gate::T => standard_gate_ops::tgate,
-                Gate::Tdag => standard_gate_ops::tgatedag,
-                Gate::X => standard_gate_ops::pauli_x,
-                Gate::Y => standard_gate_ops::pauli_y,
-                Gate::Z => standard_gate_ops::pauli_z,
-                Gate::X90 => standard_gate_ops::x90,
-                Gate::Y90 => standard_gate_ops::y90,
-                Gate::MX90 => standard_gate_ops::mx90,
-                Gate::MY90 => standard_gate_ops::my90,
-                _ => panic!("Non single gate was passed to single gate operation function."),
-            };
-            operator(prod_state.qubits[single_gate.position])
-        }
-    }
-
-    fn double_gate_on_wires(
-        double_gate: &GateInfo,
-        prod_state: &ProductState,
-        positions: &mut Vec<usize>,
-    ) -> SuperPosition {
-        // operator: fn(ProductState) -> SuperPosition
-        if let Gate::CR(angle, control) = double_gate.name {
-            positions.push(control);
-            standard_gate_ops::cr(
-                prod_state.get_unchecked(control),
-                prod_state.get_unchecked(double_gate.position),
-                angle,
-            )
-        } else if let Gate::CRk(k, control) = double_gate.name {
-            positions.push(control);
-            standard_gate_ops::crk(
-                prod_state.get_unchecked(control),
-                prod_state.get_unchecked(double_gate.position),
-                k,
-            )
-        } else {
-            let control_node: usize;
-            let operator = match double_gate.name {
-                Gate::CNot(control) => {
-                    control_node = control;
-                    standard_gate_ops::cnot
-                }
-                Gate::CZ(control) => {
-                    control_node = control;
-                    standard_gate_ops::cz
-                }
-                Gate::CY(control) => {
-                    control_node = control;
-                    standard_gate_ops::cy
-                }
-                Gate::Swap(control) => {
-                    control_node = control;
-                    standard_gate_ops::swap
-                }
-                _ => panic!("Non double gate was passed to double gate operation function."),
-            };
-
-            positions.push(control_node);
-            operator(
-                prod_state.get_unchecked(control_node),
-                prod_state.get_unchecked(double_gate.position),
-            )
-        }
-    }
-
-    fn triple_gate_on_wires(
-        triple_gate: &GateInfo,
-        prod_state: &ProductState,
-        positions: &mut Vec<usize>,
-    ) -> SuperPosition {
-        // operator: fn(ProductState) -> SuperPosition
-        let (operator, control_node_one, control_node_two) = match triple_gate.name {
-            Gate::Toffoli(control1, control2) => (standard_gate_ops::toffoli, control1, control2),
-            _ => panic!("Non triple gate was passed to triple gate operation function"),
-        };
-
-        positions.push(control_node_two);
-        positions.push(control_node_one);
-        operator(
-            prod_state.get_unchecked(control_node_one),
-            prod_state.get_unchecked(control_node_two),
-            prod_state.get_unchecked(triple_gate.position),
-        )
-    }
-
     fn custom_gate_on_wires(
-        custom_gate: &GateInfo,
+        operator: fn(ProductState) -> Option<SuperPosition>,
+        controls: &[usize],
+        position: usize,
         prod_state: &ProductState,
-        positions: &mut Vec<usize>,
     ) -> Option<SuperPosition> {
-        let (operator, controls) = match custom_gate.name {
-            Gate::Custom(func, control_map, _) => (func, control_map),
-            _ => panic!("Non custom gate was passed to custom gate operation function."),
-        };
-
-        let result_super: Option<SuperPosition> = if !controls.is_empty() {
+        if !controls.is_empty() {
             let mut concat_prodstate: ProductState = prod_state.get_unchecked(controls[0]).into();
 
             for c in &controls[1..] {
                 //converts product to larger product
                 concat_prodstate = concat_prodstate.kronecker_prod(prod_state.get_unchecked(*c));
             }
-            concat_prodstate =
-                concat_prodstate.kronecker_prod(prod_state.get_unchecked(custom_gate.position));
+            concat_prodstate = concat_prodstate.kronecker_prod(prod_state.get_unchecked(position));
 
             operator(concat_prodstate)
         } else {
-            operator(ProductState::from(prod_state.qubits[custom_gate.position]))
-        };
-
-        positions.extend(controls.iter().rev());
-
-        result_super
+            operator(ProductState::from(prod_state.qubits[position]))
+        }
     }
 
     fn insert_gate_image_into_product_state(
