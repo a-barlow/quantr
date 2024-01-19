@@ -8,6 +8,8 @@
 * Author: Andrew Rowan Barlow <a.barlow.dev@gmail.com>
 */
 
+use std::fmt;
+
 use crate::circuit::{QResult, QResultConst};
 use crate::error::{QuantrError, QuantrErrorConst};
 use crate::states::Qubit;
@@ -183,27 +185,6 @@ impl ProductState {
         self.qubits[qubit_number]
     }
 
-    /// Returns the labelling of the product state as a String.
-    ///
-    /// # Example
-    /// ```
-    /// use quantr::states::{Qubit, ProductState};
-    ///
-    /// let prod: ProductState = ProductState::new(&[Qubit::Zero, Qubit::One]).unwrap();
-    ///
-    /// assert_eq!(String::from("01"), prod.to_string());
-    /// ```
-    #[allow(clippy::inherent_to_string)]
-    pub fn to_string(&self) -> String {
-        self.qubits
-            .iter()
-            .map(|q| match q {
-                Qubit::Zero => "0",
-                Qubit::One => "1",
-            })
-            .collect::<String>()
-    }
-
     // Converts the computational basis labelling (a binary integer), into base 10.
     pub(super) fn comp_basis(&self) -> usize {
         self.qubits
@@ -229,6 +210,30 @@ impl ProductState {
             .collect();
 
         ProductState::new_unchecked(binary_index.as_slice())
+    }
+}
+
+impl fmt::Display for ProductState {
+    /// Returns the labelling of the product state.
+    ///
+    /// # Example
+    /// ```
+    /// use quantr::states::{Qubit, ProductState};
+    ///
+    /// let prod: ProductState = ProductState::new(&[Qubit::Zero, Qubit::One]).unwrap();
+    ///
+    /// assert_eq!(String::from("01"), prod.to_string());
+    /// ```
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let binary_string = self
+            .qubits
+            .iter()
+            .map(|q| match q {
+                Qubit::Zero => "0",
+                Qubit::One => "1",
+            })
+            .collect::<String>();
+        write!(f, "{}", binary_string)
     }
 }
 

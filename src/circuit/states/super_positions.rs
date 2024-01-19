@@ -109,7 +109,7 @@ impl SuperPosition {
         let mut total_amplitude: f64 = 0f64;
         for (states, amplitude) in &hash_amplitudes {
             if states.num_qubits() != product_dim {
-                return Err(QuantrError { message: format!("The first state has product dimension of {}, whilst the state, |{}>, found as a key in the HashMap has dimension {}.", product_dim, states.to_string(), states.num_qubits()) });
+                return Err(QuantrError { message: format!("The first state has product dimension of {}, whilst the state, |{}>, found as a key in the HashMap has dimension {}.", product_dim, states, states.num_qubits()) });
             }
             total_amplitude += amplitude.abs_square();
         }
@@ -281,7 +281,7 @@ impl SuperPosition {
         let mut total_amplitude: f64 = 0f64;
         for (states, amplitude) in &amplitudes {
             if states.num_qubits() != product_size {
-                return Err(QuantrError { message: format!("The first state has product dimension of {}, whilst the state, |{}>, found as a key in the HashMap has dimension {}.", product_size, states.to_string(), states.num_qubits()) });
+                return Err(QuantrError { message: format!("The first state has product dimension of {}, whilst the state, |{}>, found as a key in the HashMap has dimension {}.", product_size, states, states.num_qubits()) });
             }
             total_amplitude += amplitude.abs_square();
         }
