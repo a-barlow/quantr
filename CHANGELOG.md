@@ -20,7 +20,9 @@ Breaking changes:
 - The argument of `Circuit::get_num_qubits` now only borrows the
   circuit, instead of consuming it (which was a mistake in the 0.4.1
   release).
-- Removed `QuantrError` fields from public interface.
+- Removed `QuantrError` from the public interface. Now, it has to be
+  used through it's trait `std::error::Error`. See `examples` and the
+  `main()` function return type. 
 - The following functions have changed their returning error type to
   `QuantrErrorConst`:
   - `Circuit::new`
