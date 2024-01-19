@@ -10,12 +10,14 @@
 
 // Shows the use of `Gate::Custom` in implementing the CCC-not gate.
 
+use std::error::Error;
+
 use quantr::{
     states::{ProductState, Qubit, SuperPosition},
-    Circuit, Gate, Measurement, Printer, QuantrError,
+    Circuit, Gate, Measurement, Printer,
 };
 
-fn main() -> Result<(), QuantrError> {
+fn main() -> Result<(), Box<dyn Error>> {
     let mut qc: Circuit = Circuit::new(4)?;
 
     // Build a circuit using a CCC-not gate, placing the control nodes on positions 0, 1, 2 and

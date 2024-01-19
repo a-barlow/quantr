@@ -18,22 +18,6 @@ pub struct QuantrError {
     pub(crate) message: String,
 }
 
-impl QuantrError {
-    /// Returns the error message.
-    ///
-    /// # Example
-    /// ```
-    /// use quantr::Circuit;
-    ///
-    /// if let Err(quantr_err) = Circuit::new(0) {
-    ///     assert_eq!("The initiliased circuit must have at least one wire.", quantr_err.get_msg());
-    /// }
-    /// ```
-    pub fn get_msg(&self) -> &str {
-        &self.message
-    }
-}
-
 impl fmt::Display for QuantrError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "\x1b[91m[Quantr Error] {}\x1b[0m ", self.message)
@@ -47,3 +31,22 @@ impl fmt::Debug for QuantrError {
 }
 
 impl Error for QuantrError {}
+
+/// Relays error messages resulting from quantr.
+pub struct QuantrErrorConst {
+    pub(crate) message: &'static str,
+}
+
+impl fmt::Display for QuantrErrorConst {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "\x1b[91m[Quantr Error] {}\x1b[0m ", self.message)
+    }
+}
+
+impl fmt::Debug for QuantrErrorConst {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        fmt::Display::fmt(&self, f)
+    }
+}
+
+impl Error for QuantrErrorConst {}

@@ -8,17 +8,17 @@
 * Author: Andrew Rowan Barlow <a.barlow.dev@gmail.com>
 */
 
-use quantr::{complex_re, Complex, QuantrError};
+use quantr::{complex_re, Complex};
 use quantr::{
     states::{ProductState, Qubit, SuperPosition},
     Circuit, Gate,
     Measurement::{NonObservable, Observable},
 };
-use std::f64::consts::FRAC_1_SQRT_2;
+use std::{error::Error, f64::consts::FRAC_1_SQRT_2};
 const ERROR_MARGIN: f64 = 0.00000001f64;
 
 #[test]
-fn grovers_3qubit() -> Result<(), QuantrError> {
+fn grovers_3qubit() -> Result<(), Box<dyn Error>> {
     fastrand::seed(0);
     let mut circuit = Circuit::new(3)?;
 
@@ -70,7 +70,7 @@ fn grovers_3qubit() -> Result<(), QuantrError> {
 }
 
 #[test]
-fn x3sudoko() -> Result<(), QuantrError> {
+fn x3sudoko() -> Result<(), Box<dyn Error>> {
     fastrand::seed(0);
     let mut qc: Circuit = Circuit::new(10)?;
 

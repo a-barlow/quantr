@@ -8,9 +8,9 @@
 * Author: Andrew Rowan Barlow <a.barlow.dev@gmail.com>
 */
 
-use crate::circuit::QResult;
+use crate::circuit::{QResult, QResultConst};
+use crate::error::{QuantrError, QuantrErrorConst};
 use crate::states::Qubit;
-use crate::QuantrError;
 
 /// A product state in the computational basis.
 #[derive(Clone, Hash, PartialEq, Eq, Debug)]
@@ -32,12 +32,10 @@ impl ProductState {
     ///
     /// let prod: ProductState = ProductState::new(&[Qubit::One, Qubit::Zero]).unwrap(); // |10>
     /// ```
-    pub fn new(product_state: &[Qubit]) -> QResult<ProductState> {
+    pub fn new(product_state: &[Qubit]) -> QResultConst<ProductState> {
         if product_state.is_empty() {
-            return Err(QuantrError {
-                message: String::from(
-                    "The slice of qubits is empty, it needs to at least have one element.",
-                ),
+            return Err(QuantrErrorConst {
+                message: "The slice of qubits is empty, it needs to at least have one element.",
             });
         }
         Ok(ProductState {

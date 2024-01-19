@@ -11,14 +11,16 @@
 //! This example is a copy of `example/custom_gate.rs`, but instead uses a custom function that
 //! showcases a controlled not gate which generalises the number of control nodes.
 
+use std::error::Error;
+
 use quantr::{
     states::{ProductState, Qubit, SuperPosition},
-    Circuit, Gate, Measurement, Printer, QuantrError,
+    Circuit, Gate, Measurement, Printer,
 };
 
 const CIRCUIT_SIZE: usize = 6;
 
-fn main() -> Result<(), QuantrError> {
+fn main() -> Result<(), Box<dyn Error>> {
     let mut qc: Circuit = Circuit::new(CIRCUIT_SIZE)?;
 
     // Multi-controlled gate used here.

@@ -8,9 +8,10 @@
 * Author: Andrew Rowan Barlow <a.barlow.dev@gmail.com>
 */
 
-use crate::circuit::{HashMap, QResult, ZERO_MARGIN};
+use crate::circuit::{HashMap, QResult, QResultConst, ZERO_MARGIN};
 use crate::complex_re;
-use crate::{states::ProductState, Complex, QuantrError, COMPLEX_ZERO};
+use crate::error::{QuantrError, QuantrErrorConst};
+use crate::{states::ProductState, Complex, COMPLEX_ZERO};
 
 /// A superposition of [ProductState]s.
 #[derive(PartialEq, Debug, Clone)]
@@ -33,10 +34,10 @@ impl SuperPosition {
     ///
     /// assert_eq!(&complex_re_array![1f64, 0f64, 0f64, 0f64], superpos.get_amplitudes());
     /// ```
-    pub fn new(prod_dimension: usize) -> QResult<SuperPosition> {
+    pub fn new(prod_dimension: usize) -> QResultConst<SuperPosition> {
         if prod_dimension == 0 {
-            return Err(QuantrError {
-                message: String::from("The number of qubits must be non-zero."),
+            return Err(QuantrErrorConst {
+                message: "The number of qubits must be non-zero.",
             });
         }
 
@@ -69,7 +70,6 @@ impl SuperPosition {
 
         let length = amplitudes.len();
         if (length & (length - 1)) != 0 {
-            //
             return Err(QuantrError {
                 message: String::from(
                     "The length of the array must be of the form 2**n where n is an integer.",
@@ -244,7 +244,6 @@ impl SuperPosition {
         Ok(self)
     }
 
-    #[inline]
     fn equal_within_error(num: f64, compare_num: f64) -> bool {
         num < compare_num + ZERO_MARGIN && num > compare_num - ZERO_MARGIN
     }

@@ -11,14 +11,14 @@
 use quantr::{
     complex, complex_im, complex_re,
     states::{ProductState, SuperPosition},
-    Circuit, Complex, Gate, Measurement, QuantrError,
+    Circuit, Complex, Gate, Measurement,
 };
-use std::f64::consts::FRAC_1_SQRT_2;
+use std::{error::Error, f64::consts::FRAC_1_SQRT_2};
 
 const ERROR_MARGIN: f64 = 0.00000001f64;
 
 #[test]
-fn simple_qft() -> Result<(), QuantrError> {
+fn simple_qft() -> Result<(), Box<dyn Error>> {
     fastrand::seed(0);
     let mut qc: Circuit = Circuit::new(3)?;
 
