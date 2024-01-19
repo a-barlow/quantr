@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2023 Andrew Rowan Barlow. Licensed under the EUPL-1.2
+* Copyright (c) 2024 Andrew Rowan Barlow. Licensed under the EUPL-1.2
 * or later. You may obtain a copy of the licence at
 * https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12. A copy
 * of the EUPL-1.2 licence in English is given in LICENCE.txt which is
@@ -27,6 +27,9 @@
 //! A bin count of states that are observed over a period of measurements can be performed with
 //! [Circuit::repeat_measurement], where a new register is attached before each measurement. Or, the
 //! explicit superposition can be retrieved using [Circuit::get_superposition].
+//!
+//! All errors resulting from the incorrect use of quantr are propagated by `QuantrError` and
+//! `QuantrErrorConst` that implement the [std::error::Error] trait.
 //!
 //! More complex examples can be found in the `examples` folder within this repository.
 //!
@@ -74,4 +77,3 @@ pub use circuit::printer::Printer;
 pub use circuit::states;
 pub use circuit::{Circuit, Measurement};
 pub use complex::{Complex, COMPLEX_ZERO};
-pub use error::QuantrError;

@@ -2,12 +2,58 @@
 
 This file logs the versions of quantr.
 
+## 0.5.0 - Finalising Interface
+
+Following this update, interfacing with quantr can now be done safely,
+as to not allow the user to destroy any assumptions made from building
+the circuit. In this update, that meant making the final public fields
+private for the `Circuit` struct. 
+
+Breaking changes:
+
+- Changed return type of `states::super_positions::get_amplitude ->
+  Result<Complex<f64>, QuantrError>` to
+  `states::super_positions::get_amplitude -> Option<Complex<f64>>`.
+- All fields of `Circuit` are now private; that is `num_qubits` and
+  `circuit_gates`. These two can still be accessed through
+  `Circuit::get_num_qubits` and `Circuit::get_gates` respectively.
+- The argument of `Circuit::get_num_qubits` now only borrows the
+  circuit, instead of consuming it (which was a mistake in the 0.4.1
+  release).
+- Removed `QuantrError` from the public interface. Now, it has to be
+  used through it's trait `std::error::Error`. See `examples` and the
+  `main()` function return type. 
+- The following functions have changed their returning error type to
+  `QuantrErrorConst`:
+  - `Circuit::new`
+  - `Circuit::get_superposition`
+  - `Circuit::repeat_measurement`
+  - `states::SuperPosition::new`
+  - `states::SuperPosition::new_with_amplitudes`
+  - `states::ProductState::new`
+
+Internal improvements:
+
+- Added `QuantrErrorConst` that consumes a `&str`. This can be used for
+  constant strings (error messages) and so enables some functions to
+  become constant.
+
 ## 0.4.1 - More optimisations
 
 Edited the README to include "No parallelisation" to limitations, and
 reduced the tractable number of qubit simulations to 18. There has also
 been a large overhaul of the code to increase maintainability. Some
 common mistakes were also fixed with the help of `cargo clippy`.
+
+Features:
+
+- `Circuit::get_num_qubits`, this is to replace the `num_qubits` field
+  that will be made private in the next major update. However, the
+  argument consumes the circuit which was a mistake. This will be fixed
+  in the next major update too. This returns the number of qubits of the
+  circuit.
+- `Circuit::get_gates`, returns the vector of gates that represent the
+  quantum circuit. This will replace the `circuit_gates` field.
 
 Change of dependency:
 
@@ -20,7 +66,7 @@ Optimisations:
   arguments changed so that the `kronecker_prod` is not used; increasing
   speed for multi gate processing.
 - The main simulating algorithm has been updated to increase it's speed,
-  mostly bypassing computations that are uneeded, for instance product
+  mostly bypassing computations that are unneeded, for instance product
   state qubits are flipped only if they are indeed different.
 
 Deprecated features:

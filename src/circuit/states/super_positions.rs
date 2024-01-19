@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2023 Andrew Rowan Barlow. Licensed under the EUPL-1.2
+* Copyright (c) 2024 Andrew Rowan Barlow. Licensed under the EUPL-1.2
 * or later. You may obtain a copy of the licence at
 * https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12. A copy
 * of the EUPL-1.2 licence in English is given in LICENCE.txt which is
@@ -8,9 +8,10 @@
 * Author: Andrew Rowan Barlow <a.barlow.dev@gmail.com>
 */
 
-use crate::circuit::{HashMap, QResult, ZERO_MARGIN};
+use crate::circuit::{HashMap, QResult, QResultConst, ZERO_MARGIN};
 use crate::complex_re;
-use crate::{states::ProductState, Complex, QuantrError, COMPLEX_ZERO};
+use crate::error::{QuantrError, QuantrErrorConst};
+use crate::{states::ProductState, Complex, COMPLEX_ZERO};
 
 /// A superposition of [ProductState]s.
 #[derive(PartialEq, Debug, Clone)]
@@ -33,10 +34,10 @@ impl SuperPosition {
     ///
     /// assert_eq!(&complex_re_array![1f64, 0f64, 0f64, 0f64], superpos.get_amplitudes());
     /// ```
-    pub fn new(prod_dimension: usize) -> QResult<SuperPosition> {
+    pub fn new(prod_dimension: usize) -> QResultConst<SuperPosition> {
         if prod_dimension == 0 {
-            return Err(QuantrError {
-                message: String::from("The number of qubits must be non-zero."),
+            return Err(QuantrErrorConst {
+                message: "The number of qubits must be non-zero.",
             });
         }
 
@@ -60,20 +61,17 @@ impl SuperPosition {
     ///
     /// assert_eq!(&complex_re_array![1f64, 0f64, 0f64, 0f64], superpos.get_amplitudes());
     /// ```
-    pub fn new_with_amplitudes(amplitudes: &[Complex<f64>]) -> QResult<SuperPosition> {
+    pub fn new_with_amplitudes(amplitudes: &[Complex<f64>]) -> QResultConst<SuperPosition> {
         if !Self::equal_within_error(amplitudes.iter().map(|x| x.abs_square()).sum::<f64>(), 1f64) {
-            return Err(QuantrError {
-                message: String::from("Slice given to set amplitudes in super position does not conserve probability, the absolute square sum of the coefficents must be one."),
+            return Err(QuantrErrorConst {
+                message: "Slice given to set amplitudes in super position does not conserve probability, the absolute square sum of the coefficents must be one.",
             });
         }
 
         let length = amplitudes.len();
         if (length & (length - 1)) != 0 {
-            //
-            return Err(QuantrError {
-                message: String::from(
-                    "The length of the array must be of the form 2**n where n is an integer.",
-                ),
+            return Err(QuantrErrorConst {
+                message: "The length of the array must be of the form 2**n where n is an integer.",
             });
         }
 
@@ -109,7 +107,7 @@ impl SuperPosition {
         let mut total_amplitude: f64 = 0f64;
         for (states, amplitude) in &hash_amplitudes {
             if states.num_qubits() != product_dim {
-                return Err(QuantrError { message: format!("The first state has product dimension of {}, whilst the state, |{}>, found as a key in the HashMap has dimension {}.", product_dim, states.to_string(), states.num_qubits()) });
+                return Err(QuantrError { message: format!("The first state has product dimension of {}, whilst the state, |{}>, found as a key in the HashMap has dimension {}.", product_dim, states, states.num_qubits()) });
             }
             total_amplitude += amplitude.abs_square();
         }
@@ -126,7 +124,8 @@ impl SuperPosition {
         })
     }
 
-    /// Retrieves the coefficient of the product state in the computational basis given by the list index.
+    /// Retrieves the coefficient of the product state in the computational basis given by the list index. Returns `None` if the
+    /// index is greater than the product dimension of the superposition.
     ///
     /// # Example
     /// ```
@@ -137,14 +136,8 @@ impl SuperPosition {
     ///
     /// assert_eq!(complex_re!(1f64), superpos.get_amplitude(1).unwrap());
     /// ```
-    pub fn get_amplitude(&self, pos: usize) -> QResult<Complex<f64>> {
-        if pos >= self.amplitudes.len() {
-            let length = self.amplitudes.len();
-            Err(QuantrError { message: format!("Failed to retrieve amplitude from list. Index given was, {pos}, which is greater than length of list, {length}."), 
-            })
-        } else {
-            Ok(*self.amplitudes.get(pos).unwrap())
-        }
+    pub fn get_amplitude(&self, pos: usize) -> Option<Complex<f64>> {
+        self.amplitudes.get(pos).cloned()
     }
 
     /// Returns the number of qubits that each product state in the super position is composed of by using the Kronecker product.
@@ -158,7 +151,7 @@ impl SuperPosition {
     ///
     /// assert_eq!(2, superpos.get_num_qubits());
     /// ```
-    pub fn get_num_qubits(&self) -> usize {
+    pub const fn get_num_qubits(&self) -> usize {
         self.product_dim
     }
 
@@ -209,7 +202,7 @@ impl SuperPosition {
         if 2usize << (prod_state.qubits.len() - 1) != self.amplitudes.len() {
             return Err(QuantrError { message: format!("Unable to retreive product state, |{:?}> with dimension {}. The superposition is a linear combination of states with different dimension. These dimensions should be equal.", prod_state.to_string(), prod_state.num_qubits()),});
         }
-        Ok(*self.amplitudes.get(prod_state.comp_basis()).unwrap())
+        Ok(self.amplitudes[prod_state.comp_basis()])
     }
 
     /// Returns a new superposition in the computational basis.
@@ -244,7 +237,6 @@ impl SuperPosition {
         Ok(self)
     }
 
-    #[inline]
     fn equal_within_error(num: f64, compare_num: f64) -> bool {
         num < compare_num + ZERO_MARGIN && num > compare_num - ZERO_MARGIN
     }
@@ -282,7 +274,7 @@ impl SuperPosition {
         let mut total_amplitude: f64 = 0f64;
         for (states, amplitude) in &amplitudes {
             if states.num_qubits() != product_size {
-                return Err(QuantrError { message: format!("The first state has product dimension of {}, whilst the state, |{}>, found as a key in the HashMap has dimension {}.", product_size, states.to_string(), states.num_qubits()) });
+                return Err(QuantrError { message: format!("The first state has product dimension of {}, whilst the state, |{}>, found as a key in the HashMap has dimension {}.", product_size, states, states.num_qubits()) });
             }
             total_amplitude += amplitude.abs_square();
         }

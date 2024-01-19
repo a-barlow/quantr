@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2023 Andrew Rowan Barlow. Licensed under the EUPL-1.2
+* Copyright (c) 2024 Andrew Rowan Barlow. Licensed under the EUPL-1.2
 * or later. You may obtain a copy of the licence at
 * https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12. A copy
 * of the EUPL-1.2 licence in English is given in LICENCE.txt which is
@@ -9,11 +9,11 @@
 */
 
 // Added only for silencing deprecated warnings for using public fields of `Circuit`.
-#![allow(deprecated)]
 
 use super::circuit::gate::{GateCategory, GateInfo};
+use crate::error::{QuantrError, QuantrErrorConst};
 use crate::states::{ProductState, SuperPosition};
-use crate::{Gate, QuantrError};
+use crate::Gate;
 use std::collections::HashMap;
 use std::iter::zip;
 
@@ -24,6 +24,7 @@ mod standard_gate_ops;
 pub mod states;
 
 pub(crate) type QResult<T> = Result<T, QuantrError>;
+pub(crate) type QResultConst<T> = Result<T, QuantrErrorConst>;
 
 // The tolerance for declaring non-zero amplitudes.
 const ZERO_MARGIN: f64 = 1e-7;
@@ -41,15 +42,8 @@ pub enum Measurement<T> {
 /// A quantum circuit where gates can be appended and then simulated to measure resulting
 /// superpositions.
 pub struct Circuit<'a> {
-    #[deprecated(
-        note = "This field will be made private to the user, where it will be given pub(crate) status in the next major update. Use Circuit::get_gates instead."
-    )]
-    // Change this to Vec<CategoryGate> in next major update.
-    pub circuit_gates: Vec<Gate<'a>>,
-    #[deprecated(
-        note = "This field will be made private to the user, where it will be given pub(crate) status in the next major update. Use Circuit::get_num_qubits instead."
-    )]
-    pub num_qubits: usize,
+    circuit_gates: Vec<Gate<'a>>,
+    num_qubits: usize,
     output_state: Option<SuperPosition>,
     register: Option<SuperPosition>,
     config_progress: bool,
@@ -68,10 +62,10 @@ impl<'a> Circuit<'a> {
     /// // Initialises a 3 qubit circuit.
     /// let quantum_circuit: Circuit = Circuit::new(3).unwrap();
     /// ```
-    pub fn new(num_qubits: usize) -> QResult<Circuit<'a>> {
+    pub const fn new(num_qubits: usize) -> QResultConst<Circuit<'a>> {
         if num_qubits == 0 {
-            return Err(QuantrError {
-                message: String::from("The initiliased circuit must have at least one wire."),
+            return Err(QuantrErrorConst {
+                message: "The initiliased circuit must have at least one wire.",
             });
         }
 
@@ -94,7 +88,7 @@ impl<'a> Circuit<'a> {
     /// let quantum_circuit: Circuit = Circuit::new(3).unwrap();
     /// assert_eq!(quantum_circuit.get_num_qubits(), 3usize);
     /// ```
-    pub fn get_num_qubits(self) -> usize {
+    pub const fn get_num_qubits(&self) -> usize {
         self.num_qubits
     }
 
@@ -280,7 +274,6 @@ impl<'a> Circuit<'a> {
         Ok(())
     }
 
-    // need to implement all other gates, in addition to checking that it's within circuit size!
     fn has_overlapping_controls_and_target(gates: &[Gate], circuit_size: usize) -> QResult<()> {
         for (pos, gate) in gates.iter().enumerate() {
             if let Some(nodes) = gate.get_nodes() {
@@ -305,7 +298,6 @@ impl<'a> Circuit<'a> {
     }
 
     // Find if there are any repeating values in array, O(n)
-    // The initialisation of the circuit guarantees the max circuit size.
     fn contains_repeating_values(num_qubits: usize, array: &[usize]) -> bool {
         let mut counter: Vec<bool> = vec![false; num_qubits];
         for j in array {
@@ -456,12 +448,12 @@ impl<'a> Circuit<'a> {
     /// // |000> : 0 - 0.71...i     
     /// // |001> : 0 + 0.71...i
     /// ```
-    pub fn get_superposition(&self) -> QResult<Measurement<&SuperPosition>> {
+    pub const fn get_superposition(&self) -> QResultConst<Measurement<&SuperPosition>> {
         match &self.output_state {
             Some(super_position) => Ok(Measurement::NonObservable(super_position)),
             None => {
-                Err(QuantrError {
-                    message: "The circuit has not been simulated. Call Circuit::simulate before calling this method, Circuit::get_superposition.".to_string(),
+                Err(QuantrErrorConst {
+                    message: "The circuit has not been simulated. Call Circuit::simulate before calling this method, Circuit::get_superposition.",
                 })
             }
         }
@@ -499,10 +491,10 @@ impl<'a> Circuit<'a> {
     pub fn repeat_measurement(
         &self,
         number_iterations: usize,
-    ) -> QResult<Measurement<HashMap<ProductState, usize>>> {
+    ) -> QResultConst<Measurement<HashMap<ProductState, usize>>> {
         match &self.output_state {
             Some(super_position) => {
-                // Peform bin count of states
+                // Perform bin count of states
                 let mut probabilities: HashMap<ProductState, f64> = Default::default();
                 for (key, value) in super_position.to_hash_map() {
                     probabilities.insert(key, value.abs_square());
@@ -527,8 +519,8 @@ impl<'a> Circuit<'a> {
                 Ok(Measurement::Observable(bin_count))
             },
             None => {
-                Err(QuantrError {
-                    message: "The circuit has not been simulated. Call Circuit::simulate before calling this method, Circuit::repeat_measurement.".to_string(),
+                Err(QuantrErrorConst {
+                    message: "The circuit has not been simulated. Call Circuit::simulate before calling this method, Circuit::repeat_measurement.",
                 })
             },
         }
