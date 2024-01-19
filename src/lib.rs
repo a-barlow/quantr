@@ -28,6 +28,9 @@
 //! [Circuit::repeat_measurement], where a new register is attached before each measurement. Or, the
 //! explicit superposition can be retrieved using [Circuit::get_superposition].
 //!
+//! All errors resulting from the incorrect use of quantr are propagated by [QuantrError] and
+//! [QuantrErrorConst].
+//!
 //! More complex examples can be found in the `examples` folder within this repository.
 //!
 //! # Example
@@ -74,3 +77,4 @@ pub use circuit::printer::Printer;
 pub use circuit::states;
 pub use circuit::{Circuit, Measurement};
 pub use complex::{Complex, COMPLEX_ZERO};
+pub use error::{QuantrError, QuantrErrorConst};

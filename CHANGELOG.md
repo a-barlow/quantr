@@ -14,20 +14,26 @@ Breaking changes:
 - Changed return type of `states::super_positions::get_amplitude ->
   Result<Complex<f64>, QuantrError>` to
   `states::super_positions::get_amplitude -> Option<Complex<f64>>`.
-- Removed `QuantrError` from public interface. This is no longer
-  required, as it can used through it's implementation of the
-  `std::errorError` trait.
 - All fields of `Circuit` are now private; that is `num_qubits` and
   `circuit_gates`. These two can still be accessed through
   `Circuit::get_num_qubits` and `Circuit::get_gates` respectively.
 - The argument of `Circuit::get_num_qubits` now only borrows the
   circuit, instead of consuming it (which was a mistake in the 0.4.1
   release).
+- Removed `QuantrError` fields from public interface.
+- The following functions have changed their returning error type to
+  `QuantrErrorConst`:
+  - `Circuit::new`
+  - `Circuit::get_superposition`
+  - `Circuit::repeat_measurement`
+  - `states::SuperPosition::new`
+  - `states::SuperPosition::new_with_amplitudes`
+  - `states::ProductState::new`
 
 Internal improvements:
 
 - Added `QuantrErrorConst` that consumes a `&str`. This can be used for
-  constant strings (error messages) and so enabling some functions to
+  constant strings (error messages) and so enables some functions to
   become constant.
 
 ## 0.4.1 - More optimisations

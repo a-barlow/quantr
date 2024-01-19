@@ -32,7 +32,7 @@ impl fmt::Debug for QuantrError {
 
 impl Error for QuantrError {}
 
-/// Relays error messages resulting from quantr.
+/// Relays constant error messages resulting from quantr.
 pub struct QuantrErrorConst {
     pub(crate) message: &'static str,
 }

@@ -71,8 +71,7 @@ impl SuperPosition {
         let length = amplitudes.len();
         if (length & (length - 1)) != 0 {
             return Err(QuantrErrorConst {
-                message: 
-                    "The length of the array must be of the form 2**n where n is an integer.",
+                message: "The length of the array must be of the form 2**n where n is an integer.",
             });
         }
 
@@ -203,7 +202,7 @@ impl SuperPosition {
         if 2usize << (prod_state.qubits.len() - 1) != self.amplitudes.len() {
             return Err(QuantrError { message: format!("Unable to retreive product state, |{:?}> with dimension {}. The superposition is a linear combination of states with different dimension. These dimensions should be equal.", prod_state.to_string(), prod_state.num_qubits()),});
         }
-        Ok(self.amplitudes[prod_state.comp_basis()]) 
+        Ok(self.amplitudes[prod_state.comp_basis()])
     }
 
     /// Returns a new superposition in the computational basis.
