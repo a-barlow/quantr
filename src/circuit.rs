@@ -9,7 +9,6 @@
 */
 
 // Added only for silencing deprecated warnings for using public fields of `Circuit`.
-#![allow(deprecated)]
 
 use super::circuit::gate::{GateCategory, GateInfo};
 use crate::error::{QuantrError, QuantrErrorConst};
@@ -275,7 +274,6 @@ impl<'a> Circuit<'a> {
         Ok(())
     }
 
-    // need to implement all other gates, in addition to checking that it's within circuit size!
     fn has_overlapping_controls_and_target(gates: &[Gate], circuit_size: usize) -> QResult<()> {
         for (pos, gate) in gates.iter().enumerate() {
             if let Some(nodes) = gate.get_nodes() {
@@ -300,7 +298,6 @@ impl<'a> Circuit<'a> {
     }
 
     // Find if there are any repeating values in array, O(n)
-    // The initialisation of the circuit guarantees the max circuit size.
     fn contains_repeating_values(num_qubits: usize, array: &[usize]) -> bool {
         let mut counter: Vec<bool> = vec![false; num_qubits];
         for j in array {

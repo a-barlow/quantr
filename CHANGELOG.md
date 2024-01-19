@@ -11,6 +11,9 @@ private for the `Circuit` struct.
 
 Breaking changes:
 
+- Changed return type of `states::super_positions::get_amplitude ->
+  Result<Complex<f64>, QuantrError>` to
+  `states::super_positions::get_amplitude -> Option<Complex<f64>>`.
 - Removed `QuantrError` from public interface. This is no longer
   required, as it can used through it's implementation of the
   `std::errorError` trait.
