@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2023 Andrew Rowan Barlow. Licensed under the EUPL-1.2
+* Copyright (c) 2024 Andrew Rowan Barlow. Licensed under the EUPL-1.2
 * or later. You may obtain a copy of the licence at
 * https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12. A copy
 * of the EUPL-1.2 licence in English is given in LICENCE.txt which is
@@ -8,9 +8,11 @@
 * Author: Andrew Rowan Barlow <a.barlow.dev@gmail.com>
 */
 
-use crate::circuit::QResult;
+use std::fmt;
+
+use crate::circuit::{QResult, QResultConst};
+use crate::error::{QuantrError, QuantrErrorConst};
 use crate::states::Qubit;
-use crate::QuantrError;
 
 /// A product state in the computational basis.
 #[derive(Clone, Hash, PartialEq, Eq, Debug)]
@@ -32,12 +34,10 @@ impl ProductState {
     ///
     /// let prod: ProductState = ProductState::new(&[Qubit::One, Qubit::Zero]).unwrap(); // |10>
     /// ```
-    pub fn new(product_state: &[Qubit]) -> QResult<ProductState> {
+    pub fn new(product_state: &[Qubit]) -> QResultConst<ProductState> {
         if product_state.is_empty() {
-            return Err(QuantrError {
-                message: String::from(
-                    "The slice of qubits is empty, it needs to at least have one element.",
-                ),
+            return Err(QuantrErrorConst {
+                message: "The slice of qubits is empty, it needs to at least have one element.",
             });
         }
         Ok(ProductState {
@@ -185,27 +185,6 @@ impl ProductState {
         self.qubits[qubit_number]
     }
 
-    /// Returns the labelling of the product state as a String.
-    ///
-    /// # Example
-    /// ```
-    /// use quantr::states::{Qubit, ProductState};
-    ///
-    /// let prod: ProductState = ProductState::new(&[Qubit::Zero, Qubit::One]).unwrap();
-    ///
-    /// assert_eq!(String::from("01"), prod.to_string());
-    /// ```
-    #[allow(clippy::inherent_to_string)]
-    pub fn to_string(&self) -> String {
-        self.qubits
-            .iter()
-            .map(|q| match q {
-                Qubit::Zero => "0",
-                Qubit::One => "1",
-            })
-            .collect::<String>()
-    }
-
     // Converts the computational basis labelling (a binary integer), into base 10.
     pub(super) fn comp_basis(&self) -> usize {
         self.qubits
@@ -231,6 +210,30 @@ impl ProductState {
             .collect();
 
         ProductState::new_unchecked(binary_index.as_slice())
+    }
+}
+
+impl fmt::Display for ProductState {
+    /// Returns the labelling of the product state.
+    ///
+    /// # Example
+    /// ```
+    /// use quantr::states::{Qubit, ProductState};
+    ///
+    /// let prod: ProductState = ProductState::new(&[Qubit::Zero, Qubit::One]).unwrap();
+    ///
+    /// assert_eq!(String::from("01"), prod.to_string());
+    /// ```
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let binary_string = self
+            .qubits
+            .iter()
+            .map(|q| match q {
+                Qubit::Zero => "0",
+                Qubit::One => "1",
+            })
+            .collect::<String>();
+        write!(f, "{}", binary_string)
     }
 }
 
