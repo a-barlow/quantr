@@ -4,10 +4,20 @@ This file logs the versions of quantr.
 
 ## 0.5.0 - Finalising Interface
 
-Following this update, interfacing with quantr can now be done safely,
-as to not allow the user to destroy any assumptions made from building
-the circuit. In this update, that meant making the final public fields
-private for the `Circuit` struct. 
+Following this update, interfacing with quantr can now be done safely.
+All assumptions that are needed for the safe simulation of the circuit
+can now be upheld, no matter how the user interfaces with this library.
+Of course, any incorrect interfacing should result in an error. In this
+update, that meant making the final public fields private for the
+`Circuit` struct. 
+
+Some functions have promoted to constant functions. Although this was
+not a breaking change in itself, it meant that removing such constraints
+constitutes as a breaking change. Moreover, I had not fully understood
+it's use in Rust. So, this will be removed for some functions, if not
+all. This will be most likely removed in the next major update. Of
+course, it is the developers wishes to minimise these breaking changes.
+- A. Barlow
 
 Breaking changes:
 
@@ -31,6 +41,15 @@ Breaking changes:
   - `states::SuperPosition::new`
   - `states::SuperPosition::new_with_amplitudes`
   - `states::ProductState::new`
+
+Constant functions:
+
+The following functions have been made constant.
+
+  - `Circuit::new`
+  - `Circuit::get_superposition`
+  - `Circuit::get_num_qubits`
+  - `SuperPosition::get_num_qubits`
 
 Internal improvements:
 
@@ -129,7 +148,7 @@ Examples:
 - The `.unwrap()` on measurements have been removed, in favour of
   explicitly showing the `Result` return type of `Circuit::repeated_measurement`
   and `Circuit::get_superposition`.
-- Added examples for implementing a controlled not gate with arbitary
+- Added examples for implementing a controlled not gate with arbitrary
   number of control nodes. This uses generic constants. This can be
   found in `examples/generalised_control_not_gate.rs`.
 

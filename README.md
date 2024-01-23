@@ -32,8 +32,8 @@ implementation of Grover's algorithm.
 
 - Aimed to be accessible for beginners in Rust.
 - The distinction between physical observables and non-physical
-  observables is made clear; but the latter is still made possible to
-  retrieve. 
+  observables that can be extracted from the circuit is made clear,
+  where the latter is still possible to retrieve. 
 - Prints the circuit diagram to the terminal, or saves it to a text
   file, as a UTF-8 string.
 - Custom gates can be implemented easily by giving their explicit linear
@@ -79,7 +79,7 @@ fn main() {
 
     quantum_circuit.simulate();
 
-    // Below prints the number of times that each state was observered 
+    // Below prints the number of times that each state was observed 
     // over 500 measurements of superpositions.
 
     if let Ok(Observable(bin_count)) = quantum_circuit.repeat_measurement(500) {
