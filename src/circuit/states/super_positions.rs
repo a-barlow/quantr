@@ -140,6 +140,9 @@ impl SuperPosition {
         self.amplitudes.get(pos).cloned()
     }
 
+    #[deprecated(note=
+        "In the next major update, const will be removed from this function. Therefore, please do not use this function in constant settings."
+    )]
     /// Returns the number of qubits that each product state in the super position is composed of by using the Kronecker product.
     ///
     /// # Example

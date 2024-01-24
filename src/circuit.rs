@@ -50,6 +50,10 @@ pub struct Circuit<'a> {
 }
 
 impl<'a> Circuit<'a> {
+
+    #[deprecated(note=
+        "In the next major update, const will be removed from this function. Therefore, please do not use this function in constant settings."
+    )]
     /// Initialises a new circuit.
     ///
     /// The lifetime is due to the slices of control qubits for [Gate::Custom]. That is, the slice
@@ -79,6 +83,9 @@ impl<'a> Circuit<'a> {
         })
     }
 
+    #[deprecated(note=
+        "In the next major update, const will be removed from this function. Therefore, please do not use this function in constant settings."
+    )]
     /// Returns the number of qubits in the circuit.
     ///
     /// # Example
@@ -422,6 +429,9 @@ impl<'a> Circuit<'a> {
         self.output_state = Some(register);
     }
 
+    #[deprecated(note=
+        "In the next major update, const will be removed from this function. Therefore, please do not use this function in constant settings."
+    )]
     /// Returns the resulting superposition after the circuit has been simulated using
     /// [Circuit::simulate].
     ///
@@ -588,6 +598,8 @@ impl<'a> Circuit<'a> {
 #[rustfmt::skip]
 #[cfg(test)]
 mod tests {
+    #![allow(deprecated)] 
+
     use crate::{complex_im, complex_re, complex_re_array, complex, COMPLEX_ZERO, Gate, Complex, Circuit};
     use crate::states::{SuperPosition, Qubit, ProductState};
     use super::HashMap;
