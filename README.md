@@ -81,11 +81,10 @@ fn main() {
 
     // Below prints the number of times that each state was observed 
     // over 500 measurements of superpositions.
-
     if let Ok(Observable(bin_count)) = quantum_circuit.repeat_measurement(500) {
         println!("[Observable] Bin count of observed states.");
         for (state, count) in bin_count {
-            println!("|{}> observed {} times", state.to_string(), count);
+            println!("|{}> observed {} times", state, count);
         }
     }
 
@@ -118,8 +117,9 @@ When defining a custom function that depends on the position of control
 nodes to define gates (such as the CNot and Toffoli gates), it must be
 defined so that the most far right state of the product state, is
 assumed to be the gate that is 'activated'. In general, it is better to
-assume that the custom function doesn't define control nodes, but rather 
-it extends the dimension of the function's domain. 
+assume that the custom function doesn't define control nodes, but rather
+it extends the dimension of the function's domain. Lastly, the custom
+enum does not check if the mapping is unitary.
 
 ### Documentation 
 

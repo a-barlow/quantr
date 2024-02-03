@@ -8,7 +8,7 @@ See the previous update, 0.5.0, for why some functions were promoted to
 a const (TL;DR it was a mistake). These have been marked `deprecate` so
 the rust compiler warns users to not use them in a const context.
 
-The quick start guide has been updated to for 0.5.0 use of quantr, where
+The quick start guide has been updated for 0.5.0 use of quantr, where
 the errors that functions return have now been made private, forcing the
 user to handle them through their `std::error::Error` trait.
 
