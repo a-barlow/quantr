@@ -50,9 +50,8 @@ pub struct Circuit<'a> {
 }
 
 impl<'a> Circuit<'a> {
-
-    #[deprecated(note=
-        "In the next major update, const will be removed from this function. Therefore, please do not use this function in constant settings."
+    #[deprecated(
+        note = "In the next major update, const will be removed from this function. Therefore, please do not use this function in constant settings."
     )]
     /// Initialises a new circuit.
     ///
@@ -83,8 +82,8 @@ impl<'a> Circuit<'a> {
         })
     }
 
-    #[deprecated(note=
-        "In the next major update, const will be removed from this function. Therefore, please do not use this function in constant settings."
+    #[deprecated(
+        note = "In the next major update, const will be removed from this function. Therefore, please do not use this function in constant settings."
     )]
     /// Returns the number of qubits in the circuit.
     ///
@@ -429,8 +428,8 @@ impl<'a> Circuit<'a> {
         self.output_state = Some(register);
     }
 
-    #[deprecated(note=
-        "In the next major update, const will be removed from this function. Therefore, please do not use this function in constant settings."
+    #[deprecated(
+        note = "In the next major update, const will be removed from this function. Therefore, please do not use this function in constant settings."
     )]
     /// Returns the resulting superposition after the circuit has been simulated using
     /// [Circuit::simulate].
