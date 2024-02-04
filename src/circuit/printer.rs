@@ -371,6 +371,9 @@ impl Printer<'_> {
 #[rustfmt::skip]
 #[cfg(test)]
 mod tests {
+    
+    #![allow(deprecated)] 
+
     use crate::{
         Printer, Circuit, Gate, states::{Qubit, ProductState, SuperPosition},
     };

@@ -1,7 +1,7 @@
 # Quick Start Guide 
 
 This guide walks through an implementation of Grover's algorithm using
-[quantr](https://crates.io/crates/quantr). It's aimed at beginners in
+[quantr](https://crates.io/crates/quantr) 0.5.0. It's aimed at beginners in
 Rust and requires a little knowledge of the console. Moreover,
 it's assumed that [Rust and Cargo are
 installed](https://doc.rust-lang.org/stable/book/ch01-00-getting-started.html).
@@ -29,7 +29,7 @@ This will create a new directory called `grovers_example` containing
 the necessary files for a Rust project. Enter this directory.
 
 Add the latest version of quantr as a dependency by running `cargo add
-quantr` on the console. This should add quantr below `[d    ependecies]` in
+quantr` on the console. This should add quantr below `[dependecies]` in
 you `Cargo.toml` file. Then, run `cargo build`. This will download the
 quantr crate from [crates.io](https://crates.io/) and make it
 accessible for your project. 
@@ -128,7 +128,7 @@ be prepared and measured multiple times to collect a bin count of
 observed states. This bin count can be found and printed with
 
 ```rust,ignore
-if let Measurement::Observable(bin_count) = circuit.repeat_measurement(500).unwrap() {
+if let Ok(Measurement::Observable(bin_count)) = circuit.repeat_measurement(500) {
     // bin_count is a HashMap<ProductState, usize>
     for (state, count) in bin_count {
         println!("{} : {}", state.to_string(), count);
@@ -147,7 +147,7 @@ In nature, this cannot be directly observed. However, it can still be
 useful to view this "theoretical" superposition:
 
 ```rust,ignore
-if let Measurement::NonObservable(output_super_position) = circuit.get_superposition().unwrap() 
+if let Ok(Measurement::NonObservable(output_super_position)) = circuit.get_superposition() 
 {
     for (state, amplitude) in super_position.into_iter() {
         println!("{} : {}", state.to_string(), amplitude);
@@ -167,9 +167,9 @@ so:
 
 ```rust,ignore 
 ...
-use quantr::QuantrError;
+use std::error::Error;
 
-fn main() -> Result<(), QuantrError> {
+fn main() -> Result<(), Box<dyn Error>> {
     ...; 
     Ok(()) 
 }
@@ -177,17 +177,11 @@ fn main() -> Result<(), QuantrError> {
 
 A `Ok(())` is returned on the last line; signalling that the program has
 exited without errors. Then, effectively all unwrap methods called after
-appending gates can be replaced with a `?`. However, an argument for
-leaving the unwraps explicit is that if a function has appended a gate
-resulting in an error, such as adding a gate out width the circuit's
-size, then at runtime the program will panic and return a compiler
-message explicitly directing the user to the line in question. Even
-though the many unwraps may be unpleasant, it can be beneficial for
-debugging while creating the circuit.
+appending gates can be replaced with a `?`. This can be seen explicitly
+in the `example/grovers.rs` folder.
 
-The following is the completed code. This can also be found in
-`examples/grovers.rs`, and ran with `cargo run --example grovers` from
-the root directory.
+The following is the completed code. This can be ran with `cargo run
+--example grovers` from the root directory.
 
 ```rust
 use quantr::{Circuit, Gate, Measurement, Printer};
@@ -232,7 +226,7 @@ fn main() {
 
     // Displays bin count of the resulting 500 repeat measurements of
     // superpositions. bin_count is a HashMap<ProductState, usize>.
-    if let Measurement::Observable(bin_count) = circuit.repeat_measurement(500).unwrap() {
+    if let Ok(Measurement::Observable(bin_count)) = circuit.repeat_measurement(500) {
         println!("\n[Observable] Bin count of observed states.");
         for (state, count) in bin_count {
             println!("|{}> observed {} times", state.to_string(), count);
@@ -240,7 +234,7 @@ fn main() {
     }
 
     // Returns the superpsoition that cannot be directly observed.
-    if let Measurement::NonObservable(output_super_position) = circuit.get_superposition().unwrap()
+    if let Ok(Measurement::NonObservable(output_super_position)) = circuit.get_superposition()
     {
         println!("\n[Non-Observable] The amplitudes of each state in the final superposition.");
         for (state, amplitude) in output_super_position.into_iter() {
