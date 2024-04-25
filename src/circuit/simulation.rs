@@ -138,11 +138,9 @@ impl<'a> Circuit<'a> {
             let mut swapped_state: ProductState = prod_state.clone();
             swapped_state.insert_qubits(state.qubits.as_slice(), gate_positions.as_slice());
 
-            if let Some(existing_amp) = mapped_states.get(&swapped_state) {
-                mapped_states.insert(swapped_state, existing_amp.add(state_amp.mul(amp)));
-            } else {
-                mapped_states.insert(swapped_state, state_amp.mul(amp));
-            }
-        }
+            mapped_states.entry(swapped_state)
+                .and_modify(|existing_amp| {*existing_amp = existing_amp.add(state_amp.mul(amp));} ) 
+                .or_insert(state_amp.mul(amp));
+       }
     }
 }
