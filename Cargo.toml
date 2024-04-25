@@ -12,4 +12,4 @@ homepage = "https://a-barlow.github.io/quantr-book"
 description = "Readily create, simulate and print quantum circuits."
 
 [dependencies]
-fastrand = "^2.0.1"
+fastrand = "2.0.1"

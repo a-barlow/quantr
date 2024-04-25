@@ -37,7 +37,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     if let Ok(Measurement::NonObservable(final_sup)) = qc.get_superposition() {
         println!("\nThe final superposition is:");
         for (state, amplitude) in final_sup.into_iter() {
-            println!("|{}> : {}", state.to_string(), amplitude);
+            println!("|{}> : {}", state, amplitude);
         }
     }
 

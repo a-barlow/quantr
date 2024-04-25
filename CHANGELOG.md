@@ -2,6 +2,23 @@
 
 This file logs the versions of quantr.
 
+## 0.5.2 - Review of docs and minor code improvements
+
+The README was updated to give credit to another quantum circuit
+simulator implemented in Rust:
+[Spinoza](https://github.com/QuState/spinoza). Although yet used by the
+current authors, the Spinoza project is more developed and mature than
+quantr, and looks to be a good Rust alternative!
+
+The LICENSES were updated to reflect the use of the
+[fastrand](https://crates.io/crates/fastrand.) crate that is a
+dependency of quantr. This was implemented in update 0.4.1; although
+this wasn't stated in the licensing at the time, the fastrand crate was
+implicitly being used under the MIT licence. 
+
+Several unnecessary calls of `ProductState::to_string` through it's
+trait implementation were made in printing macros, and are now removed.
+
 ## 0.5.1 - Review of docs and deprecated const functions
 
 See the previous update, 0.5.0, for why some functions were promoted to

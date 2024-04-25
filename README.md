@@ -1,7 +1,7 @@
 # quantr
 
 [![Crates.io](https://img.shields.io/crates/v/quantr?style=flat-square&color=%23B94700)](https://crates.io/crates/quantr)
-[![Static Badge](https://img.shields.io/badge/version%20-%201.75.0%20-%20white?style=flat-square&logo=rust&color=%23B94700)](https://releases.rs/)
+[![Static Badge](https://img.shields.io/badge/version%20-%201.77.2%20-%20white?style=flat-square&logo=rust&color=%23B94700)](https://releases.rs/)
 [![GitHub Workflow Status (with event)](https://img.shields.io/github/actions/workflow/status/a-barlow/quantr/rust.yml?style=flat-square&label=tests&color=%2349881B)](https://github.com/a-barlow/quantr/actions/workflows/rust.yml)
 [![GitHub Workflow Status (with event)](https://img.shields.io/github/actions/workflow/status/a-barlow/quantr/rust_dev.yml?style=flat-square&label=tests%20(dev)&color=%2349881B)](https://github.com/a-barlow/quantr/actions/workflows/rust_dev.yml)
 [![docs.rs](https://img.shields.io/docsrs/quantr?style=flat-square&color=%2349881B)](https://crates.io/crates/quantr)
@@ -16,10 +16,10 @@
 > [other simulations](#other-quantum-computer-simulators) if you are 
 > intending to use quantr for projects.  
 
-A Rust library crate that builds, prints and simulates a quantum
-computer.
+A Rust library crate that builds, prints and simulates quantum gate
+based circuits.
 
-This crate allows the user to build a quantum circuit by adding columns
+This crate allows the user to build quantum circuits by adding columns
 of gates via various methods. Once the circuit has been built, then it
 can be simulated, which attaches the register |00..0> resulting in a
 superposition that can be measured.
@@ -39,14 +39,9 @@ implementation of Grover's algorithm.
 - Custom gates can be implemented easily by giving their explicit linear
   mappings on product states. This allows the user to avoid representing
   the gates as matrices.
-- Attempts to minimise memory consumption by not using matrices nor
-  sparse matrices, but instead uses functions to represent the linear
-  mapping of gates. For the number of qubits in a circuit, `n`, the
-  estimated memory that is required for quantr to simulate the circuit
-  when `n >= 16` is approximately the size of the state vector itself in
-  Rust, `2**(n-6) KiB`. For `n < 16`, the memory required is less than
-  `1 MiB`.
-- Can simulate circuits up to ~18 qubits within a reasonable time.
+- Custom gates do not have to be unitary, allowing for any quantum
+  channel to be implemented.
+- Can simulate circuits up to ~16 qubits within a reasonable time.
 - Only safe Rust code is used, and the only dependency is the
   [fastrand](https://crates.io/crates/fastrand) crate and its
   sub-dependencies.
@@ -96,7 +91,8 @@ guide](QUICK_START.md).
  
 ### Limitations (currently)
 
-- **No noise** consideration, or ability to introduce noise.
+- **No noise** consideration, however this could be (albeit tediously)
+  implemented through the custom gates.
 - **No parallelisation** option.
 - **No ability to add classical wires** nor gates that measure a
   single wire of a quantum circuit.
@@ -118,15 +114,17 @@ nodes to define gates (such as the CNot and Toffoli gates), it must be
 defined so that the most far right state of the product state, is
 assumed to be the gate that is 'activated'. In general, it is better to
 assume that the custom function doesn't define control nodes, but rather
-it extends the dimension of the function's domain. Lastly, the custom
-enum does not check if the mapping is unitary.
+it extends the dimension of the function's domain. Lastly, it should be
+noted that there are no checks on the custom gate for being a valid
+quantum channel.
 
 ### Documentation 
 
 > [The Quantr Book](https://a-barlow.github.io/quantr-book/) is planned
 > to serve as extended documentation to quantr, such as explaining the
 > motivations behind chosen algorithms. For now, it only contains the
-> start guide.
+> start guide, and some preliminary results of the memory efficiency of
+> quantr.
 
 For the online code documentation, please refer to 
 [crates.io](https://crates.io/crates/quantr). This can also be built and 
@@ -134,6 +132,9 @@ opened in your favourite web browser locally by cloning the project,
 moving into the directory, and running `cargo doc --open`. 
 
 ### Other quantum computer simulators 
+
+Another, and more stable, quantum circuit simulator written in Rust is
+[Spinoza](https://github.com/QuState/spinoza).
 
 The website [Are We Quantum Yet](https://arewequantumyet.github.io)
 (checked 24/10/23) lists all things quantum computing in Rust. 
