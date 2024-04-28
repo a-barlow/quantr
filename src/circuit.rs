@@ -380,7 +380,7 @@ impl<'a> Circuit<'a> {
     ///
     /// // Simulates the circuit:
     /// // |0> -------
-    /// // |0> -- H --
+    /// // |0> -------
     /// // |0> -- H --
     /// ````
     pub fn simulate(&mut self) {
@@ -468,8 +468,8 @@ impl<'a> Circuit<'a> {
         }
     }
 
-    /// Returns a `HashMap` that containes the number of times the corresponding state was observed over
-    /// `n` measurements of the superpositions.
+    /// Returns a `HashMap` that contains the number of times the corresponding state was observed over
+    /// `n` measurements of the superpositions (shots).
     ///
     /// Explicitly, this performs repeated measurements where a register is attached to the circuit,
     /// the resulting superposition measured, and then the reduced state recorded. If the HashMap does not
@@ -489,7 +489,7 @@ impl<'a> Circuit<'a> {
     /// println!("State | Number of Times Observed");
     /// if let Ok(Observable(bin_count)) = circuit.repeat_measurement(500) {
     ///     for (state, observed_count) in bin_count {
-    ///         println!("|{}>   : {}", state.to_string(), observed_count);
+    ///         println!("|{}>   : {}", state, observed_count);
     ///     }
     /// }
     ///
@@ -499,7 +499,7 @@ impl<'a> Circuit<'a> {
     /// ```
     pub fn repeat_measurement(
         &self,
-        number_iterations: usize,
+        shots: usize,
     ) -> QResultConst<Measurement<HashMap<ProductState, usize>>> {
         match &self.output_state {
             Some(super_position) => {
@@ -511,7 +511,7 @@ impl<'a> Circuit<'a> {
 
                 let mut bin_count: HashMap<ProductState, usize> = Default::default();
 
-                for _ in 0..number_iterations {
+                for _ in 0..shots {
                     let mut cummalitive: f64 = 0f64;
                     let dice_roll: f64 = fastrand::f64();
                     for (state_label, probability) in &probabilities {

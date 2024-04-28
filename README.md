@@ -36,7 +36,7 @@ implementation of Grover's algorithm.
   where the latter is still possible to retrieve. 
 - Prints the circuit diagram to the terminal, or saves it to a text
   file, as a UTF-8 string.
-- Custom gates can be implemented easily by giving their explicit linear
+- Custom gates can be implemented easily by giving their explicit 
   mappings on product states. This allows the user to avoid representing
   the gates as matrices.
 - Custom gates do not have to be unitary, allowing for any quantum

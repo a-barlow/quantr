@@ -253,10 +253,70 @@ impl From<Qubit> for ProductState {
     }
 }
 
+/// An iterator of the qubits that label the product state in the computational basis, from left to
+/// right in braket notation.
+///
+/// # Example
+/// ```
+/// use quantr::states::{ProductState, Qubit};
+///
+/// let state = ProductState::new(&[Qubit::One, Qubit::Zero, Qubit::Zero]) // |100>
+///
+/// let mut state_iter = state.into_iter();
+///
+/// assert_eq!(state_iter.next(), Some(Qubit::One));
+/// assert_eq!(state_iter.next(), Some(Qubit::Zero));
+/// assert_eq!(state_iter.next(), Some(Qubit::Zero));
+/// assert_eq!(state_iter.next(), None);
+/// ```
+pub struct ProductStateIter<'a> {
+    state: &'a ProductState,
+    index: usize
+}
+
+impl<'a> Iterator for ProductStateIter<'a> {
+    type Item = Qubit;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if let Some(qubit) = self.state.qubits.get(self.index).copied() {
+            self.index += 1;
+            Some(qubit)
+        } else {
+            self.index = 0;
+            None
+        }
+    }
+}
+
+impl<'a> IntoIterator for &'a ProductState {
+    type Item = Qubit;
+    type IntoIter = ProductStateIter<'a>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        ProductStateIter {
+            state: &self,
+            index: 0
+        }
+    }
+
+}
+
 #[cfg(test)]
 mod tests {
     use crate::states::{ProductState, Qubit, SuperPosition};
     use crate::{complex_re, Complex, COMPLEX_ZERO};
+
+    use super::ProductStateIter;
+
+    #[test]
+    fn iterates_through_qubits() {
+        let state: ProductState = ProductState::new(&[Qubit::One, Qubit::Zero, Qubit::One]).unwrap();
+        let mut iter_state: ProductStateIter = state.into_iter();
+        assert_eq!(iter_state.next(), Some(Qubit::One));
+        assert_eq!(iter_state.next(), Some(Qubit::Zero));
+        assert_eq!(iter_state.next(), Some(Qubit::One));
+        assert_eq!(iter_state.next(), None);
+    }
 
     #[test]
     fn converts_from_integer_to_product_state() {

@@ -19,6 +19,10 @@ implicitly being used under the MIT licence.
 Several unnecessary calls of `ProductState::to_string` through it's
 trait implementation were made in printing macros, and are now removed.
 
+Lastly, the `IntoIter` trait was implemented for `ProductState`, which
+produces an iterator of the qubits that represent the state, from left
+to right in braket notation.
+
 ## 0.5.1 - Review of docs and deprecated const functions
 
 See the previous update, 0.5.0, for why some functions were promoted to
