@@ -26,13 +26,14 @@
 //! [ProductState::invert_digit] and [SuperPosition::from] respectively.
 
 mod product_states;
+mod product_states_iter;
 mod qubit;
 mod super_position_iter;
 mod super_positions;
 mod super_positions_unchecked;
 
 pub use product_states::ProductState;
-pub use product_states::ProductStateIter;
+pub use product_states_iter::ProductStateIter;
 pub use qubit::Qubit;
 pub use super_position_iter::SuperPositionIterator;
 pub use super_positions::SuperPosition;

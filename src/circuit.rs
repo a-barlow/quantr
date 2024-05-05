@@ -9,6 +9,7 @@
 */
 
 use super::circuit::gate::{GateCategory, GateInfo};
+use crate::circuit::measurement::Measurement;
 use crate::error::QuantrError;
 use crate::states::{ProductState, SuperPosition};
 use crate::Gate;
@@ -16,6 +17,7 @@ use std::collections::HashMap;
 use std::iter::zip;
 
 pub mod gate;
+pub mod measurement;
 pub mod printer;
 mod simulation;
 mod standard_gate_ops;
@@ -23,29 +25,18 @@ pub mod states;
 
 pub(crate) type QResult<T> = Result<T, QuantrError>;
 
-// The tolerance for declaring non-zero amplitudes.
-const ZERO_MARGIN: f64 = 1e-7;
-
-/// Distinguishes observable and non-observable quantities.
-///
-/// For example, this will distinguish the retrieval of a superposition (that cannot be measured
-/// directly), and the state resulting from the collapse of a superposition upon measurement. See
-/// [Circuit::get_superposition] and [Circuit::repeat_measurement] for examples.
-pub enum Measurement<T> {
-    Observable(T),
-    NonObservable(T),
-}
-
 /// A quantum circuit where gates can be appended and then simulated to measure resulting
 /// superpositions.
 pub struct Circuit {
     circuit_gates: Vec<Gate>,
     num_qubits: usize,
-    output_state: Option<SuperPosition>,
+    output_state: Option<SuperPosition>, // TODO: remove this field, and only use register for simulation
     register: Option<SuperPosition>,
     config_progress: bool,
 }
 
+// The tolerance for declaring non-zero amplitudes.
+const ZERO_MARGIN: f64 = 1e-7;
 impl Circuit {
     /// Initialises a new circuit.
     ///
