@@ -32,6 +32,7 @@ mod super_positions;
 mod super_positions_unchecked;
 
 pub use product_states::ProductState;
+pub use product_states::ProductStateIter;
 pub use qubit::Qubit;
 pub use super_position_iter::SuperPositionIterator;
 pub use super_positions::SuperPosition;

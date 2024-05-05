@@ -6,16 +6,17 @@ found in the root directory of this repository.
 
 This text file details the licences that are applied to this project as a 
 consequence of using:
-- the rand crate (version 0.8.5);
+- the fastrand crate (version 2.0.1);
 - the Rust language; and
 - the standard libraries of the Rust language.
 
-As the owner of quantr, I have chosen to use the rand crate, Rust language and
-its standard library under the MIT licence. The licence can be found at
-http://opensource.org/licenses/MIT or within this file under the header 
-"MIT licence".
+As the owner of quantr, I have chosen to use the fastrand crate, Rust
+language and its standard library under the MIT licence. The licence can
+be found at http://opensource.org/licenses/MIT or within this file under
+the header "MIT licence".
 
-Details of the rand crate can be found at https://crates.io/crates/rand.
+Details of the fastrand crate can be found at
+https://crates.io/crates/fastrand.
 
 The repository for the Rust language and its standard libraries,
 can be found at https://github.com/rust-lang/, which contains the licences 

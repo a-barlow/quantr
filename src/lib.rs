@@ -62,7 +62,7 @@
 //! if let Ok(Observable(bin_count)) = quantum_circuit.repeat_measurement(500) {
 //!     println!("[Observable] Bin count of observed states.");
 //!     for (state, count) in bin_count {
-//!         println!("|{}> observed {} times", state.to_string(), count);
+//!         println!("|{}> observed {} times", state, count);
 //!     }
 //! }
 //!

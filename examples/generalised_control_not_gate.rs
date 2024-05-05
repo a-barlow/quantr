@@ -40,7 +40,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     if let Ok(Measurement::Observable(bin_count)) = qc.repeat_measurement(50) {
         println!("\nStates observed over 50 measurements:");
         for (states, count) in bin_count.into_iter() {
-            println!("|{}> : {}", states.to_string(), count);
+            println!("|{}> : {}", states, count);
         }
     }
 
