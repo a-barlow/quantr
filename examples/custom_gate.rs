@@ -21,7 +21,7 @@ fn main() -> Result<(), QuantrError> {
     // Build a circuit using a CCC-not gate, placing the control nodes on positions 0, 1, 2 and
     // the target on 3.
     qc.add_repeating_gate(Gate::X, &[0, 1, 2])?
-        .add_gate(Gate::Custom(cccnot, &[0, 1, 2], "X".to_string()), 3)?;
+        .add_gate(Gate::Custom(cccnot, vec![0, 1, 2], "X".to_string()), 3)?;
 
     // Prints the circuit, viewing the custom gate, and then simulating it.
     let mut circuit_printer: Printer = Printer::new(&qc);

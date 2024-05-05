@@ -15,7 +15,7 @@ use crate::{Circuit, Complex, Gate};
 use std::collections::HashMap;
 use std::ops::{Add, Mul};
 
-impl<'a> Circuit<'a> {
+impl Circuit {
     // If the user toggles the log on, then prints the simulation of each circuit.
     pub(super) fn print_circuit_log(
         gate: &Gate,

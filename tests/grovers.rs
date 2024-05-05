@@ -83,27 +83,42 @@ fn x3sudoko() -> Result<(), Box<dyn Error>> {
     for i in 0..=2 {
         qc.add_gate(Gate::Toffoli(i, i + 3), 8)?;
     }
-    qc.add_gate(Gate::Custom(multicnot::<4>, &[0, 1, 2], "X".to_string()), 6)?;
+    qc.add_gate(
+        Gate::Custom(multicnot::<4>, vec![0, 1, 2], "X".to_string()),
+        6,
+    )?;
     for i in 0..=2 {
         qc.add_gate(Gate::CNot(i), 6)?;
     }
-    qc.add_gate(Gate::Custom(multicnot::<4>, &[3, 4, 5], "X".to_string()), 7)?;
+    qc.add_gate(
+        Gate::Custom(multicnot::<4>, vec![3, 4, 5], "X".to_string()),
+        7,
+    )?;
     for i in 3..=5 {
         qc.add_gate(Gate::CNot(i), 7)?;
     }
 
     // The phase kickback
-    qc.add_gate(Gate::Custom(multicnot::<4>, &[6, 7, 8], "X".to_string()), 9)?;
+    qc.add_gate(
+        Gate::Custom(multicnot::<4>, vec![6, 7, 8], "X".to_string()),
+        9,
+    )?;
 
     // Reset by using the oracle again
     for i in 0..=2 {
         qc.add_gate(Gate::Toffoli(i, i + 3), 8)?;
     }
-    qc.add_gate(Gate::Custom(multicnot::<4>, &[0, 1, 2], "X".to_string()), 6)?;
+    qc.add_gate(
+        Gate::Custom(multicnot::<4>, vec![0, 1, 2], "X".to_string()),
+        6,
+    )?;
     for i in 0..=2 {
         qc.add_gate(Gate::CNot(i), 6)?;
     }
-    qc.add_gate(Gate::Custom(multicnot::<4>, &[3, 4, 5], "X".to_string()), 7)?;
+    qc.add_gate(
+        Gate::Custom(multicnot::<4>, vec![3, 4, 5], "X".to_string()),
+        7,
+    )?;
     for i in 3..=5 {
         qc.add_gate(Gate::CNot(i), 7)?;
     }
@@ -113,7 +128,7 @@ fn x3sudoko() -> Result<(), Box<dyn Error>> {
         .add_repeating_gate(Gate::X, &[0, 1, 2, 3, 4, 5])?
         .add_gate(Gate::H, 5)?
         .add_gate(
-            Gate::Custom(multicnot::<6>, &[0, 1, 2, 3, 4], "X".to_string()),
+            Gate::Custom(multicnot::<6>, vec![0, 1, 2, 3, 4], "X".to_string()),
             5,
         )?
         .add_gate(Gate::H, 5)?

@@ -24,7 +24,11 @@ fn main() -> Result<(), QuantrError> {
     // Multi-controlled gate used here.
     qc.add_repeating_gate(Gate::X, &[0, 1, 2, 3, 4, 5])?
         .add_gate(
-            Gate::Custom(multicnot::<CIRCUIT_SIZE>, &[0, 1, 2, 3, 4], "X".to_string()),
+            Gate::Custom(
+                multicnot::<CIRCUIT_SIZE>,
+                vec![0, 1, 2, 3, 4],
+                "X".to_string(),
+            ),
             5,
         )?;
 

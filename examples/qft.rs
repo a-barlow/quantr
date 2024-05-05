@@ -23,7 +23,7 @@ fn main() -> Result<(), QuantrError> {
 
     // Apply qft
     qc.add_repeating_gate(Gate::X, &[1, 2])?
-        .add_gate(Gate::Custom(qft, &[0, 1], "QFT".to_string()), 2)?; // QFT on bits 0, 1 and 2
+        .add_gate(Gate::Custom(qft, vec![0, 1], "QFT".to_string()), 2)?; // QFT on bits 0, 1 and 2
 
     let mut printer = Printer::new(&qc);
     printer.print_diagram();

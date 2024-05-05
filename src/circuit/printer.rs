@@ -19,7 +19,7 @@ use std::path::Path;
 /// has the advantage of not wrapping the circuit within the terminal. The [Printer] will also
 /// cache a copy of the diagram so subsequent prints will require no building of the diagram.
 pub struct Printer<'a> {
-    circuit: &'a Circuit<'a>,
+    circuit: &'a Circuit,
     diagram: Option<String>,
 }
 
@@ -40,7 +40,7 @@ struct RowSchematic {
 struct GatePrinterInfo<'a> {
     gate_name: String,
     gate_name_length: usize,
-    gate: &'a Gate<'a>,
+    gate: &'a Gate,
 }
 
 #[derive(Debug)]
@@ -51,7 +51,7 @@ struct Extrema {
 
 impl Printer<'_> {
     /// Handle the printing of the given circuit.
-    pub fn new<'a>(circuit: &'a Circuit) -> Printer<'a> {
+    pub fn new<'circ>(circuit: &'circ Circuit) -> Printer<'circ> {
         Printer {
             circuit,
             diagram: None,
@@ -206,9 +206,7 @@ impl Printer<'_> {
             [column_num * self.circuit.num_qubits..(column_num + 1) * self.circuit.num_qubits]
     }
 
-    fn into_printer_gate_info<'a>(
-        gates_column: &'a [Gate<'a>],
-    ) -> (Vec<GatePrinterInfo<'a>>, usize) {
+    fn into_printer_gate_info(gates_column: &[Gate]) -> (Vec<GatePrinterInfo>, usize) {
         let mut gates_infos: Vec<GatePrinterInfo> = Default::default();
         let mut longest_name_length: usize = 1usize;
         for gate in gates_column.iter() {
@@ -227,7 +225,9 @@ impl Printer<'_> {
     }
 
     // Finds if there is a gate with one/multiple control nodes
-    fn get_multi_gate<'a>(gates: &[GatePrinterInfo<'a>]) -> Option<(usize, GatePrinterInfo<'a>)> {
+    fn get_multi_gate<'gate>(
+        gates: &[GatePrinterInfo<'gate>],
+    ) -> Option<(usize, GatePrinterInfo<'gate>)> {
         for (pos, gate_info) in gates.iter().enumerate() {
             if !gate_info.gate.is_single_gate() {
                 return Some((pos, gate_info.clone()));
@@ -371,6 +371,7 @@ impl Printer<'_> {
 #[rustfmt::skip]
 #[cfg(test)]
 mod tests {
+    
     use crate::{
         Printer, Circuit, Gate, states::{Qubit, ProductState, SuperPosition},
     };
@@ -414,7 +415,7 @@ mod tests {
         quantum_circuit
             .add_gates(&[
                 Gate::H,
-                Gate::Custom(example_cnot, &[3], "Custom CNot".to_string()),
+                Gate::Custom(example_cnot, vec!(3), "Custom CNot".to_string()),
                 Gate::Id,
                 Gate::X,
             ]).unwrap()

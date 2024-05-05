@@ -16,7 +16,7 @@ use crate::states::{ProductState, Qubit, SuperPosition};
 /// Matrix representations of these gates can be found at
 /// <https://www.quantum-inspire.com/kbase/cqasm-qubit-gate-operations/>.
 #[derive(Clone, PartialEq, Debug)]
-pub enum Gate<'a> {
+pub enum Gate {
     /// Identity.
     Id,
     /// Hadamard.
@@ -82,7 +82,7 @@ pub enum Gate<'a> {
     ///
     /// // Defines a C-Not gate
     /// fn example_cnot(prod: ProductState) -> Option<SuperPosition> {
-    ///    let input_register: [Qubit; 2] = [prod.get_qubits()[0], prod.get_qubits()[0]];
+    ///    let input_register: [Qubit; 2] = [prod.get_qubits()[0], prod.get_qubits()[1]];
     ///    Some(SuperPosition::new_with_amplitudes(match input_register {
     ///        [Qubit::Zero, Qubit::Zero] => return None,
     ///        [Qubit::Zero, Qubit::One]  => return None,
@@ -92,7 +92,7 @@ pub enum Gate<'a> {
     /// }
     ///
     /// let mut quantum_circuit = Circuit::new(3).unwrap();
-    /// quantum_circuit.add_gate(Gate::Custom(example_cnot, &[2], String::from("X")), 1).unwrap();
+    /// quantum_circuit.add_gate(Gate::Custom(example_cnot, vec![2], String::from("X")), 1).unwrap();
     ///
     /// // This is equivalent to
     /// quantum_circuit.add_gate(Gate::CNot(2), 1).unwrap();
@@ -100,12 +100,12 @@ pub enum Gate<'a> {
     /// ```
     Custom(
         fn(ProductState) -> Option<SuperPosition>,
-        &'a [usize],
+        Vec<usize>,
         String,
     ),
 }
 
-impl<'a> Gate<'a> {
+impl Gate {
     // Retrieves the list of nodes within a gate.
     pub(super) fn get_nodes(&self) -> Option<Vec<usize>> {
         match self {

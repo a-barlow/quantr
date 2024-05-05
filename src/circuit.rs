@@ -38,15 +38,15 @@ pub enum Measurement<T> {
 
 /// A quantum circuit where gates can be appended and then simulated to measure resulting
 /// superpositions.
-pub struct Circuit<'a> {
-    circuit_gates: Vec<Gate<'a>>,
+pub struct Circuit {
+    circuit_gates: Vec<Gate>,
     num_qubits: usize,
     output_state: Option<SuperPosition>,
     register: Option<SuperPosition>,
     config_progress: bool,
 }
 
-impl<'a> Circuit<'a> {
+impl Circuit {
     /// Initialises a new circuit.
     ///
     /// The lifetime is due to the slices of control qubits for [Gate::Custom]. That is, the slice
@@ -59,7 +59,7 @@ impl<'a> Circuit<'a> {
     /// // Initialises a 3 qubit circuit.
     /// let quantum_circuit: Circuit = Circuit::new(3).unwrap();
     /// ```
-    pub fn new(num_qubits: usize) -> QResult<Circuit<'a>> {
+    pub fn new(num_qubits: usize) -> QResult<Circuit> {
         if num_qubits == 0 {
             return Err(QuantrError {
                 message: String::from("The initialised circuit must have at least one wire."),
@@ -118,7 +118,7 @@ impl<'a> Circuit<'a> {
     ///
     /// assert_eq!(quantum_circuit.get_gates(), &[Gate::Id, Gate::Id, Gate::X]);
     /// ```
-    pub fn get_gates(&self) -> &[Gate<'a>] {
+    pub fn get_gates(&self) -> &[Gate] {
         self.circuit_gates.as_slice()
     }
 
@@ -139,7 +139,7 @@ impl<'a> Circuit<'a> {
     /// // -------
     /// // -------
     /// ```
-    pub fn add_gate(&mut self, gate: Gate<'a>, position: usize) -> QResult<&mut Circuit<'a>> {
+    pub fn add_gate(&mut self, gate: Gate, position: usize) -> QResult<&mut Circuit> {
         Self::add_gates_with_positions(self, HashMap::from([(position, gate)]))
     }
 
@@ -169,8 +169,8 @@ impl<'a> Circuit<'a> {
     /// ```
     pub fn add_gates_with_positions(
         &mut self,
-        gates_with_positions: HashMap<usize, Gate<'a>>,
-    ) -> QResult<&mut Circuit<'a>> {
+        gates_with_positions: HashMap<usize, Gate>,
+    ) -> QResult<&mut Circuit> {
         // If any keys are out of bounds, return an error.
         if let Some(out_of_bounds_key) =
             gates_with_positions.keys().find(|k| *k >= &self.num_qubits)
@@ -225,7 +225,7 @@ impl<'a> Circuit<'a> {
     /// // -- X --
     /// // -- Y --
     /// ```
-    pub fn add_gates(&mut self, gates: &[Gate<'a>]) -> QResult<&mut Circuit<'a>> {
+    pub fn add_gates(&mut self, gates: &[Gate]) -> QResult<&mut Circuit> {
         // Ensured we have a gate for every wire.
         if gates.len() != self.num_qubits {
             return Err(QuantrError {
@@ -237,7 +237,7 @@ impl<'a> Circuit<'a> {
         Self::has_overlapping_controls_and_target(gates, self.num_qubits)?;
 
         // Push n-gates to another line (double, triple, etc.)
-        let mut gates_vec: Vec<Gate<'a>> = gates.to_vec();
+        let mut gates_vec: Vec<Gate> = gates.to_vec();
         Self::push_multi_gates(&mut gates_vec)?;
         self.circuit_gates.extend(gates_vec);
         Ok(self)
@@ -245,7 +245,7 @@ impl<'a> Circuit<'a> {
 
     // Pushes multi-controlled gates into their own column. Potentially expensive operation to
     // insert new elements at smaller positions into a long vector.
-    fn push_multi_gates(gates: &mut Vec<Gate<'a>>) -> QResult<()> {
+    fn push_multi_gates(gates: &mut Vec<Gate>) -> QResult<()> {
         let mut extended_vec: Vec<Gate> = Default::default();
         let mut multi_gate_positions: Vec<usize> = Default::default();
 
@@ -339,11 +339,7 @@ impl<'a> Circuit<'a> {
     /// // -- H --
     /// // -- H --
     /// ```
-    pub fn add_repeating_gate(
-        &mut self,
-        gate: Gate<'a>,
-        positions: &[usize],
-    ) -> QResult<&mut Circuit<'a>> {
+    pub fn add_repeating_gate(&mut self, gate: Gate, positions: &[usize]) -> QResult<&mut Circuit> {
         // Incase the user has attempted to place the gate twice on the same wire.
         if Self::contains_repeating_values(self.num_qubits, positions) {
             return Err(QuantrError {
@@ -355,19 +351,10 @@ impl<'a> Circuit<'a> {
 
         // Generates a list of identity gates, that are subsequently replaced by non-trivial gates
         // specified by the user.
-        let list_of_identities: Vec<Gate> = vec![Gate::Id; self.num_qubits];
-        let gates: Vec<Gate> = list_of_identities
-            .iter()
-            .enumerate()
-            .map(|(pos, _)| {
-                if positions.contains(&pos) {
-                    gate.clone()
-                } else {
-                    Gate::Id
-                }
-            })
-            .collect();
-
+        let mut gates: Vec<Gate> = vec![Gate::Id; self.num_qubits];
+        for &pos in positions {
+            gates[pos] = gate.clone();
+        }
         self.add_gates(gates.as_slice())
     }
 
@@ -566,7 +553,7 @@ impl<'a> Circuit<'a> {
     /// // |1> -------
     /// // |0> -- X --
     /// ````
-    pub fn change_register(&mut self, super_pos: SuperPosition) -> QResult<&mut Circuit<'a>> {
+    pub fn change_register(&mut self, super_pos: SuperPosition) -> QResult<&mut Circuit> {
         if super_pos.product_dim != self.num_qubits {
             return Err(QuantrError {
                 message: format!("The custom register has a product state dimension of {}, while the number of qubits is {}. These must equal each other.", super_pos.product_dim, self.num_qubits)
@@ -643,7 +630,7 @@ mod tests {
     fn catches_overlapping_nodes_custom_gate() {
         let mut quantum_circuit = Circuit::new(3).unwrap();
         quantum_circuit
-            .add_gates(&[Gate::Id, Gate::Custom(example_cnot, &[1], "X".to_string()), Gate::Id])
+            .add_gates(&[Gate::Id, Gate::Custom(example_cnot, vec!(1), "X".to_string()), Gate::Id])
             .unwrap();
     }
     
@@ -756,7 +743,7 @@ mod tests {
     fn custom_gates() {
         let mut quantum_circuit = Circuit::new(3).unwrap();
         quantum_circuit.add_gate(Gate::H, 2).unwrap()
-            .add_gate(Gate::Custom(example_cnot, &[2], String::from("cNot")), 1).unwrap()
+            .add_gate(Gate::Custom(example_cnot, vec!(2), String::from("cNot")), 1).unwrap()
             .simulate();
 
         let correct_register: [Complex<f64>; 8] = [
@@ -977,7 +964,7 @@ mod tests {
     fn custom_non_ascii_name() {
         let mut circuit = Circuit::new(3).unwrap();
 
-        circuit.add_gate(Gate::Custom(example_cnot, &[0], "NonAscii†".to_string()), 1).unwrap();
+        circuit.add_gate(Gate::Custom(example_cnot, vec!(0), "NonAscii†".to_string()), 1).unwrap();
     }
 
     #[test]
