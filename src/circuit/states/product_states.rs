@@ -258,11 +258,11 @@ impl From<Qubit> for ProductState {
 ///
 /// # Example
 /// ```
-/// use quantr::states::{ProductState, Qubit};
+/// use quantr::states::{ProductState, Qubit, ProductStateIter};
 ///
-/// let state = ProductState::new(&[Qubit::One, Qubit::Zero, Qubit::Zero]) // |100>
+/// let state = ProductState::new(&[Qubit::One, Qubit::Zero, Qubit::Zero]).unwrap(); // |100>
 ///
-/// let mut state_iter = state.into_iter();
+/// let mut state_iter: ProductStateIter = state.into_iter();
 ///
 /// assert_eq!(state_iter.next(), Some(Qubit::One));
 /// assert_eq!(state_iter.next(), Some(Qubit::Zero));
@@ -271,7 +271,7 @@ impl From<Qubit> for ProductState {
 /// ```
 pub struct ProductStateIter<'a> {
     state: &'a ProductState,
-    index: usize
+    index: usize,
 }
 
 impl<'a> Iterator for ProductStateIter<'a> {
@@ -295,10 +295,9 @@ impl<'a> IntoIterator for &'a ProductState {
     fn into_iter(self) -> Self::IntoIter {
         ProductStateIter {
             state: &self,
-            index: 0
+            index: 0,
         }
     }
-
 }
 
 #[cfg(test)]
@@ -310,7 +309,8 @@ mod tests {
 
     #[test]
     fn iterates_through_qubits() {
-        let state: ProductState = ProductState::new(&[Qubit::One, Qubit::Zero, Qubit::One]).unwrap();
+        let state: ProductState =
+            ProductState::new(&[Qubit::One, Qubit::Zero, Qubit::One]).unwrap();
         let mut iter_state: ProductStateIter = state.into_iter();
         assert_eq!(iter_state.next(), Some(Qubit::One));
         assert_eq!(iter_state.next(), Some(Qubit::Zero));

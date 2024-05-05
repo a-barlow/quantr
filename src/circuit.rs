@@ -98,6 +98,22 @@ impl<'a> Circuit<'a> {
         self.num_qubits
     }
 
+    /// Returns if the circuit will print explicit simulatin output set
+    /// by [Circuit::toggle_simulation_progress].
+    ///
+    /// # Example
+    /// ```
+    /// use quantr::{Circuit};
+    ///
+    /// let mut quantum_circuit = Circuit::new(2).unwrap();
+    /// assert_eq!(quantum_circuit.get_toggle_progress(), false);
+    /// quantum_circuit.toggle_simulation_progress();
+    /// assert_eq!(quantum_circuit.get_toggle_progress(), true);
+    /// ```
+    pub fn get_toggle_progress(&self) -> bool {
+        self.config_progress
+    }
+
     /// Returns the vector of gates that have been added to the circuit.
     ///
     /// It is a flattened vector which is buffered with identity gates.
@@ -472,9 +488,10 @@ impl<'a> Circuit<'a> {
     /// `n` measurements of the superpositions (shots).
     ///
     /// Explicitly, this performs repeated measurements where a register is attached to the circuit,
-    /// the resulting superposition measured, and then the reduced state recorded. If the HashMap does not
-    /// include a product state, then it was not observed over the `n` measurements. This method
-    /// requires that the circuit has already been simulated by calling [Circuit::simulate].
+    /// the resulting superposition measured in the computational basis, and then the reduced state
+    /// recorded. If the HashMap does not include a product state, then it was not observed over the
+    /// `n` measurements. This method requires that the circuit has already been simulated by calling
+    /// [Circuit::simulate].
     ///
     /// # Example
     /// ```

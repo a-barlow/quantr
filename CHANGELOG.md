@@ -19,9 +19,14 @@ implicitly being used under the MIT licence.
 Several unnecessary calls of `ProductState::to_string` through it's
 trait implementation were made in printing macros, and are now removed.
 
-Lastly, the `IntoIter` trait was implemented for `ProductState`, which
-produces an iterator of the qubits that represent the state, from left
-to right in braket notation.
+Features:
+
+  - The `IntoIter` trait was implemented for `ProductState`, which
+  produces an iterator of the qubits that represent the state, from left
+  to right in braket notation. 
+  - `Circuit::get_toggle_progress` has been added, which returns if the 
+  circuit has been set to print explicit simulation progress, set by 
+  `Circuit::toggle_simulation_progress`.
 
 ## 0.5.1 - Review of docs and deprecated const functions
 
