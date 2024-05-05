@@ -8,10 +8,8 @@
 * Author: Andrew Rowan Barlow <a.barlow.dev@gmail.com>
 */
 
-// Added only for silencing deprecated warnings for using public fields of `Circuit`.
-
 use super::circuit::gate::{GateCategory, GateInfo};
-use crate::error::{QuantrError, QuantrErrorConst};
+use crate::error::QuantrError;
 use crate::states::{ProductState, SuperPosition};
 use crate::Gate;
 use std::collections::HashMap;
@@ -24,7 +22,6 @@ mod standard_gate_ops;
 pub mod states;
 
 pub(crate) type QResult<T> = Result<T, QuantrError>;
-pub(crate) type QResultConst<T> = Result<T, QuantrErrorConst>;
 
 // The tolerance for declaring non-zero amplitudes.
 const ZERO_MARGIN: f64 = 1e-7;
@@ -50,9 +47,6 @@ pub struct Circuit<'a> {
 }
 
 impl<'a> Circuit<'a> {
-    #[deprecated(
-        note = "In the next major update, const will be removed from this function. Therefore, please do not use this function in constant settings."
-    )]
     /// Initialises a new circuit.
     ///
     /// The lifetime is due to the slices of control qubits for [Gate::Custom]. That is, the slice
@@ -65,10 +59,10 @@ impl<'a> Circuit<'a> {
     /// // Initialises a 3 qubit circuit.
     /// let quantum_circuit: Circuit = Circuit::new(3).unwrap();
     /// ```
-    pub const fn new(num_qubits: usize) -> QResultConst<Circuit<'a>> {
+    pub fn new(num_qubits: usize) -> QResult<Circuit<'a>> {
         if num_qubits == 0 {
-            return Err(QuantrErrorConst {
-                message: "The initiliased circuit must have at least one wire.",
+            return Err(QuantrError {
+                message: String::from("The initialised circuit must have at least one wire."),
             });
         }
 
@@ -82,9 +76,6 @@ impl<'a> Circuit<'a> {
         })
     }
 
-    #[deprecated(
-        note = "In the next major update, const will be removed from this function. Therefore, please do not use this function in constant settings."
-    )]
     /// Returns the number of qubits in the circuit.
     ///
     /// # Example
@@ -94,7 +85,7 @@ impl<'a> Circuit<'a> {
     /// let quantum_circuit: Circuit = Circuit::new(3).unwrap();
     /// assert_eq!(quantum_circuit.get_num_qubits(), 3usize);
     /// ```
-    pub const fn get_num_qubits(&self) -> usize {
+    pub fn get_num_qubits(&self) -> usize {
         self.num_qubits
     }
 
@@ -444,9 +435,6 @@ impl<'a> Circuit<'a> {
         self.output_state = Some(register);
     }
 
-    #[deprecated(
-        note = "In the next major update, const will be removed from this function. Therefore, please do not use this function in constant settings."
-    )]
     /// Returns the resulting superposition after the circuit has been simulated using
     /// [Circuit::simulate].
     ///
@@ -473,12 +461,12 @@ impl<'a> Circuit<'a> {
     /// // |000> : 0 - 0.71...i     
     /// // |001> : 0 + 0.71...i
     /// ```
-    pub const fn get_superposition(&self) -> QResultConst<Measurement<&SuperPosition>> {
+    pub fn get_superposition(&self) -> QResult<Measurement<&SuperPosition>> {
         match &self.output_state {
             Some(super_position) => Ok(Measurement::NonObservable(super_position)),
             None => {
-                Err(QuantrErrorConst {
-                    message: "The circuit has not been simulated. Call Circuit::simulate before calling this method, Circuit::get_superposition.",
+                Err(QuantrError{
+                    message: String::from("The circuit has not been simulated. Call Circuit::simulate before calling this method, Circuit::get_superposition."),
                 })
             }
         }
@@ -517,7 +505,7 @@ impl<'a> Circuit<'a> {
     pub fn repeat_measurement(
         &self,
         shots: usize,
-    ) -> QResultConst<Measurement<HashMap<ProductState, usize>>> {
+    ) -> QResult<Measurement<HashMap<ProductState, usize>>> {
         match &self.output_state {
             Some(super_position) => {
                 // Perform bin count of states
@@ -545,8 +533,8 @@ impl<'a> Circuit<'a> {
                 Ok(Measurement::Observable(bin_count))
             },
             None => {
-                Err(QuantrErrorConst {
-                    message: "The circuit has not been simulated. Call Circuit::simulate before calling this method, Circuit::repeat_measurement.",
+                Err(QuantrError{
+                    message: String::from("The circuit has not been simulated. Call Circuit::simulate before calling this method, Circuit::repeat_measurement."),
                 })
             },
         }
@@ -614,8 +602,6 @@ impl<'a> Circuit<'a> {
 #[rustfmt::skip]
 #[cfg(test)]
 mod tests {
-    #![allow(deprecated)] 
-
     use crate::{complex_im, complex_re, complex_re_array, complex, COMPLEX_ZERO, Gate, Complex, Circuit};
     use crate::states::{SuperPosition, Qubit, ProductState};
     use super::HashMap;

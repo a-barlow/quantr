@@ -14,11 +14,10 @@
 // This example will print a bin count of measured states from 500 repeated simulations, and the
 // superposition itself.
 
-use quantr::{Circuit, Gate, Measurement, Printer};
-use std::error::Error;
+use quantr::{Circuit, Gate, Measurement, Printer, QuantrError};
 
 #[rustfmt::skip]
-fn main() -> Result<(), Box<dyn Error>>{
+fn main() -> Result<(), QuantrError> {
     let mut circuit = Circuit::new(3)?;
 
     // Kick state into superposition of equal weights

@@ -10,8 +10,8 @@
 
 use std::fmt;
 
-use crate::circuit::{QResult, QResultConst};
-use crate::error::{QuantrError, QuantrErrorConst};
+use crate::circuit::QResult;
+use crate::error::QuantrError;
 use crate::states::Qubit;
 
 /// A product state in the computational basis.
@@ -34,10 +34,12 @@ impl ProductState {
     ///
     /// let prod: ProductState = ProductState::new(&[Qubit::One, Qubit::Zero]).unwrap(); // |10>
     /// ```
-    pub fn new(product_state: &[Qubit]) -> QResultConst<ProductState> {
+    pub fn new(product_state: &[Qubit]) -> QResult<ProductState> {
         if product_state.is_empty() {
-            return Err(QuantrErrorConst {
-                message: "The slice of qubits is empty, it needs to at least have one element.",
+            return Err(QuantrError {
+                message: String::from(
+                    "The slice of qubits is empty, it needs to at least have one element.",
+                ),
             });
         }
         Ok(ProductState {

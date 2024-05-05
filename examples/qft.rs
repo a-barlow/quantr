@@ -13,14 +13,12 @@
 //
 // To define the custom function, a new circuit is initialised and simulated.
 
-use std::error::Error;
-
 use quantr::{
     states::{ProductState, SuperPosition},
-    Circuit, Gate, Measurement, Printer,
+    Circuit, Gate, Measurement, Printer, QuantrError,
 };
 
-fn main() -> Result<(), Box<dyn Error>> {
+fn main() -> Result<(), QuantrError> {
     let mut qc: Circuit = Circuit::new(3)?;
 
     // Apply qft

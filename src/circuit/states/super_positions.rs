@@ -8,9 +8,9 @@
 * Author: Andrew Rowan Barlow <a.barlow.dev@gmail.com>
 */
 
-use crate::circuit::{HashMap, QResult, QResultConst, ZERO_MARGIN};
+use crate::circuit::{HashMap, QResult, ZERO_MARGIN};
 use crate::complex_re;
-use crate::error::{QuantrError, QuantrErrorConst};
+use crate::error::QuantrError;
 use crate::{states::ProductState, Complex, COMPLEX_ZERO};
 
 /// A superposition of [ProductState]s.
@@ -34,10 +34,10 @@ impl SuperPosition {
     ///
     /// assert_eq!(&complex_re_array![1f64, 0f64, 0f64, 0f64], superpos.get_amplitudes());
     /// ```
-    pub fn new(prod_dimension: usize) -> QResultConst<SuperPosition> {
+    pub fn new(prod_dimension: usize) -> QResult<SuperPosition> {
         if prod_dimension == 0 {
-            return Err(QuantrErrorConst {
-                message: "The number of qubits must be non-zero.",
+            return Err(QuantrError {
+                message: String::from("The number of qubits must be non-zero."),
             });
         }
 
@@ -61,17 +61,19 @@ impl SuperPosition {
     ///
     /// assert_eq!(&complex_re_array![1f64, 0f64, 0f64, 0f64], superpos.get_amplitudes());
     /// ```
-    pub fn new_with_amplitudes(amplitudes: &[Complex<f64>]) -> QResultConst<SuperPosition> {
+    pub fn new_with_amplitudes(amplitudes: &[Complex<f64>]) -> QResult<SuperPosition> {
         if !Self::equal_within_error(amplitudes.iter().map(|x| x.abs_square()).sum::<f64>(), 1f64) {
-            return Err(QuantrErrorConst {
-                message: "Slice given to set amplitudes in super position does not conserve probability, the absolute square sum of the coefficents must be one.",
+            return Err(QuantrError{
+                message: String::from("Slice given to set amplitudes in super position does not conserve probability, the absolute square sum of the coefficents must be one."),
             });
         }
 
         let length = amplitudes.len();
         if (length & (length - 1)) != 0 {
-            return Err(QuantrErrorConst {
-                message: "The length of the array must be of the form 2**n where n is an integer.",
+            return Err(QuantrError {
+                message: String::from(
+                    "The length of the array must be of the form 2**n where n is an integer.",
+                ),
             });
         }
 
@@ -140,9 +142,6 @@ impl SuperPosition {
         self.amplitudes.get(pos).cloned()
     }
 
-    #[deprecated(
-        note = "In the next major update, const will be removed from this function. Therefore, please do not use this function in constant settings."
-    )]
     /// Returns the number of qubits that each product state in the super position is composed of by using the Kronecker product.
     ///
     /// # Example
@@ -154,7 +153,7 @@ impl SuperPosition {
     ///
     /// assert_eq!(2, superpos.get_num_qubits());
     /// ```
-    pub const fn get_num_qubits(&self) -> usize {
+    pub fn get_num_qubits(&self) -> usize {
         self.product_dim
     }
 
