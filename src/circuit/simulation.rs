@@ -49,7 +49,7 @@ impl Circuit {
             //Looping through super position of register
 
             // Obtain superposition from applying gate from a specified wire onto the product state, and add control nodes if necersary
-            let mut acting_positions: Vec<usize> = Vec::<usize>::with_capacity(3); // change to array for increased speed?
+            let mut acting_positions: Vec<usize> = Vec::<usize>::with_capacity(3);
 
             let wrapped_super_pos: Option<SuperPosition> = match gate.cat_gate {
                 GateCategory::Identity => None,
@@ -130,6 +130,9 @@ impl Circuit {
         amp: Complex<f64>,
         mapped_states: &mut HashMap<ProductState, Complex<f64>>,
     ) {
+        // TODO think if looping through mapped_states, but with RAYON, would improve performance
+        // Pehaps if gate_image reached a critical mass, such as a wall of hadarmards, it would be
+        // benificial to switch the loop around and index through mapped states,
         for (state, state_amp) in gate_image.into_iter() {
             if state_amp.re.abs() < ZERO_MARGIN && state_amp.im.abs() < ZERO_MARGIN {
                 continue;

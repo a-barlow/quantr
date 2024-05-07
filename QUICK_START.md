@@ -166,22 +166,22 @@ can be removed while the main function declaration can be edited like
 so:
 
 ```rust,ignore 
-...
-use std::error::Error;
+use ...;
+use quantr::QuantrError;
 
-fn main() -> Result<(), Box<dyn Error>> {
+fn main() -> Result<(), QuantrError> {
     ...; 
     Ok(()) 
 }
 ```
 
-A `Ok(())` is returned on the last line; signalling that the program has
+An `Ok(())` is returned on the last line; signalling that the program has
 exited without errors. Then, effectively all unwrap methods called after
 appending gates can be replaced with a `?`. This can be seen explicitly
 in the `example/grovers.rs` folder.
 
-The following is the completed code. This can be ran with `cargo run
---example grovers` from the root directory.
+The following is the completed code from this tutorial. This can be ran
+with `cargo run --example grovers` from the root directory.
 
 ```rust
 use quantr::{Circuit, Gate, Measurement, Printer};
