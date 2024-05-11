@@ -36,10 +36,10 @@ fn main() -> Result<(), QuantrError> {
     circuit_printer.print_diagram();
 
     qc.toggle_simulation_progress();
-    qc.simulate();
+    let simulated = qc.simulate();
 
     // Prints the bin count of measured states.
-    if let Ok(Measurement::Observable(bin_count)) = qc.repeat_measurement(50) {
+    if let Ok(Measurement::Observable(bin_count)) = simulated.repeat_measurement(50) {
         println!("\nStates observed over 50 measurements:");
         for (states, count) in bin_count.into_iter() {
             println!("|{}> : {}", states, count);

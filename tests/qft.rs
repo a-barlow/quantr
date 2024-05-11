@@ -26,8 +26,6 @@ fn simple_qft() -> Result<(), Box<dyn Error>> {
     qc.add_repeating_gate(Gate::X, &[1, 2])?
         .add_gate(Gate::Custom(qft, vec![0, 1], "QFT".to_string()), 2)?;
 
-    qc.simulate();
-
     let correct_super = [
         complex_re!(FRAC_1_SQRT_2 * 0.5f64),
         complex_re!(-FRAC_1_SQRT_2 * 0.5f64),
@@ -39,7 +37,7 @@ fn simple_qft() -> Result<(), Box<dyn Error>> {
         complex!(-0.25f64, -0.25f64),
     ];
 
-    if let Measurement::NonObservable(super_pos) = qc.get_superposition().unwrap() {
+    if let Measurement::NonObservable(super_pos) = qc.simulate().get_superposition().unwrap() {
         println!("{:?}", super_pos);
         compare_complex_lists_and_register(&correct_super, &super_pos);
     }
@@ -62,12 +60,11 @@ fn qft(input_state: ProductState) -> Option<SuperPosition> {
         }
     }
 
-    mini_circuit
-        .change_register(input_state.into())
-        .unwrap()
-        .simulate();
+    mini_circuit.change_register(input_state.into()).unwrap();
 
-    if let Measurement::NonObservable(super_pos) = mini_circuit.get_superposition().unwrap() {
+    if let Measurement::NonObservable(super_pos) =
+        mini_circuit.simulate().get_superposition().unwrap()
+    {
         Some(super_pos.clone())
     } else {
         panic!("No superposition was simualted!");

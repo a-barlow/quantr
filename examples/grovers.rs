@@ -44,12 +44,12 @@ fn main() -> Result<(), QuantrError> {
     circuit.toggle_simulation_progress();
 
     // Simulates the circuit
-    circuit.simulate();
+    let simulated_circuit = circuit.simulate();
     println!("");
 
     // Displays bin count of the resulting 500 repeat measurements of
     // superpositions. bin_count is a HashMap<ProductState, usize>.
-    if let Ok(Measurement::Observable(bin_count)) = circuit.repeat_measurement(500) {
+    if let Ok(Measurement::Observable(bin_count)) = simulated_circuit.repeat_measurement(500) {
         println!("[Observable] Bin count of observed states.");
         for (state, count) in bin_count {
             println!("|{}> observed {} times", state, count);
@@ -57,7 +57,7 @@ fn main() -> Result<(), QuantrError> {
     } 
 
     // Returns the superpsoition that cannot be directly observed.
-    if let Ok(Measurement::NonObservable(output_super_position)) = circuit.get_superposition()
+    if let Ok(Measurement::NonObservable(output_super_position)) = simulated_circuit.get_superposition()
     {
         println!("\n[Non-Observable] The amplitudes of each state in the final superposition.");
         for (state, amplitude) in output_super_position.into_iter() {

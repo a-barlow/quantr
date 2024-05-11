@@ -54,12 +54,12 @@
 //! // ┨ Y ┠┨ X ┠
 //! // ┗━━━┛┗━━━┛
 //!
-//! quantum_circuit.simulate();
+//! let simulated_circuit = quantum_circuit.simulate();
 //!
 //! // Below prints the number of times that each state was observered
 //! // over 500 measurements of superpositions.
 //!
-//! if let Ok(Observable(bin_count)) = quantum_circuit.repeat_measurement(500) {
+//! if let Ok(Observable(bin_count)) = simulated_circuit.repeat_measurement(500) {
 //!     println!("[Observable] Bin count of observed states.");
 //!     for (state, count) in bin_count {
 //!         println!("|{}> observed {} times", state, count);
@@ -70,6 +70,7 @@
 mod circuit;
 mod complex;
 mod error;
+mod simulated_circuit;
 
 //  Make available for public use.
 pub use circuit::gate::Gate;
@@ -77,3 +78,4 @@ pub use circuit::printer::Printer;
 pub use circuit::{measurement::Measurement, states, Circuit};
 pub use complex::{Complex, COMPLEX_ZERO};
 pub use error::QuantrError;
+pub use simulated_circuit::SimulatedCircuit;

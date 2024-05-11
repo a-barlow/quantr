@@ -9,10 +9,9 @@
 */
 
 use super::circuit::gate::{GateCategory, GateInfo};
-use crate::circuit::measurement::Measurement;
 use crate::error::QuantrError;
-use crate::states::{ProductState, SuperPosition};
-use crate::Gate;
+use crate::states::SuperPosition;
+use crate::{Gate, SimulatedCircuit};
 use std::collections::HashMap;
 use std::iter::zip;
 
@@ -30,7 +29,7 @@ pub(crate) type QResult<T> = Result<T, QuantrError>;
 pub struct Circuit {
     circuit_gates: Vec<Gate>,
     num_qubits: usize,
-    output_state: Option<SuperPosition>, // TODO: remove this field, and only use register for simulation
+    pub(crate) output_state: Option<SuperPosition>, // TODO: remove this field, and only use register for simulation
     register: Option<SuperPosition>,
     config_progress: bool,
 }
@@ -368,7 +367,7 @@ impl Circuit {
     /// // |0> -------
     /// // |0> -- H --
     /// ````
-    pub fn simulate(&mut self) {
+    pub fn simulate(mut self) -> SimulatedCircuit {
         // Form the initial state if the product space, that is |0...0>
         let mut register: SuperPosition = match &self.register {
             Some(custom_register) => custom_register.clone(),
@@ -411,113 +410,12 @@ impl Circuit {
         }
 
         self.output_state = Some(register);
-    }
 
-    /// Returns the resulting superposition after the circuit has been simulated using
-    /// [Circuit::simulate].
-    ///
-    /// This is a non-physical observable, as the superposition would reduce to a single state upon measurement.
-    ///
-    /// # Example
-    /// ```
-    /// use quantr::{states::SuperPosition, Circuit, Measurement::NonObservable, Gate};
-    ///
-    /// let mut circuit = Circuit::new(3).unwrap();
-    ///
-    /// circuit.add_gate(Gate::H, 2).unwrap();
-    /// circuit.add_gate(Gate::Y, 2).unwrap();
-    /// circuit.simulate();
-    ///
-    /// println!("State | Amplitude of State");
-    /// if let Ok(NonObservable(super_pos)) = circuit.get_superposition() {
-    ///     for (state, amplitude) in super_pos.into_iter() {
-    ///         println!("|{}>   : {}", state.to_string(), amplitude);
-    ///     }
-    /// }
-    ///
-    /// // State | Amplitude of State    
-    /// // |000> : 0 - 0.71...i     
-    /// // |001> : 0 + 0.71...i
-    /// ```
-    pub fn get_superposition(&self) -> QResult<Measurement<&SuperPosition>> {
-        match &self.output_state {
-            Some(super_position) => Ok(Measurement::NonObservable(super_position)),
-            None => {
-                Err(QuantrError{
-                    message: String::from("The circuit has not been simulated. Call Circuit::simulate before calling this method, Circuit::get_superposition."),
-                })
-            }
+        SimulatedCircuit {
+            circuit: self,
+            partially_simulated: false,
         }
     }
-
-    /// Returns a `HashMap` that contains the number of times the corresponding state was observed over
-    /// `n` measurements of the superpositions (shots).
-    ///
-    /// Explicitly, this performs repeated measurements where a register is attached to the circuit,
-    /// the resulting superposition measured in the computational basis, and then the reduced state
-    /// recorded. If the HashMap does not include a product state, then it was not observed over the
-    /// `n` measurements. This method requires that the circuit has already been simulated by calling
-    /// [Circuit::simulate].
-    ///
-    /// # Example
-    /// ```
-    /// use quantr::{states::SuperPosition, Circuit, Measurement::Observable, Gate};
-    ///
-    /// let mut circuit = Circuit::new(3).unwrap();
-    ///
-    /// circuit.add_gate(Gate::H, 2).unwrap();
-    /// circuit.simulate();
-    ///
-    /// // Measures 500 superpositions.
-    /// println!("State | Number of Times Observed");
-    /// if let Ok(Observable(bin_count)) = circuit.repeat_measurement(500) {
-    ///     for (state, observed_count) in bin_count {
-    ///         println!("|{}>   : {}", state, observed_count);
-    ///     }
-    /// }
-    ///
-    /// // State | Number of Times Observed
-    /// // |000> : 247
-    /// // |001> : 253
-    /// ```
-    pub fn repeat_measurement(
-        &self,
-        shots: usize,
-    ) -> QResult<Measurement<HashMap<ProductState, usize>>> {
-        match &self.output_state {
-            Some(super_position) => {
-                // Perform bin count of states
-                let mut probabilities: HashMap<ProductState, f64> = Default::default();
-                for (key, value) in super_position.to_hash_map() {
-                    probabilities.insert(key, value.abs_square());
-                }
-
-                let mut bin_count: HashMap<ProductState, usize> = Default::default();
-
-                for _ in 0..shots {
-                    let mut cummalitive: f64 = 0f64;
-                    let dice_roll: f64 = fastrand::f64();
-                    for (state_label, probability) in &probabilities {
-                        cummalitive += probability;
-                        if dice_roll < cummalitive {
-                            match bin_count.get(state_label) {
-                                Some(previous_count) => bin_count.insert(state_label.clone(), previous_count+1),
-                                None => bin_count.insert(state_label.clone(), 1),
-                            };
-                            break;
-                        }
-                    }
-                }
-                Ok(Measurement::Observable(bin_count))
-            },
-            None => {
-                Err(QuantrError{
-                    message: String::from("The circuit has not been simulated. Call Circuit::simulate before calling this method, Circuit::repeat_measurement."),
-                })
-            },
-        }
-    }
-
     /// Changes the register which is applied to the circuit when [Circuit::simulate] is called.
     ///
     /// The default register is the |00..0> state. This method can be used before simulating the
@@ -580,7 +478,7 @@ impl Circuit {
 #[rustfmt::skip]
 #[cfg(test)]
 mod tests {
-    use crate::{complex_im, complex_re, complex_re_array, complex, COMPLEX_ZERO, Gate, Complex, Circuit};
+    use crate::{complex, complex_im, complex_re, complex_re_array, Circuit, Complex, Gate, COMPLEX_ZERO};
     use crate::states::{SuperPosition, Qubit, ProductState};
     use super::HashMap;
     use std::f64::consts::{FRAC_1_SQRT_2, PI};
@@ -598,8 +496,8 @@ mod tests {
         num < compare_num + ERROR_MARGIN && num > compare_num - ERROR_MARGIN
     }
 
-    fn compare_circuit(quantum_circuit: Circuit, correct_register: &[Complex<f64>]) {
-        if let NonObservable(measured_register) = quantum_circuit.get_superposition().unwrap() {
+    fn compare_circuit(circuit: Circuit, correct_register: &[Complex<f64>]) {
+        if let NonObservable(measured_register) = circuit.simulate().get_superposition().unwrap() {
             compare_complex_lists_and_register(correct_register, measured_register);
         }
     }
@@ -707,8 +605,7 @@ mod tests {
     fn swap_and_conjugate_gates() {
         let mut circuit = Circuit::new(2).unwrap();
         circuit.add_gates(&[Gate::H, Gate::H]).unwrap()
-            .add_gates(&[Gate::S, Gate::Sdag]).unwrap()
-            .simulate();
+            .add_gates(&[Gate::S, Gate::Sdag]).unwrap();
 
         let correct_register: [Complex<f64>; 4] = [
             complex_re!(0.5f64), complex_im!(-0.5f64),
@@ -720,8 +617,7 @@ mod tests {
     fn t_and_conjugate_gates() {
         let mut circuit = Circuit::new(2).unwrap();
         circuit.add_gates(&[Gate::H, Gate::H]).unwrap()
-               .add_gates(&[Gate::T, Gate::Tdag]).unwrap()
-               .simulate();
+               .add_gates(&[Gate::T, Gate::Tdag]).unwrap();
 
         let correct_register: [Complex<f64>; 4] = [
             complex_re!(0.5f64), complex!(0.5f64*FRAC_1_SQRT_2, -0.5f64*FRAC_1_SQRT_2),
@@ -734,8 +630,7 @@ mod tests {
     fn custom_gates() {
         let mut quantum_circuit = Circuit::new(3).unwrap();
         quantum_circuit.add_gate(Gate::H, 2).unwrap()
-            .add_gate(Gate::Custom(example_cnot, vec!(2), String::from("cNot")), 1).unwrap()
-            .simulate();
+            .add_gate(Gate::Custom(example_cnot, vec!(2), String::from("cNot")), 1).unwrap();
 
         let correct_register: [Complex<f64>; 8] = [
             complex_re!(FRAC_1_SQRT_2), COMPLEX_ZERO,
@@ -752,8 +647,7 @@ mod tests {
         quantum_circuit.add_gate(Gate::X, 0).unwrap()
             .add_gate(Gate::H, 3).unwrap()
             .add_gate(Gate::Y, 3).unwrap()
-            .add_gate(Gate::Toffoli(3, 0), 1).unwrap()
-            .simulate();
+            .add_gate(Gate::Toffoli(3, 0), 1).unwrap();
 
         let correct_register = [
             COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO,
@@ -796,8 +690,7 @@ mod tests {
     fn runs_three_pauli_gates_with_hadamard() {
         let mut circuit: Circuit = Circuit::new(4).unwrap();
         circuit
-            .add_gates(&[Gate::Z, Gate::Y, Gate::H, Gate::X]).unwrap()
-            .simulate();
+            .add_gates(&[Gate::Z, Gate::Y, Gate::H, Gate::X]).unwrap();
 
         let correct_register = [
             COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO,
@@ -811,7 +704,7 @@ mod tests {
     #[test]
     fn hash_map_with_two_gates() {
         let mut circuit = Circuit::new(3).unwrap();
-        circuit.add_gates_with_positions(HashMap::from([(0, Gate::X), (2, Gate::H)])).unwrap().simulate();
+        circuit.add_gates_with_positions(HashMap::from([(0, Gate::X), (2, Gate::H)])).unwrap();
         let correct_register: [Complex<f64>; 8] = [
             COMPLEX_ZERO, COMPLEX_ZERO,
             COMPLEX_ZERO, COMPLEX_ZERO,
@@ -830,7 +723,7 @@ mod tests {
     #[test]
     fn two_hadamard_gates_work() {
         let mut circuit = Circuit::new(2).unwrap();
-        circuit.add_gates(&[Gate::H, Gate::H]).unwrap().simulate();
+        circuit.add_gates(&[Gate::H, Gate::H]).unwrap();
 
         let correct_register: [Complex<f64>; 4] = [
             complex_re!(0.5f64), complex_re!(0.5f64),
@@ -843,8 +736,7 @@ mod tests {
         let mut circuit = Circuit::new(4).unwrap();
 
         circuit.add_gates_with_positions(HashMap::from([(0, Gate::X)])).unwrap()
-                .add_gates_with_positions(HashMap::from([(3, Gate::X), (2, Gate::H)])).unwrap()
-                .simulate();
+                .add_gates_with_positions(HashMap::from([(3, Gate::X), (2, Gate::H)])).unwrap();
 
         let correct_register = [
             COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO,
@@ -863,8 +755,7 @@ mod tests {
         circuit.add_repeating_gate(Gate::X, &[1,2]).unwrap()
             .add_gate(Gate::CY(2), 0).unwrap()
             .add_gate(Gate::Swap(3), 2).unwrap()
-            .add_gate(Gate::CY(0), 3).unwrap()
-            .simulate();
+            .add_gate(Gate::CY(0), 3).unwrap();
 
         let correct_register = [
             COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO,
@@ -883,8 +774,7 @@ mod tests {
 
         circuit.add_repeating_gate(Gate::X, &[0,2]).unwrap()
             .add_gate(Gate::Swap(1), 2).unwrap()
-            .add_gate(Gate::CZ(1), 0).unwrap()
-            .simulate();
+            .add_gate(Gate::CZ(1), 0).unwrap();
 
         let correct_register = [
             COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO,
@@ -901,8 +791,7 @@ mod tests {
         let mut circuit = Circuit::new(2).unwrap();
 
         circuit.add_gate(Gate::H, 0).unwrap()
-            .add_gate(Gate::CNot(1), 0).unwrap()
-            .simulate();
+            .add_gate(Gate::CNot(1), 0).unwrap();
 
         let correct_register: [Complex<f64>; 4] = [
             complex_re!(FRAC_1_SQRT_2), COMPLEX_ZERO,
@@ -918,8 +807,7 @@ mod tests {
         let mut circuit = Circuit::new(2).unwrap();
 
         circuit.add_gate(Gate::H, 0).unwrap()
-            .add_gate(Gate::CNot(0), 1).unwrap()
-            .simulate();
+            .add_gate(Gate::CNot(0), 1).unwrap();
 
         let correct_register: [Complex<f64>; 4] = [
             complex_re!(FRAC_1_SQRT_2), COMPLEX_ZERO,
@@ -936,8 +824,7 @@ mod tests {
 
         circuit.add_gate(Gate::H, 1).unwrap()
             .add_gate(Gate::CNot(1), 3).unwrap()
-            .add_gate(Gate::Y, 1).unwrap()
-            .simulate();
+            .add_gate(Gate::Y, 1).unwrap();
 
         let correct_register = [
             COMPLEX_ZERO, complex_im!(-FRAC_1_SQRT_2), COMPLEX_ZERO, COMPLEX_ZERO,
@@ -963,8 +850,7 @@ mod tests {
         let mut circuit = Circuit::new(2).unwrap();
 
         circuit.add_gates(&[Gate::H, Gate::H]).unwrap()
-            .add_gate(Gate::Rx(PI), 0).unwrap()
-            .simulate();
+            .add_gate(Gate::Rx(PI), 0).unwrap();
 
         let correct_register: [Complex<f64>; 4] = [
             complex_im!(-0.5f64), complex_im!(-0.5f64),
@@ -979,8 +865,7 @@ mod tests {
         let mut circuit = Circuit::new(2).unwrap();
 
         circuit.add_gates(&[Gate::H, Gate::H]).unwrap()
-            .add_gate(Gate::Ry(PI), 0).unwrap()
-            .simulate();
+            .add_gate(Gate::Ry(PI), 0).unwrap();
 
         let correct_register: [Complex<f64>; 4] = [
             complex_re!(-0.5f64), complex_re!(-0.5f64),
@@ -995,8 +880,7 @@ mod tests {
         let mut circuit = Circuit::new(2).unwrap();
 
         circuit.add_gates(&[Gate::H, Gate::H]).unwrap()
-            .add_gate(Gate::Rz(PI), 0).unwrap()
-            .simulate();
+            .add_gate(Gate::Rz(PI), 0).unwrap();
 
         let correct_register: [Complex<f64>; 4] = [
             complex_im!(-0.5f64), complex_im!(-0.5f64),
@@ -1011,8 +895,7 @@ mod tests {
         let mut circuit = Circuit::new(2).unwrap();
 
         circuit.add_gates(&[Gate::H, Gate::H]).unwrap()
-            .add_gate(Gate::Phase(PI), 0).unwrap()
-            .simulate();
+            .add_gate(Gate::Phase(PI), 0).unwrap();
 
         let correct_register: [Complex<f64>; 4] = [
             complex_im!(0.5f64), complex_im!(0.5f64),
@@ -1028,8 +911,7 @@ mod tests {
 
         circuit.add_gates(&[Gate::H, Gate::H]).unwrap()
             .add_gate(Gate::MX90, 0).unwrap()
-            .add_gate(Gate::X90, 1).unwrap()
-            .simulate();
+            .add_gate(Gate::X90, 1).unwrap();
 
         let correct_register: [Complex<f64>; 4] = [
             complex_re!(0.5f64), complex_re!(0.5f64),
@@ -1045,8 +927,7 @@ mod tests {
 
         circuit.add_gates(&[Gate::H, Gate::H]).unwrap()
             .add_gate(Gate::MY90, 0).unwrap()
-            .add_gate(Gate::Y90, 1).unwrap()
-            .simulate();
+            .add_gate(Gate::Y90, 1).unwrap();
 
         let correct_register: [Complex<f64>; 4] = [
             complex_re!(-0.5f64), complex_re!(0.5f64),
@@ -1061,8 +942,7 @@ mod tests {
         let mut circuit = Circuit::new(3).unwrap();
 
         circuit.add_gates(&[Gate::X, Gate::X, Gate::X]).unwrap()
-            .add_gate(Gate::CR(-PI*0.5f64, 2), 1).unwrap()
-            .simulate();
+            .add_gate(Gate::CR(-PI*0.5f64, 2), 1).unwrap();
 
         let correct_register = [
             COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO,
@@ -1077,8 +957,7 @@ mod tests {
         let mut circuit = Circuit::new(3).unwrap();
 
         circuit.add_gates(&[Gate::X, Gate::X, Gate::X]).unwrap()
-            .add_gate(Gate::CRk(2i32, 2), 1).unwrap()
-            .simulate();
+            .add_gate(Gate::CRk(2i32, 2), 1).unwrap();
 
         let correct_register = [
             COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO,
@@ -1093,8 +972,7 @@ mod tests {
         let mut circuit = Circuit::new(3).unwrap();
         let register: SuperPosition = ProductState::new_unchecked(&[Qubit::One, Qubit::Zero, Qubit::One]).into();
         circuit.add_gate(Gate::X, 1).unwrap()
-            .change_register(register).unwrap()
-            .simulate();
+            .change_register(register).unwrap();
 
         let correct_register = [
             COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO, COMPLEX_ZERO,
@@ -1110,7 +988,6 @@ mod tests {
         let mut circuit = Circuit::new(3).unwrap();
         let register: SuperPosition = ProductState::new_unchecked(&[Qubit::One, Qubit::Zero]).into();
         circuit.add_gate(Gate::X, 1).unwrap()
-            .change_register(register).unwrap()
-            .simulate();
+            .change_register(register).unwrap();
     }
 }

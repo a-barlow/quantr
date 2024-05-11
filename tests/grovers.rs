@@ -40,7 +40,6 @@ fn grovers_3qubit() -> Result<(), Box<dyn Error>> {
 
     // Simulates the circuit so that the final register can be
     // calculated.
-    circuit.simulate();
 
     let correct_super: [Complex<f64>; 8] = [
         complex_re!(0f64),
@@ -53,11 +52,13 @@ fn grovers_3qubit() -> Result<(), Box<dyn Error>> {
         complex_re!(-FRAC_1_SQRT_2),
     ];
 
-    if let NonObservable(output_register) = circuit.get_superposition().unwrap() {
+    let simulated = circuit.simulate();
+
+    if let NonObservable(output_register) = simulated.get_superposition().unwrap() {
         compare_complex_lists_and_register(&correct_super, output_register);
     }
 
-    if let Observable(bin_count) = circuit.repeat_measurement(500).unwrap() {
+    if let Observable(bin_count) = simulated.repeat_measurement(500).unwrap() {
         for (state, count) in bin_count {
             match state.to_string().as_str() {
                 "011" | "111" => assert!(count > 200usize),
@@ -136,9 +137,9 @@ fn x3sudoko() -> Result<(), Box<dyn Error>> {
         .add_repeating_gate(Gate::H, &[0, 1, 2, 3, 4, 5])?;
     // END
 
-    qc.simulate();
+    let simulated_circuit = qc.simulate();
 
-    if let Observable(bin_count) = qc.repeat_measurement(5000).unwrap() {
+    if let Observable(bin_count) = simulated_circuit.repeat_measurement(5000).unwrap() {
         for (state, count) in bin_count {
             match &state.to_string()[0..=5] {
                 "001100" | "001010" | "010100" | "010001" | "100010" | "100001" => {
