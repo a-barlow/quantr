@@ -8,12 +8,11 @@
 * Author: Andrew Rowan Barlow <a.barlow.dev@gmail.com>
 */
 
-use super::circuit::gate::{GateCategory, GateInfo};
+use super::circuit::gate::GateInfo;
 use crate::error::QuantrError;
 use crate::states::SuperPosition;
 use crate::{Gate, SimulatedCircuit};
 use std::collections::HashMap;
-use std::iter::zip;
 
 pub mod gate;
 pub mod measurement;
@@ -29,8 +28,7 @@ pub(crate) type QResult<T> = Result<T, QuantrError>;
 pub struct Circuit {
     circuit_gates: Vec<Gate>,
     num_qubits: usize,
-    pub(crate) output_state: Option<SuperPosition>, // TODO: remove this field, and only use register for simulation
-    register: Option<SuperPosition>,
+    pub(crate) register: Option<SuperPosition>,
     config_progress: bool,
 }
 
@@ -60,7 +58,6 @@ impl Circuit {
         Ok(Circuit {
             circuit_gates,
             num_qubits,
-            output_state: None,
             register: None,
             config_progress: false,
         })
@@ -369,47 +366,17 @@ impl Circuit {
     /// ````
     pub fn simulate(mut self) -> SimulatedCircuit {
         // Form the initial state if the product space, that is |0...0>
-        let mut register: SuperPosition = match &self.register {
-            Some(custom_register) => custom_register.clone(),
-            None => SuperPosition::new_unchecked(self.num_qubits),
-        };
-        let mut qubit_counter: usize = 0;
-        let number_gates: usize = self.circuit_gates.len();
-
-        // This will removed in next major update, as the circuit will directly store this. Instead
-        // of what's happening now, in which the gates are being copied into another wapper.
-        let mut categorised_gates: Vec<GateCategory> = Vec::with_capacity(number_gates);
-        for gate in &self.circuit_gates {
-            categorised_gates.push(Gate::linker(gate));
-        }
-
-        if self.config_progress {
-            println!("Starting circuit simulation...");
-        }
-
-        // Loop through each gate of circuit from starting at top row to bottom, then moving onto the next.
-        for (cat_gate, gate) in zip(categorised_gates, &self.circuit_gates) {
-            if cat_gate == GateCategory::Identity {
-                qubit_counter += 1;
-                continue;
+        match self.register.take() {
+            Some(mut register) => {
+                self.simulate_with_register(&mut register);
+                self.register = Some(register);
             }
-
-            let gate_pos: usize = qubit_counter % self.num_qubits;
-
-            if self.config_progress {
-                Self::print_circuit_log(gate, &gate_pos, &qubit_counter, &number_gates);
+            None => {
+                let mut zero_register = SuperPosition::new_unchecked(self.num_qubits);
+                self.simulate_with_register(&mut zero_register);
+                self.register = Some(zero_register);
             }
-
-            let gate_to_apply: GateInfo = GateInfo {
-                cat_gate,
-                position: gate_pos,
-            };
-            Circuit::apply_gate(gate_to_apply, &mut register);
-
-            qubit_counter += 1;
         }
-
-        self.output_state = Some(register);
 
         SimulatedCircuit {
             circuit: self,

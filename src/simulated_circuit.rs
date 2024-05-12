@@ -71,7 +71,7 @@ impl SimulatedCircuit {
     /// ```
     pub fn get_superposition(&self) -> QResult<Measurement<&SuperPosition>> {
         // TODO change name; and output type as None reflects partially simulated
-        match &self.circuit.output_state {
+        match &self.circuit.register {
             Some(super_position) => Ok(Measurement::NonObservable(super_position)),
             None => {
                 Err(QuantrError{
@@ -115,7 +115,7 @@ impl SimulatedCircuit {
         &self,
         shots: usize,
     ) -> QResult<Measurement<HashMap<ProductState, usize>>> {
-        match &self.circuit.output_state {
+        match &self.circuit.register {
             Some(super_position) => {
                 // Perform bin count of states
                 let mut probabilities: HashMap<ProductState, f64> = Default::default();

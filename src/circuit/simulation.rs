@@ -12,27 +12,46 @@ use super::gate::GateCategory;
 use super::{GateInfo, ZERO_MARGIN};
 use crate::states::{ProductState, SuperPosition};
 use crate::{Circuit, Complex, Gate};
+use core::iter::zip;
 use std::collections::HashMap;
 use std::ops::{Add, Mul};
 
 impl Circuit {
-    // If the user toggles the log on, then prints the simulation of each circuit.
-    pub(super) fn print_circuit_log(
-        gate: &Gate,
-        gate_pos: &usize,
-        qubit_counter: &usize,
-        number_gates: &usize,
-    ) {
-        println!(
-            "Applying {:?} on wire {} # {}/{} ",
-            gate,
-            gate_pos,
-            qubit_counter + 1,
-            number_gates
-        );
+    pub(super) fn simulate_with_register(&self, register: &mut SuperPosition) {
+        let mut qubit_counter: usize = 0;
+        let number_gates: usize = self.circuit_gates.len();
 
-        if *qubit_counter + 1 == *number_gates {
-            println!("Finished circuit simulation.")
+        // This will removed in next major update, as the circuit will directly store this. Instead
+        // of what's happening now, in which the gates are being copied into another wapper.
+        let mut categorised_gates: Vec<GateCategory> = Vec::with_capacity(number_gates);
+        for gate in &self.circuit_gates {
+            categorised_gates.push(Gate::linker(gate));
+        }
+
+        if self.config_progress {
+            println!("Starting circuit simulation...");
+        }
+
+        // Loop through each gate of circuit from starting at top row to bottom, then moving onto the next.
+        for (cat_gate, gate) in zip(categorised_gates, &self.circuit_gates) {
+            if cat_gate == GateCategory::Identity {
+                qubit_counter += 1;
+                continue;
+            }
+
+            let gate_pos: usize = qubit_counter % self.num_qubits;
+
+            if self.config_progress {
+                Self::print_circuit_log(gate, &gate_pos, &qubit_counter, &number_gates);
+            }
+
+            let gate_to_apply: GateInfo = GateInfo {
+                cat_gate,
+                position: gate_pos,
+            };
+            Circuit::apply_gate(gate_to_apply, register);
+
+            qubit_counter += 1;
         }
     }
 
@@ -147,6 +166,26 @@ impl Circuit {
                     *existing_amp = existing_amp.add(state_amp.mul(amp));
                 })
                 .or_insert(state_amp.mul(amp));
+        }
+    }
+
+    // If the user toggles the log on, then prints the simulation of each circuit.
+    pub(super) fn print_circuit_log(
+        gate: &Gate,
+        gate_pos: &usize,
+        qubit_counter: &usize,
+        number_gates: &usize,
+    ) {
+        println!(
+            "Applying {:?} on wire {} # {}/{} ",
+            gate,
+            gate_pos,
+            qubit_counter + 1,
+            number_gates
+        );
+
+        if *qubit_counter + 1 == *number_gates {
+            println!("Finished circuit simulation.")
         }
     }
 }
