@@ -369,18 +369,23 @@ impl Circuit {
         match self.register.take() {
             Some(mut register) => {
                 self.simulate_with_register(&mut register);
-                self.register = Some(register);
+                SimulatedCircuit {
+                    circuit_gates: self.circuit_gates,
+                    num_qubits: self.num_qubits,
+                    register: register,
+                    config_progress: self.config_progress,
+                }
             }
             None => {
                 let mut zero_register = SuperPosition::new_unchecked(self.num_qubits);
                 self.simulate_with_register(&mut zero_register);
-                self.register = Some(zero_register);
+                SimulatedCircuit {
+                    circuit_gates: self.circuit_gates,
+                    num_qubits: self.num_qubits,
+                    register: zero_register,
+                    config_progress: self.config_progress,
+                }
             }
-        }
-
-        SimulatedCircuit {
-            circuit: self,
-            partially_simulated: false,
         }
     }
     /// Changes the register which is applied to the circuit when [Circuit::simulate] is called.
@@ -464,7 +469,7 @@ mod tests {
     }
 
     fn compare_circuit(circuit: Circuit, correct_register: &[Complex<f64>]) {
-        if let NonObservable(measured_register) = circuit.simulate().get_superposition().unwrap() {
+        if let NonObservable(measured_register) = circuit.simulate().get_superposition() {
             compare_complex_lists_and_register(correct_register, measured_register);
         }
     }

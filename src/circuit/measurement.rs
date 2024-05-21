@@ -17,3 +17,12 @@ pub enum Measurement<T> {
     Observable(T),
     NonObservable(T),
 }
+
+impl<T> Measurement<T> {
+    pub fn take(self) -> T {
+        match self {
+            Self::Observable(item) => item,
+            Self::NonObservable(item) => item,
+        }
+    }
+}

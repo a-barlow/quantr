@@ -23,15 +23,16 @@ fn main() -> Result<(), QuantrError> {
     qc.add_repeating_gate(Gate::X, &[0, 1, 2])?
         .add_gate(Gate::Custom(cccnot, vec![0, 1, 2], "X".to_string()), 3)?;
 
-    // Prints the circuit, viewing the custom gate, and then simulating it.
+    // Prints the circuit, viewing the custom gate.
     let mut circuit_printer: Printer = Printer::new(&qc);
     circuit_printer.print_diagram();
 
-    qc.toggle_simulation_progress(); // prints the simulation toggle_simulation_progress
+    // Prints the simulation process of each gate (excluding identity gates).
+    qc.toggle_simulation_progress();
     let simulated = qc.simulate();
 
     // Prints the bin count of measured states.
-    if let Ok(Measurement::Observable(bin_count)) = simulated.repeat_measurement(50) {
+    if let Measurement::Observable(bin_count) = simulated.repeat_measurement(50) {
         println!("\nStates observed over 50 measurements:");
         for (states, count) in bin_count.into_iter() {
             println!("|{}> : {}", states, count);
@@ -44,9 +45,9 @@ fn main() -> Result<(), QuantrError> {
 // Implements the CCC-not gate.
 fn cccnot(input_state: ProductState) -> Option<SuperPosition> {
     let state: &[Qubit] = input_state.get_qubits();
-    let state_slice: [Qubit; 4] = [state[0], state[1], state[2], state[3]]; // In this format, this
-                                                                            // guarantees that state_slice has length 4 to the rust compiler. Useful for the match
-                                                                            // statement.
+    let state_slice: [Qubit; 4] = [state[0], state[1], state[2], state[3]];
+    // In this format, this guarantees that state_slice has length 4 to the
+    // rust compiler. Useful for the match statement.
     match state_slice {
         [Qubit::One, Qubit::One, Qubit::One, Qubit::Zero] => {
             Some(ProductState::new(&[Qubit::One; 4]).unwrap().into())

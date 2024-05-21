@@ -39,7 +39,7 @@ fn main() -> Result<(), QuantrError> {
     let simulated = qc.simulate();
 
     // Prints the bin count of measured states.
-    if let Ok(Measurement::Observable(bin_count)) = simulated.repeat_measurement(50) {
+    if let Measurement::Observable(bin_count) = simulated.repeat_measurement(50) {
         println!("\nStates observed over 50 measurements:");
         for (states, count) in bin_count.into_iter() {
             println!("|{}> : {}", states, count);
@@ -51,8 +51,8 @@ fn main() -> Result<(), QuantrError> {
 
 // Implements a multi-controlled Not gate.
 fn multicnot<const NUM_CONTROL: usize>(input_state: ProductState) -> Option<SuperPosition> {
-    let mut copy_state = input_state.clone();
-    if input_state.get_qubits() == [Qubit::One; NUM_CONTROL] {
+    let mut copy_state = input_state;
+    if copy_state.get_qubits() == [Qubit::One; NUM_CONTROL] {
         copy_state.get_mut_qubits()[NUM_CONTROL - 1] = Qubit::Zero;
         return Some(copy_state.into());
     } else if copy_state.get_qubits() == {

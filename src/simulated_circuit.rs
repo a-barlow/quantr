@@ -8,39 +8,40 @@
 * Author: Andrew Rowan Barlow <a.barlow.dev@gmail.com>
 */
 
-use crate::circuit::QResult;
 use crate::Gate;
 use crate::{
-    circuit::Circuit,
     states::{ProductState, SuperPosition},
-    Measurement, QuantrError,
+    Measurement,
 };
 use std::collections::HashMap;
 
 pub struct SimulatedCircuit {
-    pub(crate) circuit: Circuit,
-    pub(crate) partially_simulated: bool,
+    // Copy of Circuit struct but removed the wrapper of register.
+    pub(crate) circuit_gates: Vec<Gate>,
+    pub(crate) num_qubits: usize,
+    pub(crate) register: SuperPosition,
+    pub(crate) config_progress: bool,
 }
 
 impl SimulatedCircuit {
-    pub fn get_circuit(&self) -> &Circuit {
-        &self.circuit
+    pub fn get_circuit_gates(&self) -> &Vec<Gate> {
+        &self.circuit_gates
     }
 
-    pub fn get_circuit_gates(&self) -> &[Gate] {
-        self.circuit.get_gates()
-    }
-
-    pub fn get_partial_status(&self) -> bool {
-        self.partially_simulated
+    pub fn get_num_qubits(&self) -> usize {
+        self.num_qubits
     }
 
     pub fn get_toggle_progress(&self) -> bool {
-        self.circuit.get_toggle_progress()
+        self.config_progress
     }
 
     pub fn toggle_simulation_progress(&mut self) {
-        self.circuit.toggle_simulation_progress()
+        self.config_progress = !self.config_progress;
+    }
+
+    pub fn take_superposition(self) -> Measurement<SuperPosition> {
+        Measurement::NonObservable(self.register)
     }
 
     /// Returns the resulting superposition after the circuit has been simulated using
@@ -59,7 +60,7 @@ impl SimulatedCircuit {
     /// let simulated_circuit = circuit.simulate();
     ///
     /// println!("State | Amplitude of State");
-    /// if let Ok(NonObservable(super_pos)) = simulated_circuit.get_superposition() {
+    /// if let NonObservable(super_pos) = simulated_circuit.get_superposition() {
     ///     for (state, amplitude) in super_pos.into_iter() {
     ///         println!("|{}>   : {}", state.to_string(), amplitude);
     ///     }
@@ -69,16 +70,8 @@ impl SimulatedCircuit {
     /// // |000> : 0 - 0.71...i     
     /// // |001> : 0 + 0.71...i
     /// ```
-    pub fn get_superposition(&self) -> QResult<Measurement<&SuperPosition>> {
-        // TODO change name; and output type as None reflects partially simulated
-        match &self.circuit.register {
-            Some(super_position) => Ok(Measurement::NonObservable(super_position)),
-            None => {
-                Err(QuantrError{
-                    message: String::from("The circuit has not been simulated. Call Circuit::simulate before calling this method, Circuit::get_superposition."),
-                })
-            }
-        }
+    pub fn get_superposition(&self) -> Measurement<&SuperPosition> {
+        Measurement::NonObservable(&self.register)
     }
 
     /// Returns a `HashMap` that contains the number of times the corresponding state was observed over
@@ -101,7 +94,7 @@ impl SimulatedCircuit {
     ///
     /// // Measures 500 superpositions.
     /// println!("State | Number of Times Observed");
-    /// if let Ok(Observable(bin_count)) = simulated_circuit.repeat_measurement(500) {
+    /// if let Observable(bin_count) = simulated_circuit.repeat_measurement(500) {
     ///     for (state, observed_count) in bin_count {
     ///         println!("|{}>   : {}", state, observed_count);
     ///     }
@@ -111,41 +104,29 @@ impl SimulatedCircuit {
     /// // |000> : 247
     /// // |001> : 253
     /// ```
-    pub fn repeat_measurement(
-        &self,
-        shots: usize,
-    ) -> QResult<Measurement<HashMap<ProductState, usize>>> {
-        match &self.circuit.register {
-            Some(super_position) => {
-                // Perform bin count of states
-                let mut probabilities: HashMap<ProductState, f64> = Default::default();
-                for (key, value) in super_position.to_hash_map() {
-                    probabilities.insert(key, value.abs_square());
-                }
-
-                let mut bin_count: HashMap<ProductState, usize> = Default::default();
-
-                for _ in 0..shots {
-                    let mut cummalitive: f64 = 0f64;
-                    let dice_roll: f64 = fastrand::f64();
-                    for (state_label, probability) in &probabilities {
-                        cummalitive += probability;
-                        if dice_roll < cummalitive {
-                            match bin_count.get(state_label) {
-                                Some(previous_count) => bin_count.insert(state_label.clone(), previous_count+1),
-                                None => bin_count.insert(state_label.clone(), 1),
-                            };
-                            break;
-                        }
-                    }
-                }
-                Ok(Measurement::Observable(bin_count))
-            },
-            None => {
-                Err(QuantrError{
-                    message: String::from("The circuit has not been simulated. Call Circuit::simulate before calling this method, Circuit::repeat_measurement."),
-                })
-            },
+    pub fn repeat_measurement(&self, shots: usize) -> Measurement<HashMap<ProductState, usize>> {
+        let mut bin_count: HashMap<ProductState, usize> = Default::default();
+        let mut probabilities: HashMap<ProductState, f64> = Default::default();
+        for (key, value) in self.register.to_hash_map() {
+            probabilities.insert(key, value.abs_square());
         }
+
+        for _ in 0..shots {
+            let mut cummalitive: f64 = 0f64;
+            let dice_roll: f64 = fastrand::f64();
+            for (state_label, probability) in &probabilities {
+                cummalitive += probability;
+                if dice_roll < cummalitive {
+                    match bin_count.get(state_label) {
+                        Some(previous_count) => {
+                            bin_count.insert(state_label.clone(), previous_count + 1)
+                        }
+                        None => bin_count.insert(state_label.clone(), 1),
+                    };
+                    break;
+                }
+            }
+        }
+        Measurement::Observable(bin_count)
     }
 }
