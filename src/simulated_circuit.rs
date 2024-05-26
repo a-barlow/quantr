@@ -16,7 +16,7 @@ use crate::{
 use std::collections::HashMap;
 
 pub struct SimulatedCircuit {
-    // Copy of Circuit struct but removed the wrapper of register.
+    // Copy of Circuit struct but removed the wrapper around register.
     pub(crate) circuit_gates: Vec<Gate>,
     pub(crate) num_qubits: usize,
     pub(crate) register: SuperPosition,
@@ -66,8 +66,8 @@ impl SimulatedCircuit {
     ///     }
     /// }
     ///
-    /// // State | Amplitude of State    
-    /// // |000> : 0 - 0.71...i     
+    /// // State | Amplitude of State
+    /// // |000> : 0 - 0.71...i
     /// // |001> : 0 + 0.71...i
     /// ```
     pub fn get_superposition(&self) -> Measurement<&SuperPosition> {
@@ -106,24 +106,18 @@ impl SimulatedCircuit {
     /// ```
     pub fn repeat_measurement(&self, shots: usize) -> Measurement<HashMap<ProductState, usize>> {
         let mut bin_count: HashMap<ProductState, usize> = Default::default();
-        let mut probabilities: HashMap<ProductState, f64> = Default::default();
-        for (key, value) in self.register.to_hash_map() {
-            probabilities.insert(key, value.abs_square());
-        }
-
         for _ in 0..shots {
-            let mut cummalitive: f64 = 0f64;
-            let dice_roll: f64 = fastrand::f64();
-            for (state_label, probability) in &probabilities {
-                cummalitive += probability;
-                if dice_roll < cummalitive {
-                    match bin_count.get(state_label) {
-                        Some(previous_count) => {
-                            bin_count.insert(state_label.clone(), previous_count + 1)
-                        }
-                        None => bin_count.insert(state_label.clone(), 1),
-                    };
-                    break;
+            match self.register.measure() {
+                Some(state) => {
+                    bin_count
+                        .entry(state)
+                        .and_modify(|count| {
+                            *count = *count + 1;
+                        })
+                        .or_insert(1);
+                }
+                None => {
+                    eprintln!("\x1b[93m[Quantr Warning] The superposition failed to collapse to a state during repeat measurements. This is likely due to the use of Gate::Custom where the mapping is not unitary.\x1b[0m")
                 }
             }
         }

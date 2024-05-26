@@ -5,11 +5,11 @@ This file logs the versions of quantr.
 ## 0.6.0 - Re-design of interface for final design 
 
 The interface is being overhauled to increase the safety in using
-quantr. Perhaps the most noticable difference is that when a circuit is
+quantr. Perhaps the most noticeable difference is that when a circuit is
 simulated with `Circuit::simulate`, it will now return a struct instead
 of a superposition. This struct, called `SimulatedCircuit`, can
 guarantee that the circuit has been simulated, and when requested, the
-resulting superposition can be measured repeadetly. It can also
+resulting superposition can be measured repeatedly. It can also
 re-simulate the circuit (as true to reality), if there is an insertion
 of a `Custom::gate` that outputs a mixed state, rather than a unitary
 operator. By having this new struct, it can now be guaranteed that the
@@ -57,10 +57,18 @@ It implements the error trait, and so can be handled through that, or
 directly through `QuantrError`.
 - The `Measurement` enum now has a `take` method, which moves out the
 value that it wraps.
+- All printed '[Quantr Warnings]' are now sent to stderr, instead of
+stdout.
+- Added `Circuit::clone_and_simulate` simulates the circuit, but does not
+consume the circuit in the process. The circuit is instead borrowed,
+and its register cloned. This will lead to an increase in memory
+consumption.
+- Added `Superposition::measure` which returns simulates the effect of 
+measuring a superposition, and observing the state that it reduced to.
 
 Internal improvements:
 
-- Attaching a custom register is more memoery efficient; it use to
+- Attaching a custom register is more memory efficient; it use to
 create another vector, in addition to the circuit's state vector, in
 effect doubling the necessary memory.
 - Removed `QuantrErrorConst`.

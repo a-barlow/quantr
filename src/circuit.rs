@@ -347,8 +347,10 @@ impl Circuit {
 
     /// Attaches the register, |0...0>, to the circuit resulting in a superposition that can be measured.
     ///
-    /// See [Circuit::get_superposition] and [Circuit::repeat_measurement] for details on obtaining
+    /// See [SimulatedCircuit::get_superposition] and [SimulatedCircuit::repeat_measurement] for details on obtaining
     /// observables from the resulting superposition.
+    ///
+    /// If you are not wanting the circuit to be consumed, please refer to [Circuit::clone_and_simulate].
     ///
     /// # Example
     /// ```
@@ -365,14 +367,13 @@ impl Circuit {
     /// // |0> -- H --
     /// ````
     pub fn simulate(mut self) -> SimulatedCircuit {
-        // Form the initial state if the product space, that is |0...0>
         match self.register.take() {
-            Some(mut register) => {
-                self.simulate_with_register(&mut register);
+            Some(mut prepared_register) => {
+                self.simulate_with_register(&mut prepared_register);
                 SimulatedCircuit {
                     circuit_gates: self.circuit_gates,
                     num_qubits: self.num_qubits,
-                    register: register,
+                    register: prepared_register,
                     config_progress: self.config_progress,
                 }
             }
@@ -388,6 +389,52 @@ impl Circuit {
             }
         }
     }
+
+    /// Attaches the register, |0...0>, to the circuit resulting in a superposition that can be measured,
+    /// and will clone the contents of the register. This will duplicate the register, and so could
+    /// lead to large memeory consumption for circuits with many qubits.
+    ///
+    /// See [SimulatedCircuit::get_superposition] and [SimulatedCircuit::repeat_measurement] for details on obtaining
+    /// observables from the resulting superposition.
+    ///
+    /// If you are wanting the circuit to be consumed, please refer to [Circuit::simulate].
+    ///
+    /// # Example
+    /// ```
+    /// use quantr::{Circuit, Gate};
+    ///
+    /// let mut circuit = Circuit::new(3).unwrap();
+    /// circuit.add_gate(Gate::H, 2).unwrap();
+    ///
+    /// let simulated_with_H = circuit.clone_and_simulate();
+    ///
+    /// // Below would be impossible if Circuit::simulate was used instead
+    /// let simulated_with_H_and_X = circuit.add_gate(Gate::X, 1);
+    /// ````
+    pub fn clone_and_simulate(&self) -> SimulatedCircuit {
+        match self.register.clone() {
+            Some(mut prepared_register) => {
+                self.simulate_with_register(&mut prepared_register);
+                SimulatedCircuit {
+                    circuit_gates: self.circuit_gates.clone(),
+                    num_qubits: self.num_qubits,
+                    register: prepared_register,
+                    config_progress: self.config_progress,
+                }
+            }
+            None => {
+                let mut zero_register = SuperPosition::new_unchecked(self.num_qubits);
+                self.simulate_with_register(&mut zero_register);
+                SimulatedCircuit {
+                    circuit_gates: self.circuit_gates.clone(),
+                    num_qubits: self.num_qubits,
+                    register: zero_register,
+                    config_progress: self.config_progress,
+                }
+            }
+        }
+    }
+
     /// Changes the register which is applied to the circuit when [Circuit::simulate] is called.
     ///
     /// The default register is the |00..0> state. This method can be used before simulating the

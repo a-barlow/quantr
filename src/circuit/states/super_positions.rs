@@ -317,6 +317,18 @@ impl SuperPosition {
         super_pos_as_hash
     }
 
+    pub fn measure(&self) -> Option<ProductState> {
+        let mut cummalitive: f64 = 0f64;
+        let dice_roll: f64 = fastrand::f64();
+        for (i, probability) in self.amplitudes.iter().map(|x| x.abs_square()).enumerate() {
+            cummalitive += probability;
+            if dice_roll < cummalitive {
+                return Some(ProductState::binary_basis(i, self.product_dim));
+            }
+        }
+        None
+    }
+
     pub(super) fn from_hash_to_array(
         hash_amplitudes: HashMap<ProductState, Complex<f64>>,
         vec_amplitudes: &mut Vec<Complex<f64>>,

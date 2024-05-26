@@ -82,7 +82,7 @@ impl Printer<'_> {
     /// ```
     pub fn print_diagram(&mut self) {
         if self.circuit.circuit_gates.len() / self.circuit.num_qubits > 14 {
-            println!("\x1b[93m[Quantr Warning] The string displaying the circuit diagram exceeds 72 chars, which could cause the circuit to render incorrectly in terminals (due to the wrapping). Instead, consider saving the string to a .txt file by using Printer::save_diagram.\x1b[0m");
+            eprintln!("\x1b[93m[Quantr Warning] The string displaying the circuit diagram exceeds 72 chars, which could cause the circuit to render incorrectly in terminals (due to the wrapping). Instead, consider saving the string to a .txt file by using Printer::save_diagram.\x1b[0m");
         }
         println!("{}", self.get_or_make_diagram());
     }
