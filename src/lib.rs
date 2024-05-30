@@ -22,11 +22,12 @@
 //!
 //! The circuit can then be simulated with [Circuit::simulate]. The progress of the simulation can
 //! be printed to the terminal by calling [Circuit::toggle_simulation_progress] before simulating
-//! the circuit.
+//! the circuit. This produces a new struct [SimulatedCircuit] that guarantees that the circuit was
+//! simulated successfully.
 //!
 //! A bin count of states that are observed over a period of measurements can be performed with
-//! [SimulatedCircuit::repeat_measurement], where a new register is attached before each measurement. Or, the
-//! explicit superposition can be retrieved using [SimulatedCircuit::get_superposition].
+//! [SimulatedCircuit::measure_all], where a new register is attached before each measurement. Or, the
+//! explicit superposition can be retrieved using [SimulatedCircuit::get_state].
 //!
 //! All errors resulting from the incorrect use of quantr are propagated by [QuantrError].
 //!
@@ -58,7 +59,7 @@
 //! // Below prints the number of times that each state was observered
 //! // over 500 measurements of superpositions.
 //!
-//! if let Observable(bin_count) = simulated_circuit.repeat_measurement(500) {
+//! if let Observable(bin_count) = simulated_circuit.measure_all(500) {
 //!     println!("[Observable] Bin count of observed states.");
 //!     for (state, count) in bin_count {
 //!         println!("|{}> observed {} times", state, count);

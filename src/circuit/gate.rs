@@ -200,6 +200,13 @@ impl Gate {
         }
     }
 
+    pub(crate) fn is_custom_gate(&self) -> bool {
+        match self {
+            Gate::Custom(_, _, _) => true,
+            _ => false,
+        }
+    }
+
     pub(crate) fn get_name(&self) -> String {
         match self {
             Gate::Id => "".to_string(),

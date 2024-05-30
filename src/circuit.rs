@@ -347,7 +347,7 @@ impl Circuit {
 
     /// Attaches the register, |0...0>, to the circuit resulting in a superposition that can be measured.
     ///
-    /// See [SimulatedCircuit::get_superposition] and [SimulatedCircuit::repeat_measurement] for details on obtaining
+    /// See [SimulatedCircuit::get_state] and [SimulatedCircuit::measure_all] for details on obtaining
     /// observables from the resulting superposition.
     ///
     /// If you are not wanting the circuit to be consumed, please refer to [Circuit::clone_and_simulate].
@@ -375,6 +375,8 @@ impl Circuit {
                     num_qubits: self.num_qubits,
                     register: prepared_register,
                     config_progress: self.config_progress,
+                    disable_warnings: false,
+                    cache_register: true,
                 }
             }
             None => {
@@ -385,6 +387,8 @@ impl Circuit {
                     num_qubits: self.num_qubits,
                     register: zero_register,
                     config_progress: self.config_progress,
+                    disable_warnings: false,
+                    cache_register: true,
                 }
             }
         }
@@ -394,7 +398,7 @@ impl Circuit {
     /// and will clone the contents of the register. This will duplicate the register, and so could
     /// lead to large memeory consumption for circuits with many qubits.
     ///
-    /// See [SimulatedCircuit::get_superposition] and [SimulatedCircuit::repeat_measurement] for details on obtaining
+    /// See [SimulatedCircuit::get_state] and [SimulatedCircuit::measure_all] for details on obtaining
     /// observables from the resulting superposition.
     ///
     /// If you are wanting the circuit to be consumed, please refer to [Circuit::simulate].
@@ -420,6 +424,8 @@ impl Circuit {
                     num_qubits: self.num_qubits,
                     register: prepared_register,
                     config_progress: self.config_progress,
+                    disable_warnings: false,
+                    cache_register: true,
                 }
             }
             None => {
@@ -430,6 +436,8 @@ impl Circuit {
                     num_qubits: self.num_qubits,
                     register: zero_register,
                     config_progress: self.config_progress,
+                    disable_warnings: false,
+                    cache_register: true,
                 }
             }
         }
@@ -516,7 +524,7 @@ mod tests {
     }
 
     fn compare_circuit(circuit: Circuit, correct_register: &[Complex<f64>]) {
-        if let NonObservable(measured_register) = circuit.simulate().get_superposition() {
+        if let NonObservable(measured_register) = circuit.simulate().get_state() {
             compare_complex_lists_and_register(correct_register, measured_register);
         }
     }

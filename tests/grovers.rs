@@ -54,11 +54,11 @@ fn grovers_3qubit() -> Result<(), Box<dyn Error>> {
 
     let simulated = circuit.simulate();
 
-    if let NonObservable(output_register) = simulated.get_superposition() {
+    if let NonObservable(output_register) = simulated.get_state() {
         compare_complex_lists_and_register(&correct_super, output_register);
     }
 
-    if let Observable(bin_count) = simulated.repeat_measurement(500) {
+    if let Observable(bin_count) = simulated.measure_all(500) {
         for (state, count) in bin_count {
             match state.to_string().as_str() {
                 "011" | "111" => assert!(count > 200usize),
@@ -139,7 +139,7 @@ fn x3sudoko() -> Result<(), Box<dyn Error>> {
 
     let simulated_circuit = qc.simulate();
 
-    if let Observable(bin_count) = simulated_circuit.repeat_measurement(5000) {
+    if let Observable(bin_count) = simulated_circuit.measure_all(5000) {
         for (state, count) in bin_count {
             match &state.to_string()[0..=5] {
                 "001100" | "001010" | "010100" | "010001" | "100010" | "100001" => {

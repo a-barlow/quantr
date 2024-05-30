@@ -12,7 +12,7 @@
 ///
 /// For example, this will distinguish the retrieval of a superposition (that cannot be measured
 /// directly), and the state resulting from the collapse of a superposition upon measurement. See
-/// [crate::Circuit::get_superposition] and [crate::Circuit::repeat_measurement] for examples.
+/// [crate::SimulatedCircuit::measure_all] and [crate::SimulatedCircuit::get_state] for examples.
 pub enum Measurement<T> {
     Observable(T),
     NonObservable(T),

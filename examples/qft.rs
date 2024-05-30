@@ -32,7 +32,7 @@ fn main() -> Result<(), QuantrError> {
 
     let simulated_circuit = qc.simulate();
 
-    if let Measurement::NonObservable(final_sup) = simulated_circuit.get_superposition() {
+    if let Measurement::NonObservable(final_sup) = simulated_circuit.get_state() {
         println!("\nThe final superposition is:");
         for (state, amplitude) in final_sup.into_iter() {
             println!("|{}> : {}", state, amplitude);
@@ -61,5 +61,5 @@ fn qft(input_state: ProductState) -> Option<SuperPosition> {
         .change_register(SuperPosition::from(input_state))
         .unwrap();
 
-    Some(mini_circuit.simulate().take_superposition().take())
+    Some(mini_circuit.simulate().take_state().take())
 }

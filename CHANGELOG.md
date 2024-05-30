@@ -45,6 +45,10 @@ the circuit (`SimulatedCircuit` takes ownership).
 - The `Gate::custom` enum now takes a `Vec<uisze>` instead of a slice for
   the qubit indices that the gate should operate on. Now, the circuit
 can outlive the slice.
+- `Circuit::repeat_measurement` has been removed, and replaced with
+`SimulatedCirucit::measure_all`.
+- `Circuit::get_superposition` has been removed, and replaced with 
+`SimulatedCirucit::get_state`.
 
 Features:
 

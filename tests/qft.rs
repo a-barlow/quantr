@@ -37,7 +37,7 @@ fn simple_qft() -> Result<(), Box<dyn Error>> {
         complex!(-0.25f64, -0.25f64),
     ];
 
-    if let Measurement::NonObservable(super_pos) = qc.simulate().get_superposition() {
+    if let Measurement::NonObservable(super_pos) = qc.simulate().take_state() {
         println!("{:?}", super_pos);
         compare_complex_lists_and_register(&correct_super, &super_pos);
     }
@@ -62,7 +62,7 @@ fn qft(input_state: ProductState) -> Option<SuperPosition> {
 
     mini_circuit.change_register(input_state.into()).unwrap();
 
-    Some(mini_circuit.simulate().take_superposition().take())
+    Some(mini_circuit.simulate().take_state().take())
 }
 
 fn compare_complex_lists_and_register(correct_list: &[Complex<f64>], register: &SuperPosition) {

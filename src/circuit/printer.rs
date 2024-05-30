@@ -21,6 +21,7 @@ use std::path::Path;
 pub struct Printer<'a> {
     circuit: &'a Circuit,
     diagram: Option<String>,
+    disable_warnings: bool,
 }
 
 struct DiagramSchema<'a> {
@@ -55,6 +56,7 @@ impl Printer<'_> {
         Printer {
             circuit,
             diagram: None,
+            disable_warnings: false,
         }
     }
 
@@ -81,7 +83,8 @@ impl Printer<'_> {
     /// // ┗━━━┛
     /// ```
     pub fn print_diagram(&mut self) {
-        if self.circuit.circuit_gates.len() / self.circuit.num_qubits > 14 {
+        if self.circuit.circuit_gates.len() / self.circuit.num_qubits > 14 && !self.disable_warnings
+        {
             eprintln!("\x1b[93m[Quantr Warning] The string displaying the circuit diagram exceeds 72 chars, which could cause the circuit to render incorrectly in terminals (due to the wrapping). Instead, consider saving the string to a .txt file by using Printer::save_diagram.\x1b[0m");
         }
         println!("{}", self.get_or_make_diagram());
@@ -149,6 +152,11 @@ impl Printer<'_> {
     /// ```
     pub fn get_diagram(&mut self) -> String {
         self.get_or_make_diagram()
+    }
+
+    /// Toggles if the printer should display warnings.
+    pub fn toggle_warnings(&mut self) {
+        self.disable_warnings = !self.disable_warnings;
     }
 
     // Constructs the diagram, or returns the diagram previously built.
