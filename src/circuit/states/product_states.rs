@@ -202,7 +202,7 @@ impl ProductState {
 
     // Produces a product states based on converting a base 10 number to binary, where the product
     // state in the computational basis is defined from this labelling.
-    pub(super) fn binary_basis(index: usize, basis_size: usize) -> ProductState {
+    pub(crate) fn binary_basis(index: usize, basis_size: usize) -> ProductState {
         let binary_index: Vec<Qubit> = (0..basis_size)
             .rev()
             .map(|n| match (index >> n) & 1 == 1 {

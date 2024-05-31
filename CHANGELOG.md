@@ -69,6 +69,7 @@ and its register cloned. This will lead to an increase in memory
 consumption.
 - Added `Superposition::measure` which returns simulates the effect of 
 measuring a superposition, and observing the state that it reduced to.
+- `From<Qubit>` was implemented for `Superposition`.
 
 Internal improvements:
 

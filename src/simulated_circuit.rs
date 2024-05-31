@@ -8,11 +8,12 @@
 * Author: Andrew Rowan Barlow <a.barlow.dev@gmail.com>
 */
 
-use crate::Gate;
 use crate::{
+    complex_re,
     states::{ProductState, SuperPosition},
-    Measurement,
+    Complex, Measurement, COMPLEX_ZERO,
 };
+use crate::{Circuit, Gate};
 use std::collections::HashMap;
 
 pub struct SimulatedCircuit {
@@ -22,7 +23,6 @@ pub struct SimulatedCircuit {
     pub(crate) register: SuperPosition,
     pub(crate) config_progress: bool,
     pub(super) disable_warnings: bool,
-    pub(super) cache_register: bool,
 }
 
 impl SimulatedCircuit {
@@ -33,6 +33,10 @@ impl SimulatedCircuit {
     /// the resulting superposition measured in the computational basis, and then the reduced state
     /// recorded. If the HashMap does not include a product state, then it was not observed over the
     /// `n` measurements.
+    ///
+    /// For efficiency, this will use the cached register from the simulated circuit. If your
+    /// circuit contains mixed states, then most likely the circuit will have to be simulated again
+    /// for each shot. To achieve this, use [SimulatedCircuit::measure_all_without_cache].
     ///
     /// # Example
     /// ```
@@ -57,29 +61,69 @@ impl SimulatedCircuit {
     /// ```
     pub fn measure_all(&self, shots: usize) -> Measurement<HashMap<ProductState, usize>> {
         let mut bin_count: HashMap<ProductState, usize> = Default::default();
-        if self.cache_register
-            && self.circuit_gates.iter().any(|x| x.is_custom_gate())
-            && !self.disable_warnings
-        {
-            eprintln!("\x1b[93m[Quantr Warning] Custom gates were detected in the circuit. Measurements will be taken from a cached register, and so if the Custom gate does NOT implement a unitary mapping, the measure all function will most likely lead to wrong results. To turn the cache off, see [SimulatedCircuit::toggle_cache].")
+        if self.circuit_gates.iter().any(|x| x.is_custom_gate()) && !self.disable_warnings {
+            eprintln!("\x1b[93m[Quantr Warning] Custom gates were detected in the circuit. Measurements will be taken from a cached register in memory, and so if the Custom gate does NOT implement a unitary mapping, the measure_all method will most likely lead to wrong results. To simulate a circuit without cache, see SimulatedCircuit::measure_all_without_cache.\x1b[0m")
         }
+
         for _ in 0..shots {
-            match self.register.measure() {
-                Some(state) => {
-                    bin_count
-                        .entry(state)
-                        .and_modify(|count| {
-                            *count = *count + 1;
-                        })
-                        .or_insert(1);
-                }
-                None if !self.disable_warnings => {
-                    eprintln!("\x1b[93m[Quantr Warning] The superposition failed to collapse to a state during repeat measurements. This is likely due to the use of Gate::Custom where the mapping is not unitary.\x1b[0m")
-                }
-                None => {}
+            self.add_to_bin(&mut bin_count);
+        }
+        Measurement::Observable(bin_count)
+    }
+
+    /// Similar to [SimulatedCircuit::measure_all], however for every shot it will simulate the
+    /// circuit, where the input register is reset to the zero state.
+    ///
+    /// This allows for mixed states to be simulated, through the implementation of
+    /// [Gate::Custom]. In doing so will dramatically increase the simulation time, as a new
+    /// circuit will be simulated for each shot. An example simulation that involves mixed states
+    /// are mid-circuit measurements.
+    pub fn measure_all_without_cache(
+        self,
+        shots: usize,
+    ) -> Measurement<HashMap<ProductState, usize>> {
+        let mut bin_count: HashMap<ProductState, usize> = Default::default();
+        let mut simulated_circ = self;
+        simulated_circ.add_to_bin(&mut bin_count);
+        if simulated_circ.config_progress {
+            println!("Measured state # 1/{}", shots);
+        }
+        for i in 0..shots - 1 {
+            // reset to |0> register
+            simulated_circ.register.amplitudes.fill(COMPLEX_ZERO);
+            simulated_circ.register.amplitudes[0] = complex_re!(1f64);
+            if simulated_circ.config_progress {
+                println!("Register reset to zero state")
+            }
+            let circuit = Circuit {
+                circuit_gates: simulated_circ.circuit_gates,
+                num_qubits: simulated_circ.num_qubits,
+                register: Some(simulated_circ.register),
+                config_progress: simulated_circ.config_progress,
+            };
+            simulated_circ = circuit.simulate();
+            simulated_circ.add_to_bin(&mut bin_count);
+            if simulated_circ.config_progress {
+                println!("Measured state # {}/{}", i + 2, shots);
             }
         }
         Measurement::Observable(bin_count)
+    }
+
+    fn add_to_bin(&self, bin: &mut HashMap<ProductState, usize>) {
+        match self.register.measure() {
+            Some(state) => {
+                bin.entry(state)
+                    .and_modify(|count| {
+                        *count = *count + 1;
+                    })
+                    .or_insert(1);
+            }
+            None if !self.disable_warnings => {
+                eprintln!("\x1b[93m[Quantr Warning] The superposition failed to collapse to a state during repeat measurements. This is likely due to the use of Gate::Custom where the mapping is not unitary.\x1b[0m")
+            }
+            None => {}
+        }
     }
 
     /// Returns the resulting superposition after the circuit has been simulated using
@@ -117,20 +161,12 @@ impl SimulatedCircuit {
         self.disable_warnings = !self.disable_warnings;
     }
 
-    pub fn toggle_cache(&mut self) {
-        self.cache_register = !self.cache_register;
-    }
-
     pub fn get_circuit_gates(&self) -> &Vec<Gate> {
         &self.circuit_gates
     }
 
     pub fn get_num_qubits(&self) -> usize {
         self.num_qubits
-    }
-
-    pub fn get_cache_status(&self) -> bool {
-        self.cache_register
     }
 
     pub fn get_toggle_progress(&self) -> bool {

@@ -36,7 +36,8 @@ fn main() -> Result<(), QuantrError> {
     circuit_printer.print_diagram();
 
     qc.toggle_simulation_progress();
-    let simulated = qc.simulate();
+    let mut simulated = qc.simulate();
+    simulated.toggle_warnings();
 
     // Prints the bin count of measured states.
     if let Measurement::Observable(bin_count) = simulated.measure_all(50) {

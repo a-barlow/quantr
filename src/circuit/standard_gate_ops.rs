@@ -255,13 +255,13 @@ pub fn crk(qubit_one: Qubit, qubit_two: Qubit, k: i32) -> SuperPosition {
 #[rustfmt::skip]
 pub fn toffoli(qubit_one: Qubit, qubit_two: Qubit, qubit_three: Qubit) -> SuperPosition {
     SuperPosition::new_with_register_unchecked::<8>(match [qubit_one, qubit_two, qubit_three] {
-            [Qubit::Zero, Qubit::Zero, Qubit::Zero] => { complex_re_array!(1f64, 0f64, 0f64, 0f64, 0f64, 0f64, 0f64, 0f64) }
-            [Qubit::Zero, Qubit::Zero, Qubit::One] => { complex_re_array!(0f64, 1f64, 0f64, 0f64, 0f64, 0f64, 0f64, 0f64) }
-            [Qubit::Zero, Qubit::One, Qubit::Zero] => { complex_re_array!(0f64, 0f64, 1f64, 0f64, 0f64, 0f64, 0f64, 0f64) }
-            [Qubit::Zero, Qubit::One, Qubit::One] => {  complex_re_array!(0f64, 0f64, 0f64, 1f64, 0f64, 0f64, 0f64, 0f64) }
-            [Qubit::One, Qubit::Zero, Qubit::Zero] => { complex_re_array!(0f64, 0f64, 0f64, 0f64, 1f64, 0f64, 0f64, 0f64) }
-            [Qubit::One, Qubit::Zero, Qubit::One] => {  complex_re_array!(0f64, 0f64, 0f64, 0f64, 0f64, 1f64, 0f64, 0f64) }
-            [Qubit::One, Qubit::One, Qubit::Zero] => {  complex_re_array!(0f64, 0f64, 0f64, 0f64, 0f64, 0f64, 0f64, 1f64) }
-            [Qubit::One, Qubit::One, Qubit::One] => {   complex_re_array!(0f64, 0f64, 0f64, 0f64, 0f64, 0f64, 1f64, 0f64) }
-        })
+        [Qubit::Zero, Qubit::Zero, Qubit::Zero] => { complex_re_array!(1f64, 0f64, 0f64, 0f64, 0f64, 0f64, 0f64, 0f64) }
+        [Qubit::Zero, Qubit::Zero, Qubit::One] => {  complex_re_array!(0f64, 1f64, 0f64, 0f64, 0f64, 0f64, 0f64, 0f64) }
+        [Qubit::Zero, Qubit::One, Qubit::Zero] => {  complex_re_array!(0f64, 0f64, 1f64, 0f64, 0f64, 0f64, 0f64, 0f64) }
+        [Qubit::Zero, Qubit::One, Qubit::One] => {   complex_re_array!(0f64, 0f64, 0f64, 1f64, 0f64, 0f64, 0f64, 0f64) }
+        [Qubit::One, Qubit::Zero, Qubit::Zero] => {  complex_re_array!(0f64, 0f64, 0f64, 0f64, 1f64, 0f64, 0f64, 0f64) }
+        [Qubit::One, Qubit::Zero, Qubit::One] => {   complex_re_array!(0f64, 0f64, 0f64, 0f64, 0f64, 1f64, 0f64, 0f64) }
+        [Qubit::One, Qubit::One, Qubit::Zero] => {   complex_re_array!(0f64, 0f64, 0f64, 0f64, 0f64, 0f64, 0f64, 1f64) }
+        [Qubit::One, Qubit::One, Qubit::One] => {    complex_re_array!(0f64, 0f64, 0f64, 0f64, 0f64, 0f64, 1f64, 0f64) }
+    })
 }

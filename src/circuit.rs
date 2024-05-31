@@ -26,10 +26,10 @@ pub(crate) type QResult<T> = Result<T, QuantrError>;
 /// A quantum circuit where gates can be appended and then simulated to measure resulting
 /// superpositions.
 pub struct Circuit {
-    circuit_gates: Vec<Gate>,
-    num_qubits: usize,
+    pub(crate) circuit_gates: Vec<Gate>,
+    pub(crate) num_qubits: usize,
     pub(crate) register: Option<SuperPosition>,
-    config_progress: bool,
+    pub(crate) config_progress: bool,
 }
 
 // The tolerance for declaring non-zero amplitudes.
@@ -376,7 +376,6 @@ impl Circuit {
                     register: prepared_register,
                     config_progress: self.config_progress,
                     disable_warnings: false,
-                    cache_register: true,
                 }
             }
             None => {
@@ -388,7 +387,6 @@ impl Circuit {
                     register: zero_register,
                     config_progress: self.config_progress,
                     disable_warnings: false,
-                    cache_register: true,
                 }
             }
         }
@@ -425,7 +423,6 @@ impl Circuit {
                     register: prepared_register,
                     config_progress: self.config_progress,
                     disable_warnings: false,
-                    cache_register: true,
                 }
             }
             None => {
@@ -437,7 +434,6 @@ impl Circuit {
                     register: zero_register,
                     config_progress: self.config_progress,
                     disable_warnings: false,
-                    cache_register: true,
                 }
             }
         }

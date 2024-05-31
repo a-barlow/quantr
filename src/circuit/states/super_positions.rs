@@ -11,6 +11,7 @@
 use crate::circuit::{HashMap, QResult, ZERO_MARGIN};
 use crate::complex_re;
 use crate::error::QuantrError;
+use crate::states::Qubit;
 use crate::{states::ProductState, Complex, COMPLEX_ZERO};
 
 /// A superposition of [ProductState]s.
@@ -358,6 +359,23 @@ impl From<ProductState> for SuperPosition {
     fn from(value: ProductState) -> Self {
         SuperPosition::new_with_hash_amplitudes_unchecked(HashMap::from([(
             value,
+            complex_re!(1f64),
+        )]))
+    }
+}
+
+impl From<Qubit> for SuperPosition {
+    /// Returns the [] as a [SuperPosition].
+    ///
+    /// # Example
+    /// ```
+    /// use quantr::states::{Qubit, SuperPosition};
+    ///
+    /// let super_pos = SuperPosition::from(Qubit::Zero);
+    /// ```
+    fn from(value: Qubit) -> Self {
+        SuperPosition::new_with_hash_amplitudes_unchecked(HashMap::from([(
+            value.into(),
             complex_re!(1f64),
         )]))
     }
