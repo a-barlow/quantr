@@ -2,7 +2,7 @@
 
 This file logs the versions of quantr.
 
-## 0.6.0 - Re-design of interface for final design 
+## 0.6.0 - Overhaul of Interface
 
 The interface is being overhauled to increase the safety in using
 quantr. Perhaps the most noticeable difference is that when a circuit is
@@ -11,13 +11,13 @@ of a superposition. This struct, called `SimulatedCircuit`, can
 guarantee that the circuit has been simulated, and when requested, the
 resulting superposition can be measured repeatedly. It can also
 re-simulate the circuit (as true to reality), if there is an insertion
-of a `Custom::gate` that outputs a mixed state, rather than a unitary
-operator. By having this new struct, it can now be guaranteed that the
+of a `Custom::gate` that implements a non-unitary operation. With
+`SimulatedCircuit`, it can now be guaranteed that the
 circuit has been simulated and ready to be measured. Unlike previously
 where one could attempt to retrieve the superposition, but would get an
 error stating that the circuit has not been simulated yet.
 
-As the title suggests, this implementations are heading toward a final 
+These implementations are heading toward a final 
 design that I am happy with. Of course, this library will forever be 
 evolving but the design implemented now should be kept for the 
 foreseeable future; minimising breaking Changes.
@@ -49,6 +49,8 @@ can outlive the slice.
 `SimulatedCirucit::measure_all`.
 - `Circuit::get_superposition` has been removed, and replaced with 
 `SimulatedCirucit::get_state`.
+The following methods have been replaced:
+  - `Circuit::toggle_simulation_progress` with `SimulatedCirucit::print_progress`
 
 Features:
 
@@ -70,6 +72,8 @@ consumption.
 - Added `Superposition::measure` which returns simulates the effect of 
 measuring a superposition, and observing the state that it reduced to.
 - `From<Qubit>` was implemented for `Superposition`.
+- `Printer::pring_warnings` was added that allows the user to turn warnings
+from the printer off and on.
 
 Internal improvements:
 

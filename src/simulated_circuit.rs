@@ -156,9 +156,9 @@ impl SimulatedCircuit {
         Measurement::NonObservable(&self.register)
     }
 
-    /// Toggles if the printer should display warnings.
-    pub fn toggle_warnings(&mut self) {
-        self.disable_warnings = !self.disable_warnings;
+    /// Sets if the printer should display warnings.
+    pub fn print_warnings(&mut self, printing: bool) {
+        self.disable_warnings = printing;
     }
 
     pub fn get_circuit_gates(&self) -> &Vec<Gate> {
@@ -169,12 +169,8 @@ impl SimulatedCircuit {
         self.num_qubits
     }
 
-    pub fn get_toggle_progress(&self) -> bool {
-        self.config_progress
-    }
-
-    pub fn toggle_simulation_progress(&mut self) {
-        self.config_progress = !self.config_progress;
+    pub fn print_progress(&mut self, printing: bool) {
+        self.config_progress = printing;
     }
 
     pub fn take_state(self) -> Measurement<SuperPosition> {

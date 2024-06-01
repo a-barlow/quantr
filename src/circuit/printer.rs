@@ -154,9 +154,9 @@ impl Printer<'_> {
         self.get_or_make_diagram()
     }
 
-    /// Toggles if the printer should display warnings.
-    pub fn toggle_warnings(&mut self) {
-        self.disable_warnings = !self.disable_warnings;
+    /// Sets if the printer should display warnings.
+    pub fn set_warnings(&mut self, printing: bool) {
+        self.disable_warnings = printing;
     }
 
     // Constructs the diagram, or returns the diagram previously built.

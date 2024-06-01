@@ -30,7 +30,7 @@ fn main() -> Result<(), QuantrError> {
     // Prints the simulation process of each gate (excluding identity gates).
     qc.toggle_simulation_progress();
     let mut simulated = qc.simulate();
-    simulated.toggle_warnings();
+    simulated.print_progress(true);
 
     // Prints the bin count of measured states.
     if let Measurement::Observable(bin_count) = simulated.measure_all(50) {
