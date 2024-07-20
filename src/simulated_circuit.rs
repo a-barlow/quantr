@@ -11,7 +11,7 @@
 use crate::{
     complex_re,
     states::{ProductState, SuperPosition},
-    Complex, Measurement, COMPLEX_ZERO,
+    Measurement,
 };
 use crate::{Circuit, Gate};
 use std::collections::HashMap;
@@ -90,7 +90,10 @@ impl SimulatedCircuit {
         }
         for i in 0..shots - 1 {
             // reset to |0> register
-            simulated_circ.register.amplitudes.fill(COMPLEX_ZERO);
+            simulated_circ
+                .register
+                .amplitudes
+                .fill(num_complex::Complex64::ZERO);
             simulated_circ.register.amplitudes[0] = complex_re!(1f64);
             if simulated_circ.config_progress {
                 println!("Register reset to zero state")

@@ -78,7 +78,7 @@ pub enum Gate {
     /// ```
     /// use quantr::{Circuit, Gate};
     /// use quantr::states::{SuperPosition, ProductState, Qubit};
-    /// use quantr::{Complex, complex_re_array};
+    /// use quantr::complex_re_array;
     ///
     /// // Defines a C-Not gate
     /// fn example_cnot(prod: ProductState) -> Option<SuperPosition> {

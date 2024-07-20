@@ -9,14 +9,15 @@
 */
 
 use crate::states::{ProductState, SuperPosition};
-use crate::Complex;
+use num_complex::Complex64;
 
 /// Returns the product state and it's respective amplitude in each iteration.
 ///
 /// # Example
 /// ```
 /// use quantr::states::{ProductState, Qubit, SuperPosition};
-/// use quantr::{complex_re, complex_re_vec, COMPLEX_ZERO, Complex};
+/// use quantr::{complex_re, complex_re_vec};
+/// use num_complex::{Complex, Complex64};
 /// use std::f64::consts::FRAC_1_SQRT_2;
 ///
 /// let super_pos: SuperPosition
@@ -26,13 +27,13 @@ use crate::Complex;
 /// let mut iterator_super_pos = super_pos.into_iter();
 ///
 /// assert_eq!(iterator_super_pos.next(),
-///     Some((ProductState::new(&[Qubit::Zero, Qubit::Zero]).unwrap(), COMPLEX_ZERO)));
+///     Some((ProductState::new(&[Qubit::Zero, Qubit::Zero]).unwrap(), Complex64::ZERO)));
 /// assert_eq!(iterator_super_pos.next(),
 ///     Some((ProductState::new(&[Qubit::Zero, Qubit::One]).unwrap(), complex_re!(FRAC_1_SQRT_2))));
 /// assert_eq!(iterator_super_pos.next(),
 ///     Some((ProductState::new(&[Qubit::One, Qubit::Zero]).unwrap(), complex_re!(FRAC_1_SQRT_2))));
 /// assert_eq!(iterator_super_pos.next(),
-///     Some((ProductState::new(&[Qubit::One, Qubit::One]).unwrap(), COMPLEX_ZERO)));
+///     Some((ProductState::new(&[Qubit::One, Qubit::One]).unwrap(), Complex64::ZERO)));
 /// assert_eq!(iterator_super_pos.next(), None);
 /// ```
 pub struct SuperPositionIterator<'a> {
@@ -41,7 +42,7 @@ pub struct SuperPositionIterator<'a> {
 }
 
 impl<'a> IntoIterator for &'a SuperPosition {
-    type Item = (ProductState, Complex<f64>);
+    type Item = (ProductState, Complex64);
     type IntoIter = SuperPositionIterator<'a>;
 
     fn into_iter(self) -> Self::IntoIter {
@@ -53,7 +54,7 @@ impl<'a> IntoIterator for &'a SuperPosition {
 }
 
 impl<'a> Iterator for SuperPositionIterator<'a> {
-    type Item = (ProductState, Complex<f64>);
+    type Item = (ProductState, Complex64);
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.index < self.super_position.amplitudes.len() {

@@ -383,7 +383,6 @@ mod tests {
     use crate::{
         Printer, Circuit, Gate, states::{Qubit, ProductState, SuperPosition},
     };
-    use crate::Complex;
     use crate::complex_re_array;
     // These are primarily tested by making sure they print correctly to
     // the terminal, and then copy the output for the assert_eq! macro.

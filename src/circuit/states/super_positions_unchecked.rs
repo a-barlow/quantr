@@ -8,15 +8,16 @@
 * Author: Andrew Rowan Barlow <a.barlow.dev@gmail.com>
 */
 use crate::circuit::HashMap;
+use crate::complex_re;
 use crate::states::{ProductState, SuperPosition};
-use crate::{complex_re, Complex, COMPLEX_ZERO};
+use num_complex::Complex64;
 
 impl SuperPosition {
     pub(crate) fn new_with_hash_amplitudes_unchecked(
-        hash_amplitudes: HashMap<ProductState, Complex<f64>>,
+        hash_amplitudes: HashMap<ProductState, Complex64>,
     ) -> SuperPosition {
         let product_dim: usize = hash_amplitudes.keys().next().unwrap().num_qubits();
-        let mut amplitudes: Vec<Complex<f64>> = vec![COMPLEX_ZERO; 1 << product_dim];
+        let mut amplitudes: Vec<Complex64> = vec![num_complex::Complex64::ZERO; 1 << product_dim];
         Self::from_hash_to_array(hash_amplitudes, &mut amplitudes);
         SuperPosition {
             amplitudes,
@@ -27,7 +28,7 @@ impl SuperPosition {
     // As only used in `standard_gate_ops`, could specify product_dim manually, saves computation.
     /// Used in standard_gate_ops.rs for defining the "standard gates".1
     pub(crate) fn new_with_register_unchecked<const N: usize>(
-        amplitudes: [Complex<f64>; N],
+        amplitudes: [Complex64; N],
     ) -> SuperPosition {
         SuperPosition {
             amplitudes: amplitudes.to_vec(),
@@ -42,7 +43,7 @@ impl SuperPosition {
     /// States that are missing from the HashMap will be assumed to have 0 amplitude.
     pub(crate) fn set_amplitudes_from_states_unchecked(
         &mut self,
-        hash_amplitudes: HashMap<ProductState, Complex<f64>>,
+        hash_amplitudes: HashMap<ProductState, Complex64>,
     ) -> &mut SuperPosition {
         for (key, val) in hash_amplitudes {
             self.amplitudes[key.comp_basis()] = val;
@@ -51,7 +52,7 @@ impl SuperPosition {
     }
 
     pub(crate) fn new_unchecked(num_qubits: usize) -> SuperPosition {
-        let mut new_amps: Vec<Complex<f64>> = vec![COMPLEX_ZERO; 1 << num_qubits];
+        let mut new_amps: Vec<Complex64> = vec![num_complex::Complex64::ZERO; 1 << num_qubits];
         new_amps[0] = complex_re!(1f64);
         SuperPosition {
             amplitudes: new_amps,

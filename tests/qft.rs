@@ -8,10 +8,11 @@
 * Author: Andrew Rowan Barlow <a.barlow.dev@gmail.com>
 */
 
+use num_complex::{c64, Complex64};
 use quantr::{
-    complex, complex_im, complex_re,
+    complex_im, complex_re,
     states::{ProductState, SuperPosition},
-    Circuit, Complex, Gate, Measurement,
+    Circuit, Gate, Measurement,
 };
 use std::{error::Error, f64::consts::FRAC_1_SQRT_2};
 
@@ -31,10 +32,10 @@ fn simple_qft() -> Result<(), Box<dyn Error>> {
         complex_re!(-FRAC_1_SQRT_2 * 0.5f64),
         complex_im!(-FRAC_1_SQRT_2 * 0.5f64),
         complex_im!(FRAC_1_SQRT_2 * 0.5f64),
-        complex!(-0.25f64, 0.25f64),
-        complex!(0.25f64, -0.25f64),
-        complex!(0.25f64, 0.25f64),
-        complex!(-0.25f64, -0.25f64),
+        c64(-0.25f64, 0.25f64),
+        c64(0.25f64, -0.25f64),
+        c64(0.25f64, 0.25f64),
+        c64(-0.25f64, -0.25f64),
     ];
 
     if let Measurement::NonObservable(super_pos) = qc.simulate().take_state() {
@@ -65,7 +66,7 @@ fn qft(input_state: ProductState) -> Option<SuperPosition> {
     Some(mini_circuit.simulate().take_state().take())
 }
 
-fn compare_complex_lists_and_register(correct_list: &[Complex<f64>], register: &SuperPosition) {
+fn compare_complex_lists_and_register(correct_list: &[Complex64], register: &SuperPosition) {
     for (i, &comp_num) in register.get_amplitudes().iter().enumerate() {
         // Make sure that it turns up complex
         assert!(equal_within_error(comp_num.re, correct_list[i].re));

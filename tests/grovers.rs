@@ -8,7 +8,8 @@
 * Author: Andrew Rowan Barlow <a.barlow.dev@gmail.com>
 */
 
-use quantr::{complex_re, Complex};
+use num_complex::Complex64;
+use quantr::complex_re;
 use quantr::{
     states::{ProductState, Qubit, SuperPosition},
     Circuit, Gate,
@@ -41,7 +42,7 @@ fn grovers_3qubit() -> Result<(), Box<dyn Error>> {
     // Simulates the circuit so that the final register can be
     // calculated.
 
-    let correct_super: [Complex<f64>; 8] = [
+    let correct_super: [Complex64; 8] = [
         complex_re!(0f64),
         complex_re!(0f64),
         complex_re!(0f64),
@@ -170,7 +171,7 @@ fn multicnot<const NUM_CONTROL: usize>(input_state: ProductState) -> Option<Supe
     }
 }
 
-fn compare_complex_lists_and_register(correct_list: &[Complex<f64>], register: &SuperPosition) {
+fn compare_complex_lists_and_register(correct_list: &[Complex64], register: &SuperPosition) {
     for (i, &comp_num) in register.get_amplitudes().iter().enumerate() {
         // Make sure that it turns up complex
         assert!(equal_within_error(comp_num.re, correct_list[i].re));

@@ -17,7 +17,7 @@
 //! computational basis. For example the product state |01> which can be constructed from performing the Kronecker
 //! product on |0> and |1>. Another example of a [ProductState] is |01101>.
 //!
-//! Finally, the [SuperPosition] represents a linear combination of [ProductState] with [crate::Complex] as
+//! Finally, the [SuperPosition] represents a linear combination of [ProductState] with [num_complex] types as
 //! coefficients. The sum of the absolute conjugate square of each coefficient is 1 (conservation of
 //! probability).
 //!

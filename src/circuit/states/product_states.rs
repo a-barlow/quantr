@@ -257,8 +257,8 @@ impl From<Qubit> for ProductState {
 
 #[cfg(test)]
 mod tests {
+    use crate::complex_re;
     use crate::states::{ProductState, ProductStateIter, Qubit, SuperPosition};
-    use crate::{complex_re, Complex, COMPLEX_ZERO};
 
     #[test]
     fn iterates_through_qubits() {
@@ -325,7 +325,12 @@ mod tests {
         assert_eq!(
             &mut SuperPosition::from(ProductState::new_unchecked(&[Qubit::One, Qubit::Zero])),
             SuperPosition::new_unchecked(2)
-                .set_amplitudes(&[COMPLEX_ZERO, COMPLEX_ZERO, complex_re!(1f64), COMPLEX_ZERO])
+                .set_amplitudes(&[
+                    num_complex::Complex64::ZERO,
+                    num_complex::Complex64::ZERO,
+                    complex_re!(1f64),
+                    num_complex::Complex64::ZERO
+                ])
                 .unwrap()
         )
     }

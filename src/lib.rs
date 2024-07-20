@@ -72,10 +72,11 @@ mod complex;
 mod error;
 mod simulated_circuit;
 
+pub extern crate num_complex;
+
 //  Make available for public use.
 pub use circuit::gate::Gate;
 pub use circuit::printer::Printer;
 pub use circuit::{measurement::Measurement, states, Circuit};
-pub use complex::{Complex, COMPLEX_ZERO};
 pub use error::QuantrError;
 pub use simulated_circuit::SimulatedCircuit;
