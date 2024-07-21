@@ -296,7 +296,8 @@ impl SuperPosition {
 
     /// Creates a HashMap of the superposition with [ProductState] as keys.
     ///
-    /// The HashMap will not include states with amplitudes that are near zero.
+    /// The HashMap will not include states with amplitudes that are near zero
+    /// (with tolerance 1-e6 of the conjugate squared if the amplitude).
     ///
     /// # Example
     /// ```
@@ -321,6 +322,13 @@ impl SuperPosition {
         super_pos_as_hash
     }
 
+    /// Observe the superposition and return the measuremed state in the computational basis.
+    ///
+    /// If `None` is returned, then the state vector does not conserve probability. More
+    /// precisely, the sum of the conjugate square of coefficients is less than one. The sum could
+    /// be greater than one, however a `Some(Complex64)` type would be returned. The
+    /// non-conservation of probability can happen due to the use of implementing non-unitary
+    /// gates through `Custom::gate`.
     pub fn measure(&self) -> Option<ProductState> {
         let mut cummalitive: f64 = 0f64;
         let dice_roll: f64 = fastrand::f64();

@@ -23,8 +23,7 @@ pub mod states;
 
 pub(crate) type QResult<T> = Result<T, QuantrError>;
 
-/// A quantum circuit where gates can be appended and then simulated to measure resulting
-/// superpositions.
+/// A quantum circuit where gates can be appended and then simulated to produce a [SimulatedCircuit] struct.
 pub struct Circuit {
     pub(crate) circuit_gates: Vec<Gate>,
     pub(crate) num_qubits: usize,
@@ -75,8 +74,7 @@ impl Circuit {
         self.num_qubits
     }
 
-    /// Returns if the circuit will print explicit simulatin output set
-    /// by [Circuit::toggle_simulation_progress].
+    /// Sets whether the simulation progress of the circuit shall be printed to the terminal.
     ///
     /// # Example
     /// ```

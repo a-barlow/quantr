@@ -16,6 +16,7 @@ use crate::{
 use crate::{Circuit, Gate};
 use std::collections::HashMap;
 
+/// Contains the resulting state vector produced from the simulation of a circuit.
 pub struct SimulatedCircuit {
     // Copy of Circuit struct but removed the wrapper around register.
     pub(crate) circuit_gates: Vec<Gate>,
@@ -74,10 +75,9 @@ impl SimulatedCircuit {
     /// Similar to [SimulatedCircuit::measure_all], however for every shot it will simulate the
     /// circuit, where the input register is reset to the zero state.
     ///
-    /// This allows for mixed states to be simulated, through the implementation of
+    /// This _potentially_ allows for mixed states to be simulated, through the implementation of
     /// [Gate::Custom]. In doing so will dramatically increase the simulation time, as a new
-    /// circuit will be simulated for each shot. An example simulation that involves mixed states
-    /// are mid-circuit measurements.
+    /// circuit will be simulated for each shot.
     pub fn measure_all_without_cache(
         self,
         shots: usize,
@@ -164,18 +164,24 @@ impl SimulatedCircuit {
         self.disable_warnings = printing;
     }
 
+    /// The slice of gates that composed the circuit, equivalent to [Circuit::get_gates].
     pub fn get_circuit_gates(&self) -> &Vec<Gate> {
         &self.circuit_gates
     }
 
+    /// The number of qubits that composed the circuit, equivalent to [Circuit::get_num_qubits].
     pub fn get_num_qubits(&self) -> usize {
         self.num_qubits
     }
 
+    /// Sets whether the simulation progress of the circuit will be printed to the terminal. This
+    /// value is inherited from the circuit this struct was derived from.
     pub fn set_print_progress(&mut self, printing: bool) {
         self.config_progress = printing;
     }
 
+    /// Takes ownership of the state that the `SimulatedCircuit` wraps around, that is the state
+    /// that resulted from a circuit simulation.
     pub fn take_state(self) -> Measurement<SuperPosition> {
         Measurement::NonObservable(self.register)
     }

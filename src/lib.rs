@@ -21,7 +21,7 @@
 //! circuit that should be printed.
 //!
 //! The circuit can then be simulated with [Circuit::simulate]. The progress of the simulation can
-//! be printed to the terminal by calling [Circuit::toggle_simulation_progress] before simulating
+//! be printed to the terminal by calling [Circuit::set_print_progress] before simulating
 //! the circuit. This produces a new struct [SimulatedCircuit] that guarantees that the circuit was
 //! simulated successfully.
 //!
