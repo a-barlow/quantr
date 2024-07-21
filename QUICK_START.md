@@ -1,7 +1,7 @@
 # Quick Start Guide 
 
 This guide walks through an implementation of Grover's algorithm using
-[quantr](https://crates.io/crates/quantr) 0.5.0. It's aimed at beginners in
+[quantr](https://crates.io/crates/quantr) 0.6.0. It's aimed at beginners in
 Rust and requires a little knowledge of the console. Moreover,
 it's assumed that [Rust and Cargo are
 installed](https://doc.rust-lang.org/stable/book/ch01-00-getting-started.html).
@@ -119,127 +119,123 @@ the gates are placed correctly, run the printing code as shown before.
 Once checked that it's correct, the circuit can be simulated by calling
 
 ```rust,ignore
-circuit.simulate();
+let simulated_circuit: SimulatedCircuit = circuit.simulate();
 ```
 
 This effectively attaches the |000> register to the circuit, resulting
-in a superposition that can be measured. As usual, the superposition can
-be prepared and measured multiple times to collect a bin count of
-observed states. This bin count can be found and printed with
+in a superposition that can be measured. This superposition, and other
+information about the simulated circuit, is stored in the 
+`simulated_circuit` struct that was created upon calling the simulation.
+This SimulatedCircuit struct allows the circuit to be prepared and
+measured multiple times to collect a bin count of observed states. This
+bin count can be found and printed with
 
 ```rust,ignore
-if let Ok(Measurement::Observable(bin_count)) = circuit.repeat_measurement(500) {
-    // bin_count is a HashMap<ProductState, usize>
-    for (state, count) in bin_count {
-        println!("{} : {}", state.to_string(), count);
-    }
-}
+if let Measurement::Observable(bin_count) = simulated_circuit.measure_all(500) {
+        println!("[Observable] Bin count of observed states.");
+        for (state, count) in bin_count {
+            println!("|{}> observed {} times", state, count);
+        }
+    } 
 ```
 
 The above prints the number of times each state was observed over 500
 measurements. In this situation, the amplitude amplification results in
 a superposition of two states: |110> and |111>.
-    
+
 Note that the above code is explicit in showing that the measurements
 are *physically possible*. This is to distinguish from other data that
 can be taken from circuit, such as the resulting superposition itself.
 In nature, this cannot be directly observed. However, it can still be
-useful to view this "theoretical" superposition:
+useful to view this "theoretical" superposition. The superposition can
+be viewed explicitly with:
 
 ```rust,ignore
-if let Ok(Measurement::NonObservable(output_super_position)) = circuit.get_superposition() 
-{
-    for (state, amplitude) in super_position.into_iter() {
-        println!("{} : {}", state.to_string(), amplitude);
-    }
-}
-```
-
-This completes the construction and measurement of a three qubit
-Grover's circuit. Other functions (which include examples in their
-documentation) can add gates in other ways. Moreover, custom gates can
-be built, which can be seen in examples `examples/qft.rs` and
-`examples/custom_gate.rs`.
-
-To improve the readability of this code, the numerous `unwrap()` calls
-can be removed while the main function declaration can be edited like
-so:
-
-```rust,ignore 
-...
-use std::error::Error;
-
-fn main() -> Result<(), Box<dyn Error>> {
-    ...; 
-    Ok(()) 
-}
-```
-
-A `Ok(())` is returned on the last line; signalling that the program has
-exited without errors. Then, effectively all unwrap methods called after
-appending gates can be replaced with a `?`. This can be seen explicitly
-in the `example/grovers.rs` folder.
-
-The following is the completed code. This can be ran with `cargo run
---example grovers` from the root directory.
-
-```rust
-use quantr::{Circuit, Gate, Measurement, Printer};
-
-fn main() {
-    let mut circuit = Circuit::new(3).unwrap();
-
-    // Kick state into superposition of equal weights
-    circuit
-        .add_repeating_gate(Gate::H, &[0, 1, 2])
-        .unwrap();
-
-    // Oracle
-    circuit.add_gate(Gate::CZ(1), 0).unwrap();
-
-    // Amplitude amplification
-    circuit
-        .add_repeating_gate(Gate::H, &[0, 1, 2])
-        .unwrap()
-        .add_repeating_gate(Gate::X, &[0, 1, 2])
-        .unwrap();
-
-    circuit.add_gate(Gate::H, 2).unwrap()
-        .add_gate(Gate::Toffoli(0, 1), 2).unwrap()
-        .add_gate(Gate::H, 2).unwrap();
-
-    circuit
-        .add_repeating_gate(Gate::X, &[0, 1, 2])
-        .unwrap()
-        .add_repeating_gate(Gate::H, &[0, 1, 2])
-        .unwrap();
-
-    // Prints the circuit in UTF-8
-    let mut printer = Printer::new(&circuit);
-    printer.print_diagram();
-
-    // Un-commenting the line below will print the progress of the simulation
-    // circuit.toggle_simulation_progress();
-
-    // Simulates the circuit
-    circuit.simulate();
-
-    // Displays bin count of the resulting 500 repeat measurements of
-    // superpositions. bin_count is a HashMap<ProductState, usize>.
-    if let Ok(Measurement::Observable(bin_count)) = circuit.repeat_measurement(500) {
-        println!("\n[Observable] Bin count of observed states.");
-        for (state, count) in bin_count {
-            println!("|{}> observed {} times", state, count);
-        }
-    }
-
-    // Returns the superpsoition that cannot be directly observed.
-    if let Ok(Measurement::NonObservable(output_super_position)) = circuit.get_superposition()
+if let Measurement::NonObservable(output_super_position) = simulated_circuit.get_state()
     {
         println!("\n[Non-Observable] The amplitudes of each state in the final superposition.");
         for (state, amplitude) in output_super_position.into_iter() {
             println!("|{}> : {}", state, amplitude);
         }
     }
+```
+
+This completes the construction and measurement of a three qubit
+Grover's circuit. Other methods in `Circuit` (which include examples 
+in their documentation) can add gates in other ways. Moreover, custom
+gates can be built, where examples can be found in `examples/qft.rs` and
+`examples/custom_gate.rs`.
+
+To improve the readability of this code, the numerous `unwrap()` calls
+can be removed, requiring the main function declaration to be edited like
+so:
+
+```rust,ignore 
+use ...;
+use quantr::QuantrError;
+
+fn main() -> Result<(), QuantrError> {
+    ...; 
+    Ok(()) 
+}
+```
+
+An `Ok(())` is returned on the last line; signalling that the program has
+exited without errors. Then, effectively all unwrap methods called after
+appending gates can be replaced with a `?`. This can be seen explicitly
+in the `example/grovers.rs` folder.
+
+The following is the completed code from this tutorial. This can be ran
+with `cargo run --example grovers` from the root directory.
+
+```rust
+use quantr::{Circuit, Gate, Measurement, Printer, QuantrError};
+
+fn main() -> Result<(), QuantrError> {
+    let mut circuit = Circuit::new(3)?;
+
+    // Kick state into superposition of equal weights
+    circuit.add_repeating_gate(Gate::H, &[0, 1, 2])?;
+
+    // Oracle
+    circuit.add_gate(Gate::CZ(1), 0)?;
+
+    // Amplitude amplification
+    circuit
+        .add_repeating_gate(Gate::H, &[0, 1, 2])?
+        .add_repeating_gate(Gate::X, &[0, 1, 2])?
+        .add_gate(Gate::H, 2)?
+        .add_gate(Gate::Toffoli(0, 1), 2)?
+        .add_gate(Gate::H, 2)?
+        .add_repeating_gate(Gate::X, &[0, 1, 2])?
+        .add_repeating_gate(Gate::H, &[0, 1, 2])?;
+
+    // Prints the circuit in UTF-8
+    let mut printer = Printer::new(&circuit);
+    printer.print_diagram();
+
+    // Simulates the circuit
+    let simulated_circuit = circuit.simulate();
+    println!("");
+
+    // Displays bin count of the resulting 500 repeat measurements of
+    // superpositions. bin_count is a HashMap<ProductState, usize>.
+    if let Measurement::Observable(bin_count) = simulated_circuit.measure_all(500) {
+        println!("[Observable] Bin count of observed states.");
+        for (state, count) in bin_count {
+            println!("|{}> observed {} times", state, count);
+        }
+    } 
+
+    // Returns the superpsoition that cannot be directly observed.
+    if let Measurement::NonObservable(output_super_position) = simulated_circuit.get_state()
+    {
+        println!("\n[Non-Observable] The amplitudes of each state in the final superposition.");
+        for (state, amplitude) in output_super_position.into_iter() {
+            println!("|{}> : {}", state, amplitude);
+        }
+    }
+
+    Ok(())
 }
 ```

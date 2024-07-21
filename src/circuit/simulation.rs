@@ -9,30 +9,50 @@
 */
 
 use super::gate::GateCategory;
-use super::{GateInfo, ZERO_MARGIN};
+use super::GateInfo;
 use crate::states::{ProductState, SuperPosition};
-use crate::{Circuit, Complex, Gate};
+use crate::{Circuit, Gate};
+use core::iter::zip;
+use num_complex::Complex;
 use std::collections::HashMap;
 use std::ops::{Add, Mul};
 
-impl<'a> Circuit<'a> {
-    // If the user toggles the log on, then prints the simulation of each circuit.
-    pub(super) fn print_circuit_log(
-        gate: &Gate,
-        gate_pos: &usize,
-        qubit_counter: &usize,
-        number_gates: &usize,
-    ) {
-        println!(
-            "Applying {:?} on wire {} # {}/{} ",
-            gate,
-            gate_pos,
-            qubit_counter + 1,
-            number_gates
-        );
+impl Circuit {
+    pub(super) fn simulate_with_register(&self, register: &mut SuperPosition) {
+        let mut qubit_counter: usize = 0;
+        let number_gates: usize = self.circuit_gates.len();
 
-        if *qubit_counter + 1 == *number_gates {
-            println!("Finished circuit simulation.")
+        // This will removed in next major update, as the circuit will directly store this. Instead
+        // of what's happening now, in which the gates are being copied into another wapper.
+        let mut categorised_gates: Vec<GateCategory> = Vec::with_capacity(number_gates);
+        for gate in &self.circuit_gates {
+            categorised_gates.push(Gate::linker(gate));
+        }
+
+        if self.config_progress {
+            println!("Starting circuit simulation...");
+        }
+
+        // Loop through each gate of circuit from starting at top row to bottom, then moving onto the next.
+        for (cat_gate, gate) in zip(categorised_gates, &self.circuit_gates) {
+            if cat_gate == GateCategory::Identity {
+                qubit_counter += 1;
+                continue;
+            }
+
+            let gate_pos: usize = qubit_counter % self.num_qubits;
+
+            if self.config_progress {
+                Self::print_circuit_log(gate, &gate_pos, &qubit_counter, &number_gates);
+            }
+
+            let gate_to_apply: GateInfo = GateInfo {
+                cat_gate,
+                position: gate_pos,
+            };
+            Circuit::apply_gate(gate_to_apply, register);
+
+            qubit_counter += 1;
         }
     }
 
@@ -44,12 +64,13 @@ impl<'a> Circuit<'a> {
     pub(super) fn apply_gate(gate: GateInfo, register: &mut SuperPosition) {
         // the sum of states that are required to be added to the register
         let mut mapped_states: HashMap<ProductState, Complex<f64>> = Default::default();
+        let mut untouched_states: HashMap<ProductState, Complex<f64>> = Default::default();
 
         for (prod_state, amp) in register.into_iter() {
             //Looping through super position of register
 
             // Obtain superposition from applying gate from a specified wire onto the product state, and add control nodes if necersary
-            let mut acting_positions: Vec<usize> = Vec::<usize>::with_capacity(3); // change to array for increased speed?
+            let mut acting_positions: Vec<usize> = Vec::<usize>::with_capacity(3);
 
             let wrapped_super_pos: Option<SuperPosition> = match gate.cat_gate {
                 GateCategory::Identity => None,
@@ -96,9 +117,20 @@ impl<'a> Circuit<'a> {
                     amp,
                     &mut mapped_states,
                 );
+            } else {
+                untouched_states.insert(prod_state, amp);
             }
         }
+
         // All states in register considers, and can create new super position
+        for (k, v) in untouched_states {
+            mapped_states
+                .entry(k)
+                .and_modify(|map_v| {
+                    *map_v = v;
+                })
+                .or_insert(v);
+        }
         register.set_amplitudes_from_states_unchecked(mapped_states);
     }
 
@@ -130,10 +162,10 @@ impl<'a> Circuit<'a> {
         amp: Complex<f64>,
         mapped_states: &mut HashMap<ProductState, Complex<f64>>,
     ) {
+        // TODO think if looping through mapped_states, but with RAYON, would improve performance
+        // Pehaps if gate_image reached a critical mass, such as a wall of hadarmards, it would be
+        // benificial to switch the loop around and index through mapped states,
         for (state, state_amp) in gate_image.into_iter() {
-            if state_amp.re.abs() < ZERO_MARGIN && state_amp.im.abs() < ZERO_MARGIN {
-                continue;
-            }
             // Insert these image states back into a product space
             let mut swapped_state: ProductState = prod_state.clone();
             swapped_state.insert_qubits(state.qubits.as_slice(), gate_positions.as_slice());
@@ -144,6 +176,26 @@ impl<'a> Circuit<'a> {
                     *existing_amp = existing_amp.add(state_amp.mul(amp));
                 })
                 .or_insert(state_amp.mul(amp));
+        }
+    }
+
+    // If the user toggles the log on, then prints the simulation of each circuit.
+    pub(super) fn print_circuit_log(
+        gate: &Gate,
+        gate_pos: &usize,
+        qubit_counter: &usize,
+        number_gates: &usize,
+    ) {
+        println!(
+            "Applying {:?} on wire {} # {}/{} ",
+            gate,
+            gate_pos,
+            qubit_counter + 1,
+            number_gates
+        );
+
+        if *qubit_counter + 1 == *number_gates {
+            println!("Finished circuit simulation.")
         }
     }
 }

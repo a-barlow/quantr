@@ -14,11 +14,10 @@
 // This example will print a bin count of measured states from 500 repeated simulations, and the
 // superposition itself.
 
-use quantr::{Circuit, Gate, Measurement, Printer};
-use std::error::Error;
+use quantr::{Circuit, Gate, Measurement, Printer, QuantrError};
 
 #[rustfmt::skip]
-fn main() -> Result<(), Box<dyn Error>>{
+fn main() -> Result<(), QuantrError> {
     let mut circuit = Circuit::new(3)?;
 
     // Kick state into superposition of equal weights
@@ -41,16 +40,16 @@ fn main() -> Result<(), Box<dyn Error>>{
     let mut printer = Printer::new(&circuit);
     printer.print_diagram();
 
-    // Un-commenting the line below will print the progress of the simulation
-    circuit.toggle_simulation_progress();
+    // Print the progress of the simulation
+    circuit.set_print_progress(true);
 
     // Simulates the circuit
-    circuit.simulate();
+    let simulated_circuit = circuit.simulate();
     println!("");
 
     // Displays bin count of the resulting 500 repeat measurements of
     // superpositions. bin_count is a HashMap<ProductState, usize>.
-    if let Ok(Measurement::Observable(bin_count)) = circuit.repeat_measurement(500) {
+    if let Measurement::Observable(bin_count) = simulated_circuit.measure_all(500) {
         println!("[Observable] Bin count of observed states.");
         for (state, count) in bin_count {
             println!("|{}> observed {} times", state, count);
@@ -58,7 +57,7 @@ fn main() -> Result<(), Box<dyn Error>>{
     } 
 
     // Returns the superpsoition that cannot be directly observed.
-    if let Ok(Measurement::NonObservable(output_super_position)) = circuit.get_superposition()
+    if let Measurement::NonObservable(output_super_position) = simulated_circuit.get_state()
     {
         println!("\n[Non-Observable] The amplitudes of each state in the final superposition.");
         for (state, amplitude) in output_super_position.into_iter() {

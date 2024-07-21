@@ -8,7 +8,7 @@
 * Author: Andrew Rowan Barlow <a.barlow.dev@gmail.com>
 */
 
-//! Construct, simulate and measure quantum circuits.
+//! A gate-based quantum circuit simulator that focuses on memory efficency and accessibility.
 //!
 //! Initialise a new quantum circuit by using [Circuit::new] where the argument defines the number
 //! of qubits. Afterwards, various methods can be called to append gates onto the circuit in columns.
@@ -21,17 +21,20 @@
 //! circuit that should be printed.
 //!
 //! The circuit can then be simulated with [Circuit::simulate]. The progress of the simulation can
-//! be printed to the terminal by calling [Circuit::toggle_simulation_progress] before simulating
-//! the circuit.
+//! be printed to the terminal by calling [Circuit::set_print_progress] before simulating
+//! the circuit. This produces a new struct [SimulatedCircuit] that guarantees that the circuit was
+//! simulated successfully.
 //!
 //! A bin count of states that are observed over a period of measurements can be performed with
-//! [Circuit::repeat_measurement], where a new register is attached before each measurement. Or, the
-//! explicit superposition can be retrieved using [Circuit::get_superposition].
+//! [SimulatedCircuit::measure_all], where a new register is attached before each measurement. Or, the
+//! explicit superposition can be retrieved using [SimulatedCircuit::get_state].
 //!
-//! All errors resulting from the incorrect use of quantr are propagated by `QuantrError` and
-//! `QuantrErrorConst` that implement the [std::error::Error] trait.
+//! All errors resulting from the incorrect use of quantr are propagated by [QuantrError].
 //!
-//! More complex examples can be found in the `examples` folder within this repository.
+//! More complex examples can be found in the `../examples/` folder within this repository.
+//!
+//! For now, quantr is primiarly designed to simulate pure states, _some_ quantum channels
+//! can be implemented. For an example, see `../examples/post_select.rs`.
 //!
 //! # Example
 //! ```
@@ -54,12 +57,12 @@
 //! // ┨ Y ┠┨ X ┠
 //! // ┗━━━┛┗━━━┛
 //!
-//! quantum_circuit.simulate();
+//! let simulated_circuit = quantum_circuit.simulate();
 //!
 //! // Below prints the number of times that each state was observered
 //! // over 500 measurements of superpositions.
 //!
-//! if let Ok(Observable(bin_count)) = quantum_circuit.repeat_measurement(500) {
+//! if let Observable(bin_count) = simulated_circuit.measure_all(500) {
 //!     println!("[Observable] Bin count of observed states.");
 //!     for (state, count) in bin_count {
 //!         println!("|{}> observed {} times", state, count);
@@ -70,10 +73,13 @@
 mod circuit;
 mod complex;
 mod error;
+mod simulated_circuit;
+
+pub extern crate num_complex;
 
 //  Make available for public use.
 pub use circuit::gate::Gate;
 pub use circuit::printer::Printer;
-pub use circuit::states;
-pub use circuit::{Circuit, Measurement};
-pub use complex::{Complex, COMPLEX_ZERO};
+pub use circuit::{measurement::Measurement, states, Circuit};
+pub use error::QuantrError;
+pub use simulated_circuit::SimulatedCircuit;

@@ -8,15 +8,19 @@
 * Author: Andrew Rowan Barlow <a.barlow.dev@gmail.com>
 */
 
-use crate::circuit::{HashMap, QResult, QResultConst, ZERO_MARGIN};
+use crate::circuit::{HashMap, QResult};
 use crate::complex_re;
-use crate::error::{QuantrError, QuantrErrorConst};
-use crate::{states::ProductState, Complex, COMPLEX_ZERO};
+use crate::error::QuantrError;
+use crate::states::ProductState;
+use crate::states::Qubit;
+use num_complex::Complex64;
+
+const ZERO_MARGIN: f64 = 1e-6;
 
 /// A superposition of [ProductState]s.
 #[derive(PartialEq, Debug, Clone)]
 pub struct SuperPosition {
-    pub(crate) amplitudes: Vec<Complex<f64>>,
+    pub(crate) amplitudes: Vec<Complex64>,
     pub(crate) product_dim: usize,
 }
 
@@ -28,20 +32,20 @@ impl SuperPosition {
     /// # Example
     /// ```
     /// use quantr::states::SuperPosition;
-    /// use quantr::{Complex, complex_re_array};
+    /// use quantr::complex_re_array;
     ///
     /// let superpos = SuperPosition::new(2).unwrap();
     ///
     /// assert_eq!(&complex_re_array![1f64, 0f64, 0f64, 0f64], superpos.get_amplitudes());
     /// ```
-    pub fn new(prod_dimension: usize) -> QResultConst<SuperPosition> {
+    pub fn new(prod_dimension: usize) -> QResult<SuperPosition> {
         if prod_dimension == 0 {
-            return Err(QuantrErrorConst {
-                message: "The number of qubits must be non-zero.",
+            return Err(QuantrError {
+                message: String::from("The number of qubits must be non-zero."),
             });
         }
 
-        let mut new_amps: Vec<Complex<f64>> = vec![COMPLEX_ZERO; 1 << prod_dimension];
+        let mut new_amps: Vec<Complex64> = vec![num_complex::Complex64::ZERO; 1 << prod_dimension];
         new_amps[0] = complex_re!(1f64);
         Ok(SuperPosition {
             amplitudes: new_amps,
@@ -55,23 +59,25 @@ impl SuperPosition {
     /// # Example
     /// ```
     /// use quantr::states::SuperPosition;
-    /// use quantr::{Complex, complex_re_array};
+    /// use quantr::complex_re_array;
     ///
     /// let superpos = SuperPosition::new_with_amplitudes(&complex_re_array![1f64, 0f64, 0f64, 0f64]).unwrap();
     ///
     /// assert_eq!(&complex_re_array![1f64, 0f64, 0f64, 0f64], superpos.get_amplitudes());
     /// ```
-    pub fn new_with_amplitudes(amplitudes: &[Complex<f64>]) -> QResultConst<SuperPosition> {
-        if !Self::equal_within_error(amplitudes.iter().map(|x| x.abs_square()).sum::<f64>(), 1f64) {
-            return Err(QuantrErrorConst {
-                message: "Slice given to set amplitudes in super position does not conserve probability, the absolute square sum of the coefficents must be one.",
+    pub fn new_with_amplitudes(amplitudes: &[Complex64]) -> QResult<SuperPosition> {
+        if !Self::equal_within_error(amplitudes.iter().map(|x| x.norm_sqr()).sum::<f64>(), 1f64) {
+            return Err(QuantrError{
+                message: String::from("Slice given to set amplitudes in super position does not conserve probability, the absolute square sum of the coefficents must be one."),
             });
         }
 
         let length = amplitudes.len();
         if (length & (length - 1)) != 0 {
-            return Err(QuantrErrorConst {
-                message: "The length of the array must be of the form 2**n where n is an integer.",
+            return Err(QuantrError {
+                message: String::from(
+                    "The length of the array must be of the form 2**n where n is an integer.",
+                ),
             });
         }
 
@@ -88,7 +94,7 @@ impl SuperPosition {
     /// ```
     /// use std::collections::HashMap;
     /// use quantr::states::{Qubit, ProductState, SuperPosition};
-    /// use quantr::{Complex, complex_re_array, complex_re};
+    /// use quantr::{complex_re_array, complex_re};
     ///
     /// let prod = ProductState::new(&[Qubit::Zero, Qubit::One]).unwrap();
     /// let hash_amps = HashMap::from([(prod, complex_re!(1f64))]);
@@ -97,7 +103,7 @@ impl SuperPosition {
     /// assert_eq!(&complex_re_array![0f64, 1f64, 0f64, 0f64], superpos.get_amplitudes());
     /// ```
     pub fn new_with_hash_amplitudes(
-        hash_amplitudes: HashMap<ProductState, Complex<f64>>,
+        hash_amplitudes: HashMap<ProductState, Complex64>,
     ) -> QResult<SuperPosition> {
         if hash_amplitudes.is_empty() {
             return Err(QuantrError { message: String::from("An empty HashMap was given. A superposition must have at least one non-zero state.") });
@@ -109,14 +115,14 @@ impl SuperPosition {
             if states.num_qubits() != product_dim {
                 return Err(QuantrError { message: format!("The first state has product dimension of {}, whilst the state, |{}>, found as a key in the HashMap has dimension {}.", product_dim, states, states.num_qubits()) });
             }
-            total_amplitude += amplitude.abs_square();
+            total_amplitude += amplitude.norm_sqr();
         }
 
         if !Self::equal_within_error(total_amplitude, 1f64) {
             return Err(QuantrError { message: format!("The total sum of the absolute square of all amplitudes, {}, does not equal 1. That is, the superpositon does not conserve probability.", total_amplitude) });
         }
 
-        let mut amplitudes: Vec<Complex<f64>> = vec![COMPLEX_ZERO; 1 << product_dim];
+        let mut amplitudes: Vec<Complex64> = vec![num_complex::Complex64::ZERO; 1 << product_dim];
         Self::from_hash_to_array(hash_amplitudes, &mut amplitudes);
         Ok(SuperPosition {
             amplitudes,
@@ -130,31 +136,28 @@ impl SuperPosition {
     /// # Example
     /// ```
     /// use quantr::states::SuperPosition;
-    /// use quantr::{Complex, complex_re_array, complex_re};
+    /// use quantr::{complex_re_array, complex_re};
     ///
     /// let superpos = SuperPosition::new_with_amplitudes(&complex_re_array![0f64, 1f64, 0f64, 0f64]).unwrap();
     ///
     /// assert_eq!(complex_re!(1f64), superpos.get_amplitude(1).unwrap());
     /// ```
-    pub fn get_amplitude(&self, pos: usize) -> Option<Complex<f64>> {
+    pub fn get_amplitude(&self, pos: usize) -> Option<Complex64> {
         self.amplitudes.get(pos).cloned()
     }
 
-    #[deprecated(
-        note = "In the next major update, const will be removed from this function. Therefore, please do not use this function in constant settings."
-    )]
     /// Returns the number of qubits that each product state in the super position is composed of by using the Kronecker product.
     ///
     /// # Example
     /// ```
     /// use quantr::states::SuperPosition;
-    /// use quantr::{Complex, complex_re_array, complex_re};
+    /// use quantr::{complex_re_array, complex_re};
     ///
     /// let superpos = SuperPosition::new_with_amplitudes(&complex_re_array![0f64, 1f64, 0f64, 0f64]).unwrap();
     ///
     /// assert_eq!(2, superpos.get_num_qubits());
     /// ```
-    pub const fn get_num_qubits(&self) -> usize {
+    pub fn get_num_qubits(&self) -> usize {
         self.product_dim
     }
 
@@ -163,7 +166,7 @@ impl SuperPosition {
     /// # Example
     /// ```
     /// use quantr::states::SuperPosition;
-    /// use quantr::{Complex, complex_re_array, complex_re};
+    /// use quantr::{complex_re_array, complex_re};
     ///
     /// let superpos = SuperPosition::new_with_amplitudes(&complex_re_array![0f64, 1f64, 0f64, 0f64]).unwrap();
     ///
@@ -179,13 +182,13 @@ impl SuperPosition {
     /// # Example
     /// ```
     /// use quantr::states::SuperPosition;
-    /// use quantr::{Complex, complex_re_array, complex_re};
+    /// use quantr::{complex_re_array, complex_re};
     ///
     /// let superpos = SuperPosition::new(2).unwrap();
     ///
     /// assert_eq!(&complex_re_array![1f64, 0f64, 0f64, 0f64], superpos.get_amplitudes());
     /// ```
-    pub fn get_amplitudes(&self) -> &[Complex<f64>] {
+    pub fn get_amplitudes(&self) -> &[Complex64] {
         self.amplitudes.as_slice()
     }
 
@@ -194,14 +197,14 @@ impl SuperPosition {
     /// # Example
     /// ```
     /// use quantr::states::{Qubit, ProductState, SuperPosition};
-    /// use quantr::{Complex, complex_re};
+    /// use quantr::{complex_re};
     ///
     /// let superpos = SuperPosition::new(2).unwrap();
     /// let prod_state = ProductState::new(&[Qubit::Zero, Qubit::Zero]).unwrap();
     ///
     /// assert_eq!(complex_re!(1f64), superpos.get_amplitude_from_state(prod_state).unwrap());
     /// ```
-    pub fn get_amplitude_from_state(&self, prod_state: ProductState) -> QResult<Complex<f64>> {
+    pub fn get_amplitude_from_state(&self, prod_state: ProductState) -> QResult<Complex64> {
         if 2usize << (prod_state.qubits.len() - 1) != self.amplitudes.len() {
             return Err(QuantrError { message: format!("Unable to retreive product state, |{:?}> with dimension {}. The superposition is a linear combination of states with different dimension. These dimensions should be equal.", prod_state.to_string(), prod_state.num_qubits()),});
         }
@@ -216,21 +219,21 @@ impl SuperPosition {
     /// # Example
     /// ```
     /// use quantr::states::SuperPosition;
-    /// use quantr::{Complex, complex_re_array};
+    /// use quantr::complex_re_array;
     ///
     /// let mut superpos = SuperPosition::new(2).unwrap();
     /// superpos.set_amplitudes(&complex_re_array![0f64, 1f64, 0f64, 0f64]).unwrap();
     ///
     /// assert_eq!(&complex_re_array![0f64, 1f64, 0f64, 0f64], superpos.get_amplitudes());
     /// ```
-    pub fn set_amplitudes(&mut self, amplitudes: &[Complex<f64>]) -> QResult<&mut SuperPosition> {
+    pub fn set_amplitudes(&mut self, amplitudes: &[Complex64]) -> QResult<&mut SuperPosition> {
         if amplitudes.len() != self.amplitudes.len() {
             return Err(QuantrError {
                 message: format!("The slice given to set the amplitudes in the computational basis has length {}, when it should have length {}.", amplitudes.len(), self.amplitudes.len()),
             });
         }
 
-        if !Self::equal_within_error(amplitudes.iter().map(|x| x.abs_square()).sum::<f64>(), 1f64) {
+        if !Self::equal_within_error(amplitudes.iter().map(|x| x.norm_sqr()).sum::<f64>(), 1f64) {
             return Err(QuantrError {
                 message: String::from("Slice given to set amplitudes in super position does not conserve probability, the absolute square sum of the coefficents must be one."),
             });
@@ -245,7 +248,7 @@ impl SuperPosition {
     }
 
     /// Returns a superposition constructed from a HashMap with [ProductState] keys and amplitudes
-    /// that are `Complex<f64>` values.
+    /// that are `Complex64` values.
     ///
     /// The amplitudes are checked for probability conservation, and that the product states are
     /// dimensionally consistent. States that are missing will assume to have zero amplitude.
@@ -254,7 +257,7 @@ impl SuperPosition {
     /// ```
     /// use std::collections::HashMap;
     /// use quantr::states::{Qubit, ProductState, SuperPosition};
-    /// use quantr::{Complex, complex_re_array, complex_re};
+    /// use quantr::{complex_re_array, complex_re};
     ///
     /// let mut superpos = SuperPosition::new(2).unwrap();
     ///
@@ -266,7 +269,7 @@ impl SuperPosition {
     /// ```
     pub fn set_amplitudes_from_states(
         &mut self,
-        amplitudes: HashMap<ProductState, Complex<f64>>,
+        amplitudes: HashMap<ProductState, Complex64>,
     ) -> QResult<&mut SuperPosition> {
         // Check if amplitudes and product states are correct.
         if amplitudes.is_empty() {
@@ -279,7 +282,7 @@ impl SuperPosition {
             if states.num_qubits() != product_size {
                 return Err(QuantrError { message: format!("The first state has product dimension of {}, whilst the state, |{}>, found as a key in the HashMap has dimension {}.", product_size, states, states.num_qubits()) });
             }
-            total_amplitude += amplitude.abs_square();
+            total_amplitude += amplitude.norm_sqr();
         }
 
         if !Self::equal_within_error(total_amplitude, 1f64) {
@@ -293,13 +296,14 @@ impl SuperPosition {
 
     /// Creates a HashMap of the superposition with [ProductState] as keys.
     ///
-    /// The HashMap will not include states with amplitudes that are near zero.
+    /// The HashMap will not include states with amplitudes that are near zero
+    /// (with tolerance 1-e6 of the conjugate squared if the amplitude).
     ///
     /// # Example
     /// ```
     /// use std::collections::HashMap;
     /// use quantr::states::{Qubit, ProductState, SuperPosition};
-    /// use quantr::{Complex, complex_re};
+    /// use quantr::complex_re;
     ///
     /// let mut superpos = SuperPosition::new(2).unwrap();
     ///
@@ -308,19 +312,38 @@ impl SuperPosition {
     ///
     /// assert_eq!(hash_compare, superpos.to_hash_map());
     /// ```
-    pub fn to_hash_map(&self) -> HashMap<ProductState, Complex<f64>> {
-        let mut super_pos_as_hash: HashMap<ProductState, Complex<f64>> = Default::default();
+    pub fn to_hash_map(&self) -> HashMap<ProductState, Complex64> {
+        let mut super_pos_as_hash: HashMap<ProductState, Complex64> = Default::default();
         for (i, amp) in self.amplitudes.iter().enumerate() {
-            if !Self::equal_within_error(amp.abs_square(), 0f64) {
+            if !Self::equal_within_error(amp.norm_sqr(), 0f64) {
                 super_pos_as_hash.insert(ProductState::binary_basis(i, self.product_dim), *amp);
             }
         }
         super_pos_as_hash
     }
 
+    /// Observe the superposition and return the measuremed state in the computational basis.
+    ///
+    /// If `None` is returned, then the state vector does not conserve probability. More
+    /// precisely, the sum of the conjugate square of coefficients is less than one. The sum could
+    /// be greater than one, however a `Some(Complex64)` type would be returned. The
+    /// non-conservation of probability can happen due to the use of implementing non-unitary
+    /// gates through `Custom::gate`.
+    pub fn measure(&self) -> Option<ProductState> {
+        let mut cummalitive: f64 = 0f64;
+        let dice_roll: f64 = fastrand::f64();
+        for (i, probability) in self.amplitudes.iter().map(|x| x.norm_sqr()).enumerate() {
+            cummalitive += probability;
+            if dice_roll < cummalitive {
+                return Some(ProductState::binary_basis(i, self.product_dim));
+            }
+        }
+        None
+    }
+
     pub(super) fn from_hash_to_array(
-        hash_amplitudes: HashMap<ProductState, Complex<f64>>,
-        vec_amplitudes: &mut Vec<Complex<f64>>,
+        hash_amplitudes: HashMap<ProductState, Complex64>,
+        vec_amplitudes: &mut Vec<Complex64>,
     ) {
         let length: usize = vec_amplitudes.len();
         let trailing_length: usize = length.trailing_zeros() as usize;
@@ -328,7 +351,7 @@ impl SuperPosition {
             let key: ProductState = ProductState::binary_basis(i, trailing_length);
             match hash_amplitudes.get(&key) {
                 Some(val) => *amp = *val,
-                None => *amp = COMPLEX_ZERO,
+                None => *amp = num_complex::Complex64::ZERO,
             }
         }
     }
@@ -352,11 +375,29 @@ impl From<ProductState> for SuperPosition {
     }
 }
 
+impl From<Qubit> for SuperPosition {
+    /// Returns the [] as a [SuperPosition].
+    ///
+    /// # Example
+    /// ```
+    /// use quantr::states::{Qubit, SuperPosition};
+    ///
+    /// let super_pos = SuperPosition::from(Qubit::Zero);
+    /// ```
+    fn from(value: Qubit) -> Self {
+        SuperPosition::new_with_hash_amplitudes_unchecked(HashMap::from([(
+            value.into(),
+            complex_re!(1f64),
+        )]))
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use crate::circuit::HashMap;
     use crate::states::{ProductState, Qubit, SuperPosition};
-    use crate::{complex_im, complex_re, Complex, COMPLEX_ZERO};
+    use crate::{complex_im, complex_re};
+    use num_complex::Complex64;
     use std::f64::consts::FRAC_1_SQRT_2;
 
     #[test]
@@ -364,10 +405,10 @@ mod tests {
         assert_eq!(
             SuperPosition::new_unchecked(2)
                 .set_amplitudes(&[
-                    COMPLEX_ZERO,
+                    num_complex::Complex64::ZERO,
                     complex_re!(FRAC_1_SQRT_2),
                     complex_im!(-FRAC_1_SQRT_2),
-                    COMPLEX_ZERO
+                    num_complex::Complex64::ZERO
                 ])
                 .unwrap()
                 .get_amplitude_from_state(ProductState::new_unchecked(&[Qubit::Zero, Qubit::One]))
@@ -381,10 +422,10 @@ mod tests {
         assert_eq!(
             SuperPosition::new_unchecked(2)
                 .set_amplitudes(&[
-                    COMPLEX_ZERO,
+                    num_complex::Complex64::ZERO,
                     complex_re!(FRAC_1_SQRT_2),
                     complex_im!(-FRAC_1_SQRT_2),
-                    COMPLEX_ZERO
+                    num_complex::Complex64::ZERO
                 ])
                 .unwrap()
                 .get_amplitude(2)
@@ -395,7 +436,7 @@ mod tests {
 
     #[test]
     fn sets_amplitude_from_states() {
-        let states: HashMap<ProductState, Complex<f64>> = HashMap::from([
+        let states: HashMap<ProductState, Complex64> = HashMap::from([
             (
                 ProductState::new_unchecked(&[Qubit::Zero, Qubit::One]),
                 complex_re!(FRAC_1_SQRT_2),
@@ -408,10 +449,10 @@ mod tests {
 
         assert_eq!(
             SuperPosition::new_with_amplitudes(&[
-                COMPLEX_ZERO,
+                num_complex::Complex64::ZERO,
                 complex_re!(FRAC_1_SQRT_2),
                 complex_im!(-FRAC_1_SQRT_2),
-                COMPLEX_ZERO
+                num_complex::Complex64::ZERO
             ])
             .unwrap()
             .amplitudes,
@@ -424,7 +465,7 @@ mod tests {
     #[test]
     #[should_panic]
     fn sets_amplitude_from_states_wrong_dimension() {
-        let states: HashMap<ProductState, Complex<f64>> = HashMap::from([
+        let states: HashMap<ProductState, Complex64> = HashMap::from([
             (
                 ProductState::new_unchecked(&[Qubit::Zero, Qubit::One]),
                 complex_re!(FRAC_1_SQRT_2),
@@ -441,7 +482,7 @@ mod tests {
     #[test]
     #[should_panic]
     fn sets_amplitude_from_states_breaks_probability() {
-        let states: HashMap<ProductState, Complex<f64>> = HashMap::from([
+        let states: HashMap<ProductState, Complex64> = HashMap::from([
             (
                 ProductState::new_unchecked(&[Qubit::Zero, Qubit::One]),
                 complex_re!(FRAC_1_SQRT_2),
@@ -460,10 +501,10 @@ mod tests {
     fn catches_retrieve_amplitude_from_wrong_state() {
         SuperPosition::new_unchecked(2)
             .set_amplitudes(&[
-                COMPLEX_ZERO,
+                num_complex::Complex64::ZERO,
                 complex_re!(FRAC_1_SQRT_2),
                 complex_im!(-FRAC_1_SQRT_2),
-                COMPLEX_ZERO,
+                num_complex::Complex64::ZERO,
             ])
             .unwrap()
             .get_amplitude_from_state(ProductState::new_unchecked(&[
@@ -479,10 +520,10 @@ mod tests {
     fn catches_retrieve_amplitude_from_wrong_list_pos() {
         SuperPosition::new_unchecked(2)
             .set_amplitudes(&[
-                COMPLEX_ZERO,
+                num_complex::Complex64::ZERO,
                 complex_re!(FRAC_1_SQRT_2),
                 complex_im!(-FRAC_1_SQRT_2),
-                COMPLEX_ZERO,
+                num_complex::Complex64::ZERO,
             ])
             .unwrap()
             .get_amplitude(4)
@@ -494,9 +535,9 @@ mod tests {
     fn catches_super_position_breaking_conservation() {
         SuperPosition::new_unchecked(2)
             .set_amplitudes(&[
-                COMPLEX_ZERO,
+                num_complex::Complex64::ZERO,
                 complex_re!(0.5f64),
-                COMPLEX_ZERO,
+                num_complex::Complex64::ZERO,
                 complex_im!(-0.5f64),
             ])
             .unwrap();

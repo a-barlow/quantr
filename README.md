@@ -1,7 +1,7 @@
 # quantr
 
 [![Crates.io](https://img.shields.io/crates/v/quantr?style=flat-square&color=%23B94700)](https://crates.io/crates/quantr)
-[![Static Badge](https://img.shields.io/badge/version%20-%201.77.2%20-%20white?style=flat-square&logo=rust&color=%23B94700)](https://releases.rs/)
+[![Static Badge](https://img.shields.io/badge/version%20-%201.79.0%20-%20white?style=flat-square&logo=rust&color=%23B94700)](https://releases.rs/)
 [![GitHub Workflow Status (with event)](https://img.shields.io/github/actions/workflow/status/a-barlow/quantr/rust.yml?style=flat-square&label=tests&color=%2349881B)](https://github.com/a-barlow/quantr/actions/workflows/rust.yml)
 [![GitHub Workflow Status (with event)](https://img.shields.io/github/actions/workflow/status/a-barlow/quantr/rust_dev.yml?style=flat-square&label=tests%20(dev)&color=%2349881B)](https://github.com/a-barlow/quantr/actions/workflows/rust_dev.yml)
 [![docs.rs](https://img.shields.io/docsrs/quantr?style=flat-square&color=%2349881B)](https://crates.io/crates/quantr)
@@ -10,19 +10,19 @@
 
 > This crate is not production ready and so should **not** be considered
 > stable, nor produce correct answers. It is still under heavy
-> development and requires many more optimisations. Hence, it's likely 
-> that near future updates will induce breaking changes. Please 
+> development and requires many more optimisations. Please 
 > always check answers with 
 > [other simulations](#other-quantum-computer-simulators) if you are 
 > intending to use quantr for projects.  
 
-A Rust library crate that builds, prints and simulates quantum gate
-based circuits.
+A Rust library crate that simulates gate-based quantum circuits with
+focus on memory efficiency and accessibility.
 
 This crate allows the user to build quantum circuits by adding columns
 of gates via various methods. Once the circuit has been built, then it
 can be simulated, which attaches the register |00..0> resulting in a
-superposition that can be measured.
+superposition that can be measured. Quantr has primarily been built for
+the simulation of pure states.
 
 For a brief example of using quantr, see the 
 [quick start guide](QUICK_START.md) which walks through an
@@ -39,11 +39,12 @@ implementation of Grover's algorithm.
 - Custom gates can be implemented easily by giving their explicit 
   mappings on product states. This allows the user to avoid representing
   the gates as matrices.
-- Custom gates do not have to be unitary, allowing for any quantum
+- Custom gates do not have to be unitary, allowing for _some_ quantum
   channel to be implemented.
-- Can simulate circuits up to ~16 qubits within a reasonable time.
-- Only safe Rust code is used, and the only dependency is the
-  [fastrand](https://crates.io/crates/fastrand) crate and its
+- Can simulate circuits up to ~16 qubits within a tractable time.
+- Only safe Rust code is used, and the only dependencies are the
+  [fastrand (2.1.0)](https://crates.io/crates/fastrand) crate,
+  [num_complex (0.4.6)](https://crates.io/crates/num-complex), and their
   sub-dependencies.
 
 ### Usage
@@ -54,13 +55,12 @@ An example of simulating and printing a two qubit circuit:
 use quantr::{Circuit, Gate, Printer, Measurement::Observable};
 
 fn main() {
-
     let mut quantum_circuit: Circuit = Circuit::new(2).unwrap();
-    
-    quantum_circuit 
+
+    quantum_circuit
         .add_gates(&[Gate::H, Gate::Y]).unwrap()
         .add_gate(Gate::CNot(0), 1).unwrap();
-    
+
     let mut printer = Printer::new(&quantum_circuit);
     printer.print_diagram();
     // The above prints the following:
@@ -72,17 +72,17 @@ fn main() {
     // ┨ Y ┠┨ X ┠
     // ┗━━━┛┗━━━┛
 
-    quantum_circuit.simulate();
+    let simulated_circuit = quantum_circuit.simulate();
 
-    // Below prints the number of times that each state was observed 
+    // Below prints the number of times that each state was observered
     // over 500 measurements of superpositions.
-    if let Ok(Observable(bin_count)) = quantum_circuit.repeat_measurement(500) {
+
+    if let Observable(bin_count) = simulated_circuit.measure_all(500) {
         println!("[Observable] Bin count of observed states.");
         for (state, count) in bin_count {
             println!("|{}> observed {} times", state, count);
         }
     }
-
 }
 ```
 
@@ -95,7 +95,11 @@ guide](QUICK_START.md).
   implemented through the custom gates.
 - **No parallelisation** option.
 - **No ability to add classical wires** nor gates that measure a
-  single wire of a quantum circuit.
+  single wire of a quantum circuit. Only one method is given that in 
+  effect attaches a measurement gate at the end of all qubit wires.
+- **Designed primarily for the simulation of pure state vectors.**
+  Although, through the use of custom gates some quantum channels can be 
+  implemented. For an example, see `examples/post_select.rs`.
 
 ### Conventions
 

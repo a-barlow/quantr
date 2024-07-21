@@ -11,33 +11,35 @@
 //! This example is a copy of `example/custom_gate.rs`, but instead uses a custom function that
 //! showcases a controlled not gate which generalises the number of control nodes.
 
-use std::error::Error;
-
 use quantr::{
     states::{ProductState, Qubit, SuperPosition},
-    Circuit, Gate, Measurement, Printer,
+    Circuit, Gate, Measurement, Printer, QuantrError,
 };
 
 const CIRCUIT_SIZE: usize = 6;
 
-fn main() -> Result<(), Box<dyn Error>> {
+fn main() -> Result<(), QuantrError> {
     let mut qc: Circuit = Circuit::new(CIRCUIT_SIZE)?;
 
     // Multi-controlled gate used here.
     qc.add_repeating_gate(Gate::X, &[0, 1, 2, 3, 4, 5])?
         .add_gate(
-            Gate::Custom(multicnot::<CIRCUIT_SIZE>, &[0, 1, 2, 3, 4], "X".to_string()),
+            Gate::Custom(
+                multicnot::<CIRCUIT_SIZE>,
+                vec![0, 1, 2, 3, 4],
+                "X".to_string(),
+            ),
             5,
         )?;
 
     let mut circuit_printer: Printer = Printer::new(&qc);
     circuit_printer.print_diagram();
 
-    qc.toggle_simulation_progress();
-    qc.simulate();
+    qc.set_print_progress(true);
+    let simulated = qc.simulate();
 
     // Prints the bin count of measured states.
-    if let Ok(Measurement::Observable(bin_count)) = qc.repeat_measurement(50) {
+    if let Measurement::Observable(bin_count) = simulated.measure_all(50) {
         println!("\nStates observed over 50 measurements:");
         for (states, count) in bin_count.into_iter() {
             println!("|{}> : {}", states, count);
@@ -49,8 +51,8 @@ fn main() -> Result<(), Box<dyn Error>> {
 
 // Implements a multi-controlled Not gate.
 fn multicnot<const NUM_CONTROL: usize>(input_state: ProductState) -> Option<SuperPosition> {
-    let mut copy_state = input_state.clone();
-    if input_state.get_qubits() == [Qubit::One; NUM_CONTROL] {
+    let mut copy_state = input_state;
+    if copy_state.get_qubits() == [Qubit::One; NUM_CONTROL] {
         copy_state.get_mut_qubits()[NUM_CONTROL - 1] = Qubit::Zero;
         return Some(copy_state.into());
     } else if copy_state.get_qubits() == {

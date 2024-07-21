@@ -2,7 +2,93 @@
 
 This file logs the versions of quantr.
 
-## 0.5.2 - Review of docs and minor code improvements
+## 0.6.0 - Overhaul of Interface
+
+The interface is being overhauled to increase the safety in using
+quantr. Perhaps the most noticeable difference is that when a circuit is
+simulated with `Circuit::simulate`, it will now return a struct instead
+of a superposition. This struct, called `SimulatedCircuit`, can
+guarantee that the circuit has been simulated, and when requested, the
+resulting superposition can be measured repeatedly. It can also
+re-simulate the circuit (as true to reality), if there is an insertion
+of a `Custom::gate` that implements a non-unitary operation. With
+`SimulatedCircuit`, it can now be guaranteed that the
+circuit has been simulated and ready to be measured. Unlike previously
+where one could attempt to retrieve the superposition, but would get an
+error stating that the circuit has not been simulated yet.
+
+These implementations are heading toward a final 
+design that we are happy with. Of course, this library will forever be 
+evolving but the design implemented now should be kept for the 
+foreseeable future; minimising breaking changes.
+
+Breaking changes:
+
+- `Circuit::simulate` now returns `SimulatedCircuit`, and will consume
+the circuit (`SimulatedCircuit` takes ownership).
+- All functions that return `Result<T, QuantrError>` for some type
+`T` are:
+  - `Circuit::new`
+  - `Circuit::add_gate`
+  - `Circuit::add_gates`
+  - `Circuit::add_gates_with_positions`
+  - `Circuit::add_repeating_gate`
+  - `Circuit::change_register`
+  - `states::ProductState::invert_digit`
+  - `states::ProductState::new`
+  - `states::SuperPosition::new`
+  - `states::SuperPosition::new_with_amplitudes`
+  - `states::SuperPosition::get_amplitude_from_state`
+  - `states::SuperPosition::set_amplitudes`
+  - `states::SuperPosition::set_amplitudes_from_state`
+- The `Gate::custom` enum now takes a `Vec<uisze>` instead of a slice for
+  the qubit indices that the gate should operate on. Now, the circuit
+can outlive the slice.
+The following methods have been replaced:
+  - `Circuit::repeat_measurement` with `SimulatedCirucit::measure_all`.
+  - `Circuit::get_superposition` with `SimulatedCirucit::get_state`.
+  - `Circuit::toggle_simulation_progress` with 
+  `SimulatedCirucit::print_progress` and `Circuit::set_print_progress`
+
+Features:
+
+- A new struct `SimulatedCirucit` that holds information about the
+simulated circuit, and can guarantee a superposition that can be
+measured.
+- Re-introduced `QuantrError`, which as originally introduced for,
+will hold error messages that result from the incorrect use of quantr.
+It implements the error trait, and so can be handled through that, or
+directly through `QuantrError`.
+- The `Measurement` enum now has a `take` method, which moves out the
+value that it wraps.
+- All printed '[Quantr Warnings]' are now sent to stderr, instead of
+stdout.
+- Added `Circuit::clone_and_simulate` simulates the circuit, but does not
+consume the circuit in the process. The circuit is instead borrowed,
+and its register cloned. This will lead to an increase in memory
+consumption.
+- Added `Superposition::measure` which returns simulates the effect of 
+measuring a superposition, and observing the state that it reduced to.
+- `From<Qubit>` was implemented for `Superposition`.
+- `Printer::set_print_warnings` was added that allows the user to turn warnings
+from the printer off and on.
+- `SuperPosition::new_with_amplitudes_unchecked` and 
+`SuperPosition::set_amplitudes_unchecked` are two new methods that allow for
+the implementation of _some_ quantum channels, as they do not enforce
+probability conservation of the state vector. That act in an equivalent way
+to their 'checked' counterparts.
+
+Internal improvements:
+
+- Attaching a custom register is more memory efficient; it use to
+create another vector, in addition to the circuit's state vector, in
+effect doubling the necessary memory.
+- Removed `QuantrErrorConst`.
+- The Iterator trait implementations for `ProductState` and the
+`Measurment` enum have moved to their own files.  
+- Bumped Rust version to 1.79.0
+
+## 0.5.2 - Review of docs and minor code improvements 
 
 The README was updated to give credit to another quantum circuit
 simulator implemented in Rust:

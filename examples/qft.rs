@@ -13,28 +13,26 @@
 //
 // To define the custom function, a new circuit is initialised and simulated.
 
-use std::error::Error;
-
 use quantr::{
     states::{ProductState, SuperPosition},
-    Circuit, Gate, Measurement, Printer,
+    Circuit, Gate, Measurement, Printer, QuantrError,
 };
 
-fn main() -> Result<(), Box<dyn Error>> {
+fn main() -> Result<(), QuantrError> {
     let mut qc: Circuit = Circuit::new(3)?;
 
     // Apply qft
     qc.add_repeating_gate(Gate::X, &[1, 2])?
-        .add_gate(Gate::Custom(qft, &[0, 1], "QFT".to_string()), 2)?; // QFT on bits 0, 1 and 2
+        .add_gate(Gate::Custom(qft, vec![0, 1], "QFT".to_string()), 2)?; // QFT on bits 0, 1 and 2
 
     let mut printer = Printer::new(&qc);
     printer.print_diagram();
 
-    qc.toggle_simulation_progress();
+    qc.set_print_progress(true);
 
-    qc.simulate();
+    let simulated_circuit = qc.simulate();
 
-    if let Ok(Measurement::NonObservable(final_sup)) = qc.get_superposition() {
+    if let Measurement::NonObservable(final_sup) = simulated_circuit.get_state() {
         println!("\nThe final superposition is:");
         for (state, amplitude) in final_sup.into_iter() {
             println!("|{}> : {}", state, amplitude);
@@ -61,12 +59,7 @@ fn qft(input_state: ProductState) -> Option<SuperPosition> {
 
     mini_circuit
         .change_register(SuperPosition::from(input_state))
-        .unwrap()
-        .simulate();
+        .unwrap();
 
-    if let Ok(Measurement::NonObservable(super_pos)) = mini_circuit.get_superposition() {
-        Some(super_pos.clone())
-    } else {
-        panic!("No superposition was simualted!");
-    }
+    Some(mini_circuit.simulate().take_state().take())
 }
