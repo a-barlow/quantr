@@ -98,8 +98,8 @@ guide](QUICK_START.md).
   single wire of a quantum circuit. Only one method is given that in 
   effect attaches a measurement gate at the end of all qubit wires.
 - **Designed primarily for the simulation of pure state vectors.**
-  Although, through the use of custom gates and unsafe code, mixed states
-  could be simulated. An example is _yet_ to be given.
+  Although, through the use of custom gates some quantum channels can be 
+  implemented. For an example, see `examples/post_select.rs`.
 
 ### Conventions
 

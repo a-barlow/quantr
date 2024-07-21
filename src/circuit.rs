@@ -33,7 +33,6 @@ pub struct Circuit {
 }
 
 // The tolerance for declaring non-zero amplitudes.
-const ZERO_MARGIN: f64 = 1e-7;
 impl Circuit {
     /// Initialises a new circuit.
     ///

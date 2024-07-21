@@ -72,6 +72,11 @@ measuring a superposition, and observing the state that it reduced to.
 - `From<Qubit>` was implemented for `Superposition`.
 - `Printer::set_print_warnings` was added that allows the user to turn warnings
 from the printer off and on.
+- `SuperPosition::new_with_amplitudes_unchecked` and 
+`SuperPosition::set_amplitudes_unchecked` are two new methods that allow for
+the implementation of _some_ quantum channels, as they do not enforce
+probability conservation of the state vector. That act in an equivalent way
+to their 'checked' counterparts.
 
 Internal improvements:
 

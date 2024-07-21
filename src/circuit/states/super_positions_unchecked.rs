@@ -36,21 +36,6 @@ impl SuperPosition {
         }
     }
 
-    /// Sets the amplitudes of a [SuperPosition] from a HashMap.
-    /// BUT, it does not clear the pre-existing vector, so it does produce state vectors that do
-    /// not conserve probability. See circuit::tests::custom_gate for an example. This is needed
-    /// for the main algorithm to currently operate (quantr 0.4.0).
-    /// States that are missing from the HashMap will be assumed to have 0 amplitude.
-    pub(crate) fn set_amplitudes_from_states_unchecked(
-        &mut self,
-        hash_amplitudes: HashMap<ProductState, Complex64>,
-    ) -> &mut SuperPosition {
-        for (key, val) in hash_amplitudes {
-            self.amplitudes[key.comp_basis()] = val;
-        }
-        self
-    }
-
     pub(crate) fn new_unchecked(num_qubits: usize) -> SuperPosition {
         let mut new_amps: Vec<Complex64> = vec![num_complex::Complex64::ZERO; 1 << num_qubits];
         new_amps[0] = complex_re!(1f64);
@@ -58,5 +43,36 @@ impl SuperPosition {
             amplitudes: new_amps,
             product_dim: num_qubits,
         }
+    }
+
+    /// Sets the amplitudes of a [SuperPosition] from a HashMap, **without** check on conservation of
+    /// probability.
+    pub(crate) fn set_amplitudes_from_states_unchecked(
+        &mut self,
+        mut hash_amplitudes: HashMap<ProductState, Complex64>,
+    ) -> &mut SuperPosition {
+        for (i, amp) in self.amplitudes.iter_mut().enumerate() {
+            *amp = hash_amplitudes
+                .remove(&ProductState::binary_basis(i, self.product_dim))
+                .unwrap_or(complex_re!(0f64));
+        }
+        self
+    }
+
+    /// Same as [SuperPosition::new_with_amplitudes], but **without** checks on dimension size being a
+    /// power of two and the conservation of probability.
+    pub fn new_with_amplitudes_unchecked(amplitudes: &[Complex64]) -> SuperPosition {
+        let length = amplitudes.len();
+        SuperPosition {
+            amplitudes: amplitudes.to_vec(),
+            product_dim: length.trailing_zeros() as usize,
+        }
+    }
+
+    /// Same as [SuperPosition::set_amplitudes], but **without** checks on conservation of
+    /// probability.
+    pub fn set_amplitudes_unchecked(&mut self, amplitudes: &[Complex64]) -> &mut SuperPosition {
+        self.amplitudes = amplitudes.to_vec();
+        self
     }
 }

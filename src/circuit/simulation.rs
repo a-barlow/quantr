@@ -9,7 +9,7 @@
 */
 
 use super::gate::GateCategory;
-use super::{GateInfo, ZERO_MARGIN};
+use super::GateInfo;
 use crate::states::{ProductState, SuperPosition};
 use crate::{Circuit, Gate};
 use core::iter::zip;
@@ -64,6 +64,7 @@ impl Circuit {
     pub(super) fn apply_gate(gate: GateInfo, register: &mut SuperPosition) {
         // the sum of states that are required to be added to the register
         let mut mapped_states: HashMap<ProductState, Complex<f64>> = Default::default();
+        let mut untouched_states: HashMap<ProductState, Complex<f64>> = Default::default();
 
         for (prod_state, amp) in register.into_iter() {
             //Looping through super position of register
@@ -116,9 +117,20 @@ impl Circuit {
                     amp,
                     &mut mapped_states,
                 );
+            } else {
+                untouched_states.insert(prod_state, amp);
             }
         }
+
         // All states in register considers, and can create new super position
+        for (k, v) in untouched_states {
+            mapped_states
+                .entry(k)
+                .and_modify(|map_v| {
+                    *map_v = v;
+                })
+                .or_insert(v);
+        }
         register.set_amplitudes_from_states_unchecked(mapped_states);
     }
 
@@ -154,9 +166,6 @@ impl Circuit {
         // Pehaps if gate_image reached a critical mass, such as a wall of hadarmards, it would be
         // benificial to switch the loop around and index through mapped states,
         for (state, state_amp) in gate_image.into_iter() {
-            if state_amp.re.abs() < ZERO_MARGIN && state_amp.im.abs() < ZERO_MARGIN {
-                continue;
-            }
             // Insert these image states back into a product space
             let mut swapped_state: ProductState = prod_state.clone();
             swapped_state.insert_qubits(state.qubits.as_slice(), gate_positions.as_slice());

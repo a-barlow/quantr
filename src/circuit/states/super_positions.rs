@@ -8,12 +8,14 @@
 * Author: Andrew Rowan Barlow <a.barlow.dev@gmail.com>
 */
 
-use crate::circuit::{HashMap, QResult, ZERO_MARGIN};
+use crate::circuit::{HashMap, QResult};
 use crate::complex_re;
 use crate::error::QuantrError;
 use crate::states::ProductState;
 use crate::states::Qubit;
 use num_complex::Complex64;
+
+const ZERO_MARGIN: f64 = 1e-6;
 
 /// A superposition of [ProductState]s.
 #[derive(PartialEq, Debug, Clone)]
