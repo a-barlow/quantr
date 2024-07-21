@@ -8,7 +8,7 @@
 * Author: Andrew Rowan Barlow <a.barlow.dev@gmail.com>
 */
 
-//! Construct, simulate and measure quantum circuits.
+//! A gate-based quantum circuit simulator that focuses on memory efficency and accesibility.
 //!
 //! Initialise a new quantum circuit by using [Circuit::new] where the argument defines the number
 //! of qubits. Afterwards, various methods can be called to append gates onto the circuit in columns.
@@ -32,6 +32,9 @@
 //! All errors resulting from the incorrect use of quantr are propagated by [QuantrError].
 //!
 //! More complex examples can be found in the `../examples/` folder within this repository.
+//!
+//! For now, quantr is primiarly designed to simulate pure states, although mixed states _could_ be
+//! possible; it has yet to be implemented.
 //!
 //! # Example
 //! ```
