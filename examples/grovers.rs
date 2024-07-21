@@ -41,7 +41,7 @@ fn main() -> Result<(), QuantrError> {
     printer.print_diagram();
 
     // Print the progress of the simulation
-    circuit.toggle_simulation_progress();
+    circuit.set_print_progress(true);
 
     // Simulates the circuit
     let simulated_circuit = circuit.simulate();

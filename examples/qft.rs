@@ -28,7 +28,7 @@ fn main() -> Result<(), QuantrError> {
     let mut printer = Printer::new(&qc);
     printer.print_diagram();
 
-    qc.toggle_simulation_progress();
+    qc.set_print_progress(true);
 
     let simulated_circuit = qc.simulate();
 

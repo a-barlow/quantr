@@ -84,15 +84,13 @@ impl Circuit {
     /// use quantr::{Circuit};
     ///
     /// let mut quantum_circuit = Circuit::new(2).unwrap();
-    /// assert_eq!(quantum_circuit.get_toggle_progress(), false);
-    /// quantum_circuit.toggle_simulation_progress();
-    /// assert_eq!(quantum_circuit.get_toggle_progress(), true);
+    /// quantum_circuit.set_print_progress(true);
     /// ```
-    pub fn get_toggle_progress(&self) -> bool {
-        self.config_progress
+    pub fn set_print_progress(&mut self, progress: bool) {
+        self.config_progress = progress;
     }
 
-    /// Returns the vector of gates that have been added to the circuit.
+    /// Returns the slice of gates that have been added to the circuit.
     ///
     /// It is a flattened vector which is buffered with identity gates.
     ///
@@ -475,26 +473,6 @@ impl Circuit {
         self.register = Some(super_pos);
 
         Ok(self)
-    }
-
-    /// Toggles if the circuit should print the progress of simulating each gate.
-    ///
-    /// It will only show the application of non-identity gates. The toggle is set to `false` by
-    /// default for a new quantum circuit.
-    ///
-    /// # Example
-    /// ```
-    /// use quantr::{Circuit, Gate};
-    ///
-    /// let mut circuit = Circuit::new(3).unwrap();
-    /// circuit.add_gate(Gate::H, 2).unwrap();
-    ///
-    /// circuit.toggle_simulation_progress();
-    ///
-    /// circuit.simulate(); // Simulates and prints progress.
-    /// ```
-    pub fn toggle_simulation_progress(&mut self) {
-        self.config_progress = !self.config_progress;
     }
 }
 

@@ -172,7 +172,7 @@ impl SimulatedCircuit {
         self.num_qubits
     }
 
-    pub fn print_progress(&mut self, printing: bool) {
+    pub fn set_print_progress(&mut self, printing: bool) {
         self.config_progress = printing;
     }
 

@@ -18,10 +18,9 @@ where one could attempt to retrieve the superposition, but would get an
 error stating that the circuit has not been simulated yet.
 
 These implementations are heading toward a final 
-design that I am happy with. Of course, this library will forever be 
+design that we are happy with. Of course, this library will forever be 
 evolving but the design implemented now should be kept for the 
-foreseeable future; minimising breaking Changes.
-- A. Barlow
+foreseeable future; minimising breaking changes.
 
 Breaking changes:
 
@@ -45,12 +44,11 @@ the circuit (`SimulatedCircuit` takes ownership).
 - The `Gate::custom` enum now takes a `Vec<uisze>` instead of a slice for
   the qubit indices that the gate should operate on. Now, the circuit
 can outlive the slice.
-- `Circuit::repeat_measurement` has been removed, and replaced with
-`SimulatedCirucit::measure_all`.
-- `Circuit::get_superposition` has been removed, and replaced with 
-`SimulatedCirucit::get_state`.
 The following methods have been replaced:
-  - `Circuit::toggle_simulation_progress` with `SimulatedCirucit::print_progress`
+  - `Circuit::repeat_measurement` with `SimulatedCirucit::measure_all`.
+  - `Circuit::get_superposition` with `SimulatedCirucit::get_state`.
+  - `Circuit::toggle_simulation_progress` with 
+  `SimulatedCirucit::print_progress` and `Circuit::set_print_progress`
 
 Features:
 
@@ -72,7 +70,7 @@ consumption.
 - Added `Superposition::measure` which returns simulates the effect of 
 measuring a superposition, and observing the state that it reduced to.
 - `From<Qubit>` was implemented for `Superposition`.
-- `Printer::pring_warnings` was added that allows the user to turn warnings
+- `Printer::set_print_warnings` was added that allows the user to turn warnings
 from the printer off and on.
 
 Internal improvements:

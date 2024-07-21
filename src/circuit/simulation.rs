@@ -13,7 +13,7 @@ use super::{GateInfo, ZERO_MARGIN};
 use crate::states::{ProductState, SuperPosition};
 use crate::{Circuit, Gate};
 use core::iter::zip;
-use num_complex::Complex64;
+use num_complex::Complex;
 use std::collections::HashMap;
 use std::ops::{Add, Mul};
 
@@ -63,7 +63,7 @@ impl Circuit {
     // matrices, in an effort to reduce memory. Cannot guarantee if this method is the fastest.
     pub(super) fn apply_gate(gate: GateInfo, register: &mut SuperPosition) {
         // the sum of states that are required to be added to the register
-        let mut mapped_states: HashMap<ProductState, Complex64> = Default::default();
+        let mut mapped_states: HashMap<ProductState, Complex<f64>> = Default::default();
 
         for (prod_state, amp) in register.into_iter() {
             //Looping through super position of register
@@ -147,8 +147,8 @@ impl Circuit {
         gate_image: SuperPosition,
         gate_positions: Vec<usize>,
         prod_state: ProductState,
-        amp: Complex64,
-        mapped_states: &mut HashMap<ProductState, Complex64>,
+        amp: Complex<f64>,
+        mapped_states: &mut HashMap<ProductState, Complex<f64>>,
     ) {
         // TODO think if looping through mapped_states, but with RAYON, would improve performance
         // Pehaps if gate_image reached a critical mass, such as a wall of hadarmards, it would be
