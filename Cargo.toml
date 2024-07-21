@@ -1,6 +1,6 @@
 [package]
 name = "quantr"
-version = "0.5.2"
+version = "0.6.0"
 edition = "2021"
 license = "EUPL-1.2"
 readme = "README.md"
@@ -13,3 +13,4 @@ description = "Create and simulate gate-based quantum circuits."
 
 [dependencies]
 fastrand = "2.1.0"
+num-complex = "0.4.6"

@@ -8,7 +8,8 @@
 * Author: Andrew Rowan Barlow <a.barlow.dev@gmail.com>
 */
 
-use quantr::{complex_re, Complex};
+use num_complex::Complex64;
+use quantr::complex_re;
 use quantr::{
     states::{ProductState, Qubit, SuperPosition},
     Circuit, Gate,
@@ -40,9 +41,8 @@ fn grovers_3qubit() -> Result<(), Box<dyn Error>> {
 
     // Simulates the circuit so that the final register can be
     // calculated.
-    circuit.simulate();
 
-    let correct_super: [Complex<f64>; 8] = [
+    let correct_super: [Complex64; 8] = [
         complex_re!(0f64),
         complex_re!(0f64),
         complex_re!(0f64),
@@ -53,11 +53,13 @@ fn grovers_3qubit() -> Result<(), Box<dyn Error>> {
         complex_re!(-FRAC_1_SQRT_2),
     ];
 
-    if let NonObservable(output_register) = circuit.get_superposition().unwrap() {
+    let simulated = circuit.simulate();
+
+    if let NonObservable(output_register) = simulated.get_state() {
         compare_complex_lists_and_register(&correct_super, output_register);
     }
 
-    if let Observable(bin_count) = circuit.repeat_measurement(500).unwrap() {
+    if let Observable(bin_count) = simulated.measure_all(500) {
         for (state, count) in bin_count {
             match state.to_string().as_str() {
                 "011" | "111" => assert!(count > 200usize),
@@ -83,27 +85,42 @@ fn x3sudoko() -> Result<(), Box<dyn Error>> {
     for i in 0..=2 {
         qc.add_gate(Gate::Toffoli(i, i + 3), 8)?;
     }
-    qc.add_gate(Gate::Custom(multicnot::<4>, &[0, 1, 2], "X".to_string()), 6)?;
+    qc.add_gate(
+        Gate::Custom(multicnot::<4>, vec![0, 1, 2], "X".to_string()),
+        6,
+    )?;
     for i in 0..=2 {
         qc.add_gate(Gate::CNot(i), 6)?;
     }
-    qc.add_gate(Gate::Custom(multicnot::<4>, &[3, 4, 5], "X".to_string()), 7)?;
+    qc.add_gate(
+        Gate::Custom(multicnot::<4>, vec![3, 4, 5], "X".to_string()),
+        7,
+    )?;
     for i in 3..=5 {
         qc.add_gate(Gate::CNot(i), 7)?;
     }
 
     // The phase kickback
-    qc.add_gate(Gate::Custom(multicnot::<4>, &[6, 7, 8], "X".to_string()), 9)?;
+    qc.add_gate(
+        Gate::Custom(multicnot::<4>, vec![6, 7, 8], "X".to_string()),
+        9,
+    )?;
 
     // Reset by using the oracle again
     for i in 0..=2 {
         qc.add_gate(Gate::Toffoli(i, i + 3), 8)?;
     }
-    qc.add_gate(Gate::Custom(multicnot::<4>, &[0, 1, 2], "X".to_string()), 6)?;
+    qc.add_gate(
+        Gate::Custom(multicnot::<4>, vec![0, 1, 2], "X".to_string()),
+        6,
+    )?;
     for i in 0..=2 {
         qc.add_gate(Gate::CNot(i), 6)?;
     }
-    qc.add_gate(Gate::Custom(multicnot::<4>, &[3, 4, 5], "X".to_string()), 7)?;
+    qc.add_gate(
+        Gate::Custom(multicnot::<4>, vec![3, 4, 5], "X".to_string()),
+        7,
+    )?;
     for i in 3..=5 {
         qc.add_gate(Gate::CNot(i), 7)?;
     }
@@ -113,7 +130,7 @@ fn x3sudoko() -> Result<(), Box<dyn Error>> {
         .add_repeating_gate(Gate::X, &[0, 1, 2, 3, 4, 5])?
         .add_gate(Gate::H, 5)?
         .add_gate(
-            Gate::Custom(multicnot::<6>, &[0, 1, 2, 3, 4], "X".to_string()),
+            Gate::Custom(multicnot::<6>, vec![0, 1, 2, 3, 4], "X".to_string()),
             5,
         )?
         .add_gate(Gate::H, 5)?
@@ -121,9 +138,9 @@ fn x3sudoko() -> Result<(), Box<dyn Error>> {
         .add_repeating_gate(Gate::H, &[0, 1, 2, 3, 4, 5])?;
     // END
 
-    qc.simulate();
+    let simulated_circuit = qc.simulate();
 
-    if let Observable(bin_count) = qc.repeat_measurement(5000).unwrap() {
+    if let Observable(bin_count) = simulated_circuit.measure_all(5000) {
         for (state, count) in bin_count {
             match &state.to_string()[0..=5] {
                 "001100" | "001010" | "010100" | "010001" | "100010" | "100001" => {
@@ -138,8 +155,8 @@ fn x3sudoko() -> Result<(), Box<dyn Error>> {
 }
 
 fn multicnot<const NUM_CONTROL: usize>(input_state: ProductState) -> Option<SuperPosition> {
-    let mut copy_state = input_state.clone();
-    if input_state.get_qubits() == [Qubit::One; NUM_CONTROL] {
+    let mut copy_state = input_state;
+    if copy_state.get_qubits() == [Qubit::One; NUM_CONTROL] {
         copy_state.get_mut_qubits()[NUM_CONTROL - 1] = Qubit::Zero;
         return Some(copy_state.into());
     } else if copy_state.get_qubits() == {
@@ -154,7 +171,7 @@ fn multicnot<const NUM_CONTROL: usize>(input_state: ProductState) -> Option<Supe
     }
 }
 
-fn compare_complex_lists_and_register(correct_list: &[Complex<f64>], register: &SuperPosition) {
+fn compare_complex_lists_and_register(correct_list: &[Complex64], register: &SuperPosition) {
     for (i, &comp_num) in register.get_amplitudes().iter().enumerate() {
         // Make sure that it turns up complex
         assert!(equal_within_error(comp_num.re, correct_list[i].re));

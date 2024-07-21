@@ -10,8 +10,8 @@
 
 use std::fmt;
 
-use crate::circuit::{QResult, QResultConst};
-use crate::error::{QuantrError, QuantrErrorConst};
+use crate::circuit::QResult;
+use crate::error::QuantrError;
 use crate::states::Qubit;
 
 /// A product state in the computational basis.
@@ -34,10 +34,12 @@ impl ProductState {
     ///
     /// let prod: ProductState = ProductState::new(&[Qubit::One, Qubit::Zero]).unwrap(); // |10>
     /// ```
-    pub fn new(product_state: &[Qubit]) -> QResultConst<ProductState> {
+    pub fn new(product_state: &[Qubit]) -> QResult<ProductState> {
         if product_state.is_empty() {
-            return Err(QuantrErrorConst {
-                message: "The slice of qubits is empty, it needs to at least have one element.",
+            return Err(QuantrError {
+                message: String::from(
+                    "The slice of qubits is empty, it needs to at least have one element.",
+                ),
             });
         }
         Ok(ProductState {
@@ -200,7 +202,7 @@ impl ProductState {
 
     // Produces a product states based on converting a base 10 number to binary, where the product
     // state in the computational basis is defined from this labelling.
-    pub(super) fn binary_basis(index: usize, basis_size: usize) -> ProductState {
+    pub(crate) fn binary_basis(index: usize, basis_size: usize) -> ProductState {
         let binary_index: Vec<Qubit> = (0..basis_size)
             .rev()
             .map(|n| match (index >> n) & 1 == 1 {
@@ -253,59 +255,10 @@ impl From<Qubit> for ProductState {
     }
 }
 
-/// An iterator of the qubits that label the product state in the computational basis, from left to
-/// right in braket notation.
-///
-/// # Example
-/// ```
-/// use quantr::states::{ProductState, Qubit, ProductStateIter};
-///
-/// let state = ProductState::new(&[Qubit::One, Qubit::Zero, Qubit::Zero]).unwrap(); // |100>
-///
-/// let mut state_iter: ProductStateIter = state.into_iter();
-///
-/// assert_eq!(state_iter.next(), Some(Qubit::One));
-/// assert_eq!(state_iter.next(), Some(Qubit::Zero));
-/// assert_eq!(state_iter.next(), Some(Qubit::Zero));
-/// assert_eq!(state_iter.next(), None);
-/// ```
-pub struct ProductStateIter<'a> {
-    state: &'a ProductState,
-    index: usize,
-}
-
-impl<'a> Iterator for ProductStateIter<'a> {
-    type Item = Qubit;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        if let Some(qubit) = self.state.qubits.get(self.index).copied() {
-            self.index += 1;
-            Some(qubit)
-        } else {
-            self.index = 0;
-            None
-        }
-    }
-}
-
-impl<'a> IntoIterator for &'a ProductState {
-    type Item = Qubit;
-    type IntoIter = ProductStateIter<'a>;
-
-    fn into_iter(self) -> Self::IntoIter {
-        ProductStateIter {
-            state: &self,
-            index: 0,
-        }
-    }
-}
-
 #[cfg(test)]
 mod tests {
-    use crate::states::{ProductState, Qubit, SuperPosition};
-    use crate::{complex_re, Complex, COMPLEX_ZERO};
-
-    use super::ProductStateIter;
+    use crate::complex_re;
+    use crate::states::{ProductState, ProductStateIter, Qubit, SuperPosition};
 
     #[test]
     fn iterates_through_qubits() {
@@ -372,7 +325,12 @@ mod tests {
         assert_eq!(
             &mut SuperPosition::from(ProductState::new_unchecked(&[Qubit::One, Qubit::Zero])),
             SuperPosition::new_unchecked(2)
-                .set_amplitudes(&[COMPLEX_ZERO, COMPLEX_ZERO, complex_re!(1f64), COMPLEX_ZERO])
+                .set_amplitudes(&[
+                    num_complex::Complex64::ZERO,
+                    num_complex::Complex64::ZERO,
+                    complex_re!(1f64),
+                    num_complex::Complex64::ZERO
+                ])
                 .unwrap()
         )
     }
