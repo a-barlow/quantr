@@ -86,6 +86,7 @@ effect doubling the necessary memory.
 - Removed `QuantrErrorConst`.
 - The Iterator trait implementations for `ProductState` and the
 `Measurment` enum have moved to their own files.  
+- Bumped Rust version to 1.79.0
 
 ## 0.5.2 - Review of docs and minor code improvements 
 
